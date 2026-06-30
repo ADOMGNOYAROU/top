@@ -1,0 +1,27 @@
+// ════════════════════════════════════════════════════════════════
+// Schéma Prisma minimal — DINAWA
+// Ce schéma sera remplacé progressivement lors du développement.
+// Un modèle User minimal est présent pour que `migrate deploy`
+// ne crashe pas sur une base vide.
+//
+// Toutes les dates sont stockées en UTC.
+// Togo = UTC+0 sans DST : UTC ≡ Africa/Lomé.
+// ════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Seed minimal — sera remplacé par le modèle User complet
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
