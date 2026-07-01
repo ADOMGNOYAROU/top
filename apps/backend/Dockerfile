@@ -31,8 +31,8 @@ RUN cd apps/backend && npm run build
 FROM node:20.18.0-alpine AS runner
 
 # Utilisateur non-root pour la sécurité
-RUN addgroup -g 1001 -S dinawa && \
-    adduser -u 1001 -S dinawa -G dinawa
+RUN addgroup -g 1001 -S warah && \
+    adduser -u 1001 -S warah -G warah
 
 WORKDIR /app
 
@@ -54,9 +54,9 @@ RUN cd apps/backend && npx prisma generate
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
 # Changer le propriétaire des fichiers
-RUN chown -R dinawa:dinawa /app
+RUN chown -R warah:warah /app
 
-USER dinawa
+USER warah
 
 EXPOSE 3000
 

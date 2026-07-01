@@ -8,6 +8,7 @@ import {
 import { SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Health')
 @SkipThrottle()
@@ -18,12 +19,14 @@ export class HealthController {
     private readonly prisma: PrismaService,
   ) {}
 
+  @Public()
   @Get('live')
   @ApiOperation({ summary: 'Liveness probe — le process tourne, sans dépendances' })
   liveness(): { status: string; timestamp: string } {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
+  @Public()
   @Get('ready')
   @HealthCheck()
   @ApiOperation({ summary: 'Readiness probe — vérifie Prisma/PostgreSQL' })
@@ -31,7 +34,7 @@ export class HealthController {
     return this.health.check([
       async (): Promise<HealthIndicatorResult> => {
         try {
-          await this.prisma.$queryRaw`SELECT 1`;
+          await this.prisma['$queryRaw']`SELECT 1`;
           return { database: { status: 'up' } };
         } catch (err) {
           const message = err instanceof Error ? err.message : 'database unreachable';

@@ -1,11 +1,19 @@
 // ════════════════════════════════════════════════════════════════
-// Schéma Prisma minimal — DINAWA
-// Ce schéma sera remplacé progressivement lors du développement.
-// Un modèle User minimal est présent pour que `migrate deploy`
-// ne crashe pas sur une base vide.
+// Schéma Prisma — WARAH
 //
-// Toutes les dates sont stockées en UTC.
-// Togo = UTC+0 sans DST : UTC ≡ Africa/Lomé.
+// Toutes les dates sont stockées en UTC (@db.Timestamptz). Togo =
+// UTC+0 sans DST : UTC ≡ Africa/Lomé, donc pas de conversion à
+// l'écriture, uniquement à l'affichage (PDF, email).
+//
+// Les montants FCFA sont stockés en Int (pas de sous-unité pour
+// cette devise) — jamais de Float ni de Decimal pour l'argent.
+//
+// Toutes les relations transverses (Property, Lease, Mandate,
+// Payment...) pointent directement vers User.id, jamais vers un
+// profil de rôle (OwnerProfile/TenantProfile/ManagerProfile). Les
+// profils de rôle ne portent que des champs spécifiques au rôle et
+// ne sont jamais la cible d'une clé étrangère venant d'un autre
+// module métier.
 // ════════════════════════════════════════════════════════════════
 
 generator client {
@@ -13,15 +21,637 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Seed minimal — sera remplacé par le modèle User complet
+// ────────────────────────────────────────────────────────────────
+// Énumérations
+// ────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  OWNER
+  TENANT
+  MANAGER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED_INACTIVITY
+  SUSPENDED_ADMIN
+  SUSPENDED_PAYMENT
+}
+
+enum NotificationConsent {
+  NOT_ASKED
+  ACCEPTED
+  DECLINED
+}
+
+enum IdVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PropertyType {
+  VILLA
+  APARTMENT
+  STUDIO
+  COMMERCIAL
+}
+
+enum PropertyStatus {
+  OCCUPIED
+  VACANT
+  RENOVATION
+  ARCHIVED
+}
+
+enum PropertyDocumentType {
+  STATE_OF_PLAY
+  PROPERTY_TITLE
+  INSURANCE
+  OTHER
+}
+
+enum LeaseStatus {
+  ACTIVE
+  TERMINATED
+  EXPIRED
+}
+
+enum PaymentFrequency {
+  MONTHLY
+  QUARTERLY
+  BIANNUAL
+  ANNUAL
+}
+
+enum ScheduleEntryStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum PaymentStatus {
+  PENDING
+  PENDING_CONFIRMATION
+  PAID
+  PARTIAL
+  LATE
+  OVERDUE
+  REJECTED
+}
+
+enum PaymentSource {
+  CASHPAY_API
+  MANUAL_OWNER
+  TENANT_DECLARATION
+}
+
+enum PaymentMethod {
+  TMONEY
+  FLOOZ
+  CASH
+  BANK_TRANSFER
+}
+
+enum ListingStatus {
+  ACTIVE
+  DISABLED
+  SUSPENDED
+}
+
+enum MandateStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum MandateFeeType {
+  PERCENTAGE
+  FLAT
+}
+
+enum SubscriptionTier {
+  STARTER
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PENDING_CANCELLATION
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+}
+
+enum NotificationDispatchStatus {
+  SENT
+  FAILED
+}
+
+// ────────────────────────────────────────────────────────────────
+// Comptes utilisateurs
+// ────────────────────────────────────────────────────────────────
+
 model User {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String              @id @default(cuid())
+  supabaseId          String?             @unique
+  email               String?             @unique
+  phone               String?             @unique
+  role                UserRole
+  firstName           String
+  lastName            String
+  accountStatus       AccountStatus       @default(ACTIVE)
+  notificationConsent NotificationConsent @default(NOT_ASKED)
+  reminderDaysBefore  Int                 @default(5)
+  overdueGraceDays    Int                 @default(3)
+  profilePhotoPath    String?
+  anonymizedAt        DateTime?           @db.Timestamptz(6)
+  createdAt           DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime            @updatedAt @db.Timestamptz(6)
+
+  ownerProfile   OwnerProfile?
+  tenantProfile  TenantProfile?
+  managerProfile ManagerProfile?
+  adminProfile   AdminProfile?
+
+  tenantsInvited         TenantProfile[]        @relation("TenantInvitedBy")
+  ownedProperties        Property[]             @relation("PropertyOwner")
+  listingsPublished      Listing[]
+  leasesAsOwner          Lease[]                @relation("LeaseOwner")
+  leasesAsTenant         Lease[]                @relation("LeaseTenant")
+  mandatesAsOwner        Mandate[]              @relation("MandateOwner")
+  mandatesAsManager      Mandate[]              @relation("MandateManager")
+  paymentsRecorded       Payment[]              @relation("PaymentRecordedBy")
+  paymentsConfirmed      Payment[]              @relation("PaymentConfirmedBy")
+  managerReviewsGiven    ManagerReview[]        @relation("ManagerReviewOwner")
+  managerReviewsReceived ManagerReview[]        @relation("ManagerReviewManager")
+  subscription           Subscription?
+  identityVerifications  IdentityVerification[]
+  pushSubscriptions      PushSubscription[]
+  passwordResetOtps      PasswordResetOtp[]
+  notifications          Notification[]
+  auditLogs              AuditLog[]
 
   @@map("users")
+}
+
+model OwnerProfile {
+  id                   String               @id @default(cuid())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  residenceCountry     String
+  idVerificationStatus IdVerificationStatus @default(PENDING)
+  betaUntil            DateTime?            @db.Timestamptz(6)
+  createdAt            DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime             @updatedAt @db.Timestamptz(6)
+
+  @@map("owner_profiles")
+}
+
+// Créé dès `POST /api/tenants` par le propriétaire/gestionnaire — userId
+// existe donc avant même que le locataire n'ait terminé son inscription
+// via le lien d'invitation (voir unité 09).
+model TenantProfile {
+  id                   String               @id @default(cuid())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idVerificationStatus IdVerificationStatus @default(PENDING)
+  invitedByUserId      String?
+  invitedBy            User?                @relation("TenantInvitedBy", fields: [invitedByUserId], references: [id])
+  createdAt            DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime             @updatedAt @db.Timestamptz(6)
+
+  @@map("tenant_profiles")
+}
+
+model ManagerProfile {
+  id                   String               @id @default(cuid())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idVerificationStatus IdVerificationStatus @default(PENDING)
+  zonesOfIntervention  String[]             @default([])
+  pricingNote          String?
+  ratingAverage        Float                @default(0)
+  ratingCount          Int                  @default(0)
+  createdAt            DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime             @updatedAt @db.Timestamptz(6)
+
+  @@map("manager_profiles")
+}
+
+model AdminProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("admin_profiles")
+}
+
+model PasswordResetOtp {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  expiresAt DateTime  @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("password_reset_otps")
+}
+
+model IdentityVerification {
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storagePath String
+  status      IdVerificationStatus
+  reason      String?
+  rawText     String?              @db.Text
+  createdAt   DateTime             @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("identity_verifications")
+}
+
+// ────────────────────────────────────────────────────────────────
+// Patrimoine immobilier
+// ────────────────────────────────────────────────────────────────
+
+model Property {
+  id             String         @id @default(cuid())
+  ownerId        String
+  owner          User           @relation("PropertyOwner", fields: [ownerId], references: [id])
+  type           PropertyType
+  status         PropertyStatus @default(VACANT)
+  address        String
+  neighborhood   String
+  city           String
+  surfaceArea    Float
+  roomsCount     Int?
+  monthlyRent    Int
+  monthlyCharges Int            @default(0)
+  description    String?
+  archivedAt     DateTime?      @db.Timestamptz(6)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @db.Timestamptz(6)
+
+  photos    PropertyPhoto[]
+  documents PropertyDocument[]
+  leases    Lease[]
+  mandates  Mandate[]
+  listings  Listing[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([type])
+  @@index([city, neighborhood])
+  @@map("properties")
+}
+
+model PropertyPhoto {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  storagePath String
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([propertyId])
+  @@map("property_photos")
+}
+
+model PropertyDocument {
+  id          String               @id @default(cuid())
+  propertyId  String
+  property    Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type        PropertyDocumentType
+  storagePath String
+  createdAt   DateTime             @default(now()) @db.Timestamptz(6)
+
+  @@index([propertyId])
+  @@map("property_documents")
+}
+
+// Contrainte non exprimable en Prisma : un seul Lease ACTIVE par
+// tenantUserId à la fois. À ajouter manuellement dans la migration
+// générée : CREATE UNIQUE INDEX leases_tenant_active_unique ON
+// leases (tenant_user_id) WHERE status = 'ACTIVE'.
+model Lease {
+  id                      String           @id @default(cuid())
+  propertyId              String
+  property                Property         @relation(fields: [propertyId], references: [id])
+  ownerId                 String
+  owner                   User             @relation("LeaseOwner", fields: [ownerId], references: [id])
+  tenantUserId            String
+  tenant                  User             @relation("LeaseTenant", fields: [tenantUserId], references: [id])
+  monthlyRent             Int
+  monthlyCharges          Int              @default(0)
+  paymentFrequency        PaymentFrequency
+  startDate               DateTime         @db.Timestamptz(6)
+  endDate                 DateTime?        @db.Timestamptz(6)
+  securityDeposit         Int              @default(0)
+  depositReturnConditions String?
+  status                  LeaseStatus      @default(ACTIVE)
+  terminatedAt            DateTime?        @db.Timestamptz(6)
+  terminationReason       String?
+  createdAt               DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime         @updatedAt @db.Timestamptz(6)
+
+  scheduleEntries PaymentScheduleEntry[]
+  payments        Payment[]
+
+  @@index([propertyId])
+  @@index([ownerId])
+  @@index([tenantUserId])
+  @@index([status])
+  @@map("leases")
+}
+
+// ────────────────────────────────────────────────────────────────
+// Paiements
+// ────────────────────────────────────────────────────────────────
+
+model PaymentScheduleEntry {
+  id                 String              @id @default(cuid())
+  leaseId            String
+  lease              Lease               @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  periodStart        DateTime            @db.Timestamptz(6)
+  periodEnd          DateTime            @db.Timestamptz(6)
+  dueDate            DateTime            @db.Timestamptz(6)
+  expectedAmount     Int
+  paidAmount         Int                 @default(0)
+  status             ScheduleEntryStatus @default(PENDING)
+  reminderSentAt     DateTime?           @db.Timestamptz(6)
+  overdueAlertSentAt DateTime?           @db.Timestamptz(6)
+  createdAt          DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime            @updatedAt @db.Timestamptz(6)
+
+  payments Payment[]
+
+  @@index([leaseId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("payment_schedule_entries")
+}
+
+// Un Payment source = CASHPAY_API ne peut jamais être re-confirmé ni
+// rejeté manuellement (voir invariants architecture.md #4) — l'idempotence
+// du webhook repose sur transactionId unique, jamais sur une vérification
+// applicative seule.
+model Payment {
+  id                String               @id @default(cuid())
+  scheduleEntryId   String
+  scheduleEntry     PaymentScheduleEntry @relation(fields: [scheduleEntryId], references: [id])
+  leaseId           String
+  lease             Lease                @relation(fields: [leaseId], references: [id])
+  source            PaymentSource
+  status            PaymentStatus        @default(PENDING)
+  paymentMethod     PaymentMethod?
+  paidAmount        Int
+  paidAt            DateTime?            @db.Timestamptz(6)
+  transactionId     String?              @unique
+  proofStoragePath  String?
+  note              String?
+  recordedByUserId  String?
+  recordedBy        User?                @relation("PaymentRecordedBy", fields: [recordedByUserId], references: [id])
+  confirmedByUserId String?
+  confirmedBy       User?                @relation("PaymentConfirmedBy", fields: [confirmedByUserId], references: [id])
+  confirmedAt       DateTime?            @db.Timestamptz(6)
+  rejectionReason   String?
+  createdAt         DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime             @updatedAt @db.Timestamptz(6)
+
+  declaration PaymentDeclaration?
+
+  @@index([leaseId])
+  @@index([scheduleEntryId])
+  @@index([status])
+  @@index([paidAt])
+  @@map("payments")
+}
+
+// Couche éditable par le locataire tant que le Payment lié est en
+// PENDING_CONFIRMATION (PATCH/DELETE côté API) — le Payment reste la
+// ligne canonique consultée par le propriétaire/gestionnaire et les
+// tableaux de bord.
+model PaymentDeclaration {
+  id               String        @id @default(cuid())
+  paymentId        String        @unique
+  payment          Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  declaredAmount   Int
+  declaredAt       DateTime      @db.Timestamptz(6)
+  declaredMethod   PaymentMethod
+  proofStoragePath String?
+  note             String?
+  editedAt         DateTime?     @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @db.Timestamptz(6)
+
+  @@map("payment_declarations")
+}
+
+// ────────────────────────────────────────────────────────────────
+// Annonces
+// ────────────────────────────────────────────────────────────────
+
+model Listing {
+  id                String        @id @default(cuid())
+  propertyId        String
+  property          Property      @relation(fields: [propertyId], references: [id])
+  publishedByUserId String
+  publishedBy       User          @relation(fields: [publishedByUserId], references: [id])
+  slug              String        @unique
+  status            ListingStatus @default(ACTIVE)
+  publishedAt       DateTime      @default(now()) @db.Timestamptz(6)
+  deactivatedAt     DateTime?     @db.Timestamptz(6)
+  suspendedAt       DateTime?     @db.Timestamptz(6)
+  suspensionReason  String?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(6)
+
+  contacts ListingContact[]
+
+  @@index([propertyId])
+  @@index([status])
+  @@map("listings")
+}
+
+model ListingContact {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  firstName String
+  phone     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([listingId])
+  @@map("listing_contacts")
+}
+
+// ────────────────────────────────────────────────────────────────
+// Gestionnaires et mandats
+// ────────────────────────────────────────────────────────────────
+
+// Contrainte non exprimable en Prisma : un seul Mandate ACTIVE par
+// propertyId à la fois. À ajouter manuellement dans la migration
+// générée : CREATE UNIQUE INDEX mandates_property_active_unique ON
+// mandates (property_id) WHERE status = 'ACTIVE'.
+model Mandate {
+  id            String         @id @default(cuid())
+  propertyId    String
+  property      Property       @relation(fields: [propertyId], references: [id])
+  ownerId       String
+  owner         User           @relation("MandateOwner", fields: [ownerId], references: [id])
+  managerId     String
+  manager       User           @relation("MandateManager", fields: [managerId], references: [id])
+  status        MandateStatus  @default(PENDING)
+  feeType       MandateFeeType
+  feeValue      Int
+  startDate     DateTime       @db.Timestamptz(6)
+  endDate       DateTime?      @db.Timestamptz(6)
+  acceptedAt    DateTime?      @db.Timestamptz(6)
+  revokedAt     DateTime?      @db.Timestamptz(6)
+  revokedReason String?
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+
+  reviews ManagerReview[]
+
+  @@index([propertyId, status])
+  @@index([managerId])
+  @@index([ownerId])
+  @@map("mandates")
+}
+
+model ManagerReview {
+  id        String   @id @default(cuid())
+  managerId String
+  manager   User     @relation("ManagerReviewManager", fields: [managerId], references: [id])
+  ownerId   String
+  owner     User     @relation("ManagerReviewOwner", fields: [ownerId], references: [id])
+  mandateId String?
+  mandate   Mandate? @relation(fields: [mandateId], references: [id])
+  rating    Int
+  comment   String?
+  isHidden  Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([managerId])
+  @@map("manager_reviews")
+}
+
+// ────────────────────────────────────────────────────────────────
+// Abonnements
+// ────────────────────────────────────────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id])
+  tier                 SubscriptionTier   @default(STARTER)
+  status               SubscriptionStatus @default(ACTIVE)
+  betaUntil            DateTime?          @db.Timestamptz(6)
+  promoDiscountPercent Int?
+  currentPeriodEnd     DateTime?          @db.Timestamptz(6)
+  cancelAt             DateTime?          @db.Timestamptz(6)
+  createdAt            DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime           @updatedAt @db.Timestamptz(6)
+
+  invoices SubscriptionInvoice[]
+
+  @@map("subscriptions")
+}
+
+model SubscriptionInvoice {
+  id             String        @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id])
+  amount         Int
+  status         InvoiceStatus @default(PENDING)
+  transactionId  String?       @unique
+  attemptCount   Int           @default(0)
+  paidAt         DateTime?     @db.Timestamptz(6)
+  periodStart    DateTime      @db.Timestamptz(6)
+  periodEnd      DateTime      @db.Timestamptz(6)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(6)
+
+  @@index([subscriptionId])
+  @@map("subscription_invoices")
+}
+
+// ────────────────────────────────────────────────────────────────
+// Notifications, audit
+// ────────────────────────────────────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+// Journal des envois déclenchés par NotifyService.notifyUser() — sert
+// à l'écran admin « répartition push vs email » et au débogage des
+// envois manqués, pas de logique métier ne dépend de cette table.
+model Notification {
+  id        String                     @id @default(cuid())
+  userId    String
+  user      User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     String
+  channel   NotificationChannel
+  status    NotificationDispatchStatus @default(SENT)
+  payload   Json?
+  error     String?
+  createdAt DateTime                   @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([event])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actor       User?    @relation(fields: [actorUserId], references: [id])
+  action      String
+  entityType  String?
+  entityId    String?
+  metadata    Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

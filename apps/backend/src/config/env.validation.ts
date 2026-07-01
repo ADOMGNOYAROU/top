@@ -29,41 +29,47 @@ class EnvironmentVariables {
 
   // Base de données
   @IsString()
-  DATABASE_URL: string;
+  DATABASE_URL!: string;
+
+  @IsString()
+  DIRECT_URL!: string;
 
   // Supabase
   @IsUrl({ require_tld: false })
-  SUPABASE_URL: string;
+  SUPABASE_URL!: string;
 
   @IsString()
-  SUPABASE_ANON_KEY: string;
+  SUPABASE_ANON_KEY!: string;
 
   @IsString()
-  SUPABASE_SERVICE_ROLE_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY!: string;
 
+  // Optionnel — SupabaseAuthGuard valide les JWT via l'API Admin Supabase
+  // (auth.getUser()), pas de vérification locale HS256 nécessaire
   @IsString()
-  SUPABASE_JWT_SECRET: string;
+  @IsOptional()
+  SUPABASE_JWT_SECRET?: string;
 
   // Resend
   @IsString()
-  RESEND_API_KEY: string;
+  RESEND_API_KEY!: string;
 
   @IsEmail()
-  RESEND_FROM_EMAIL: string;
+  RESEND_FROM_EMAIL!: string;
 
   @IsString()
   @IsOptional()
-  RESEND_FROM_NAME?: string = 'DINAWA';
+  RESEND_FROM_NAME?: string = 'WARAH';
 
   // VAPID (Web Push)
   @IsString()
-  VAPID_PUBLIC_KEY: string;
+  VAPID_PUBLIC_KEY!: string;
 
   @IsString()
-  VAPID_PRIVATE_KEY: string;
+  VAPID_PRIVATE_KEY!: string;
 
   @IsString()
-  VAPID_SUBJECT: string;
+  VAPID_SUBJECT!: string;
 
   // Cashpay (optionnel — non disponible en dev sans compte marchand)
   @IsUrl({ require_tld: false })
@@ -90,7 +96,14 @@ class EnvironmentVariables {
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {
-  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+  // Une variable optionnelle laissée vide dans .env (`CASHPAY_API_URL=`) est lue
+  // comme une chaîne vide, pas `undefined` — @IsOptional() ne l'ignore donc pas.
+  // On normalise ici pour que "vide" et "absente" soient traités de la même façon.
+  const sanitized = Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [key, value === '' ? undefined : value]),
+  );
+
+  const validatedConfig = plainToInstance(EnvironmentVariables, sanitized, {
     enableImplicitConversion: true,
   });
 
