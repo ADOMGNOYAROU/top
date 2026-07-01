@@ -52,7 +52,7 @@ export const pinoConfig: Params = {
     },
 
     customProps: () => ({
-      service: 'dinawa-backend',
+      service: 'warah-backend',
       timezone: 'Africa/Lome',
     }),
   },

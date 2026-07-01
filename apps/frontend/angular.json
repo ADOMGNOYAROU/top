@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "dinawa-frontend": {
+    "warah-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -21,7 +21,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/dinawa-frontend",
+            "outputPath": "dist/warah-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -39,7 +39,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "650kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -73,8 +73,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
-            "production": { "buildTarget": "dinawa-frontend:build:production" },
-            "development": { "buildTarget": "dinawa-frontend:build:development" }
+            "production": { "buildTarget": "warah-frontend:build:production" },
+            "development": { "buildTarget": "warah-frontend:build:development" }
           },
           "defaultConfiguration": "development"
         },

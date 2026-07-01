@@ -36,7 +36,7 @@ jobs:
       # Épingler la version pour la sécurité supply-chain.
       # Vérifier la dernière version stable : https://github.com/railwayapp/cli/releases
       - name: Install Railway CLI
-        run: npm install -g @railway/cli@3.15.0
+        run: npm install -g @railway/cli@5.23.3
 
       - name: Deploy to Railway
         env:
