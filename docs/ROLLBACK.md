@@ -1,4 +1,4 @@
-# Procédure de rollback — DINAWA
+# Procédure de rollback — WARAH
 
 ---
 
@@ -26,10 +26,10 @@
 
 ```bash
 # Lister les déploiements récents
-railway deployments --service dinawa-backend
+railway deployments --service warah-backend
 
 # Rollback vers un déploiement spécifique
-railway rollback --deployment <DEPLOYMENT_ID> --service dinawa-backend
+railway rollback --deployment <DEPLOYMENT_ID> --service warah-backend
 ```
 
 ### Délai de rollback estimé
@@ -83,24 +83,26 @@ Ces opérations peuvent être déployées et rollbackées librement :
 
 Ces opérations ne permettent pas un rollback simple :
 
-| Opération | Risque | Stratégie recommandée |
-|---|---|---|
-| Supprimer une colonne | Perte de données | 3 étapes : déprécier → déployer → supprimer |
-| Renommer une colonne | Casse l'ancien code | Ajouter la nouvelle colonne, migrer les données, supprimer l'ancienne en 3 déploiements |
-| Ajouter une contrainte NOT NULL | Bloque les insertions de l'ancien code | Ajouter nullable d'abord, remplir les valeurs, ajouter NOT NULL ensuite |
-| Modifier un type de colonne | Risque de perte de données | Migration en plusieurs étapes |
+| Opération                       | Risque                                 | Stratégie recommandée                                                                   |
+| ------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- |
+| Supprimer une colonne           | Perte de données                       | 3 étapes : déprécier → déployer → supprimer                                             |
+| Renommer une colonne            | Casse l'ancien code                    | Ajouter la nouvelle colonne, migrer les données, supprimer l'ancienne en 3 déploiements |
+| Ajouter une contrainte NOT NULL | Bloque les insertions de l'ancien code | Ajouter nullable d'abord, remplir les valeurs, ajouter NOT NULL ensuite                 |
+| Modifier un type de colonne     | Risque de perte de données             | Migration en plusieurs étapes                                                           |
 
 ### Stratégie en 3 déploiements pour les changements destructifs
 
 Pour toute migration non rétrocompatible, suivre ce processus :
 
 **Déploiement 1** — Préparer
+
 ```sql
 -- Ajouter la nouvelle colonne (nullable ou avec DEFAULT)
 ALTER TABLE users ADD COLUMN phone_normalized VARCHAR(20);
 ```
 
 **Déploiement 2** — Migrer
+
 ```sql
 -- Remplir la nouvelle colonne depuis l'ancienne
 UPDATE users SET phone_normalized = normalize_phone(phone) WHERE phone IS NOT NULL;
@@ -109,6 +111,7 @@ ALTER TABLE users ALTER COLUMN phone_normalized SET NOT NULL;
 ```
 
 **Déploiement 3** — Nettoyer
+
 ```sql
 -- Supprimer l'ancienne colonne une fois que le code ne l'utilise plus
 ALTER TABLE users DROP COLUMN phone;
@@ -134,11 +137,11 @@ npx prisma migrate resolve --rolled-back <migration_name>
 
 ## 4. Matrice de décision
 
-| Scénario | Action Backend | Action Frontend | Rollback DB ? |
-|---|---|---|---|
-| Bug UI / CSS | Aucune | Rollback Vercel | Non |
-| Bug API non critique | Rollback Railway | Aucune | Non |
-| Bug API + migration additive | Rollback Railway | Aucune | Non (migration additive est sûre) |
-| Bug API + migration destructive | Rollback Railway | Aucune | Oui — migration inverse manuelle |
-| Panne totale | Rollback Railway + Vercel | — | Selon la migration |
-| Panne DB Supabase | Contacter Supabase support | — | — |
+| Scénario                        | Action Backend             | Action Frontend | Rollback DB ?                     |
+| ------------------------------- | -------------------------- | --------------- | --------------------------------- |
+| Bug UI / CSS                    | Aucune                     | Rollback Vercel | Non                               |
+| Bug API non critique            | Rollback Railway           | Aucune          | Non                               |
+| Bug API + migration additive    | Rollback Railway           | Aucune          | Non (migration additive est sûre) |
+| Bug API + migration destructive | Rollback Railway           | Aucune          | Oui — migration inverse manuelle  |
+| Panne totale                    | Rollback Railway + Vercel  | —               | Selon la migration                |
+| Panne DB Supabase               | Contacter Supabase support | —               | —                                 |

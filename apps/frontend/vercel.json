@@ -60,5 +60,5 @@
     }
   ],
   "framework": "angular",
-  "outputDirectory": "dist/dinawa-frontend/browser"
+  "outputDirectory": "dist/warah-frontend/browser"
 }

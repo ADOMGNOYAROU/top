@@ -1,6 +1,6 @@
-# DINAWA — Frontend (Angular 20)
+# WARAH — Frontend (Angular 20)
 
-SPA Angular de la plateforme DINAWA, déployée sur **Vercel**.
+SPA Angular de la plateforme WARAH, déployée sur **Vercel**.
 
 ## Stack
 
@@ -32,24 +32,24 @@ L'application est disponible sur `http://localhost:4200`.
 
 ## Scripts
 
-| Script | Description |
-|---|---|
-| `npm run start` | Dev server (port 4200) |
-| `npm run build` | Build développement |
-| `npm run build:prod` | Build production optimisé |
-| `npm run test` | Tests unitaires (Karma) |
-| `npm run lint` | ESLint (TypeScript + templates Angular) |
-| `npm run typecheck` | Vérification TypeScript sans build |
+| Script               | Description                             |
+| -------------------- | --------------------------------------- |
+| `npm run start`      | Dev server (port 4200)                  |
+| `npm run build`      | Build développement                     |
+| `npm run build:prod` | Build production optimisé               |
+| `npm run test`       | Tests unitaires (Karma)                 |
+| `npm run lint`       | ESLint (TypeScript + templates Angular) |
+| `npm run typecheck`  | Vérification TypeScript sans build      |
 
 ## Variables d'environnement Vercel
 
 À configurer dans Vercel → Project → Settings → Environment Variables :
 
-| Variable Vercel | Description | Exemple |
-|---|---|---|
-| `NG_APP_API_URL` | URL de l'API backend Railway | `https://dinawa-api.up.railway.app/api` |
-| `NG_APP_SENTRY_DSN` | DSN du projet Sentry frontend | `https://xxx@sentry.io/yyy` |
-| `NG_APP_VAPID_PUBLIC_KEY` | Clé publique VAPID pour les notifications push | `BI0...` |
+| Variable Vercel           | Description                                    | Exemple                                |
+| ------------------------- | ---------------------------------------------- | -------------------------------------- |
+| `NG_APP_API_URL`          | URL de l'API backend Railway                   | `https://warah-api.up.railway.app/api` |
+| `NG_APP_SENTRY_DSN`       | DSN du projet Sentry frontend                  | `https://xxx@sentry.io/yyy`            |
+| `NG_APP_VAPID_PUBLIC_KEY` | Clé publique VAPID pour les notifications push | `BI0...`                               |
 
 Ces variables sont automatiquement reconnues par `@angular/build:application` et injectées dans le bundle.
 

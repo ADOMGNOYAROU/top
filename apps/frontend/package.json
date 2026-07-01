@@ -1,5 +1,5 @@
 {
-  "name": "@dinawa/frontend",
+  "name": "@warah/frontend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
     "@angular/platform-browser": "^20.0.0",
     "@angular/platform-browser-dynamic": "^20.0.0",
     "@angular/router": "^20.0.0",
-    "@sentry/angular": "^8.47.0",
+    "@sentry/angular": "^10.62.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.6.0",
     "zone.js": "~0.15.0"
@@ -29,9 +29,8 @@
     "@angular/build": "^20.0.0",
     "@angular/cli": "^20.0.0",
     "@angular/compiler-cli": "^20.0.0",
-    "@angular-eslint/builder": "^18.0.0",
-    "@angular-eslint/eslint-plugin": "^18.0.0",
-    "@angular-eslint/eslint-plugin-template": "^18.0.0",
+    "@angular-eslint/builder": "^20.7.0",
+    "angular-eslint": "^20.7.0",
     "@types/node": "^20.17.0",
     "typescript": "~5.5.0",
     "typescript-eslint": "^8.0.0",

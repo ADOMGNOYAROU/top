@@ -1,6 +1,6 @@
-# DINAWA — Plateforme de gestion locative
+# WARAH — Plateforme de gestion locative
 
-DINAWA permet aux propriétaires immobiliers togolais (résidant au Togo ou à l'étranger) de gérer leurs
+WARAH permet aux propriétaires immobiliers togolais (résidant au Togo ou à l'étranger) de gérer leurs
 locations en temps réel : encaissement des loyers via mobile money (T-Money et Flooz), génération de
 quittances officielles, tableau de bord analytique et gestion des mandats.
 
@@ -11,7 +11,7 @@ quittances officielles, tableau de bord analytique et gestion des mandats.
 ## Structure du monorepo
 
 ```
-dinawa/
+warah/
 ├── apps/
 │   ├── backend/          NestJS 10 — déployé sur Railway
 │   └── frontend/         Angular 20 — déployé sur Vercel
@@ -51,15 +51,15 @@ npm run prepare
 
 ## Commandes principales
 
-| Commande | Description |
-|---|---|
-| `npm run dev:backend` | Démarre le backend en watch mode |
-| `npm run dev:frontend` | Démarre le frontend en dev mode |
-| `npm run build` | Build toutes les apps |
-| `npm run test` | Lance tous les tests |
-| `npm run lint` | Lint tout le monorepo |
-| `npm run typecheck` | Vérification TypeScript stricte |
-| `npm run build:backend` | Build le backend uniquement |
+| Commande                 | Description                          |
+| ------------------------ | ------------------------------------ |
+| `npm run dev:backend`    | Démarre le backend en watch mode     |
+| `npm run dev:frontend`   | Démarre le frontend en dev mode      |
+| `npm run build`          | Build toutes les apps                |
+| `npm run test`           | Lance tous les tests                 |
+| `npm run lint`           | Lint tout le monorepo                |
+| `npm run typecheck`      | Vérification TypeScript stricte      |
+| `npm run build:backend`  | Build le backend uniquement          |
 | `npm run build:frontend` | Build le frontend en mode production |
 
 ---
@@ -84,9 +84,9 @@ Voir [`CONTRIBUTING.md`](CONTRIBUTING.md) pour les conventions de commit, nommag
 
 ## Rôles utilisateurs
 
-| Rôle | Description |
-|---|---|
-| `OWNER` | Propriétaire de biens immobiliers |
-| `TENANT` | Locataire |
+| Rôle      | Description                                                                     |
+| --------- | ------------------------------------------------------------------------------- |
+| `OWNER`   | Propriétaire de biens immobiliers                                               |
+| `TENANT`  | Locataire                                                                       |
 | `MANAGER` | Gestionnaire immobilier professionnel (peut être mandataire et/ou propriétaire) |
-| `ADMIN` | Administrateur de la plateforme |
+| `ADMIN`   | Administrateur de la plateforme                                                 |
