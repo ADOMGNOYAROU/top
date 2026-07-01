@@ -1,6 +1,6 @@
-# Guide de déploiement — DINAWA
+# Guide de déploiement — WARAH
 
-Procédure de premier déploiement de la plateforme DINAWA.
+Procédure de premier déploiement de la plateforme WARAH.
 
 ---
 
@@ -41,10 +41,10 @@ Comptes à créer (voir section 2) :
 ### 2a. Sentry
 
 1. Aller sur [sentry.io](https://sentry.io) → Sign Up
-2. Créer une **Organisation** (ex. `dinawa`)
+2. Créer une **Organisation** (ex. `warah`)
 3. Créer **deux projets** :
-   - Projet `dinawa-backend` (plateforme : Node.js)
-   - Projet `dinawa-frontend` (plateforme : Angular)
+   - Projet `warah-backend` (plateforme : Node.js)
+   - Projet `warah-frontend` (plateforme : Angular)
 4. Pour chaque projet, copier le **DSN** (Settings → Client Keys → DSN)
 5. Configurer les alertes recommandées (voir section 9)
 
@@ -63,6 +63,7 @@ Cashpay est le service de paiement mobile money de Semoa pour le Togo (T-Money e
    - `CASHPAY_WEBHOOK_SECRET` — Secret HMAC pour valider les notifications de paiement
 
 **En attendant le compte marchand :**
+
 - Laisser ces variables vides dans Railway
 - Le module Cashpay ne s'initialisera pas et renverra des erreurs 503 sur les endpoints de paiement
 - Les autres fonctionnalités de la plateforme restent opérationnelles
@@ -97,19 +98,20 @@ Dans Settings → Database → Connection string → Transaction pooler :
 
 Dans Storage, créer les 5 buckets suivants en mode **privé** :
 
-| Bucket | Usage |
-|---|---|
-| `cni-documents` | Photos de CNI pour vérification OCR |
-| `property-photos` | Photos des biens immobiliers |
-| `lease-documents` | Contrats de location signés |
-| `mandate-documents` | Documents de mandats de gestion |
-| `payment-proofs` | Preuves de paiement mobile money |
+| Bucket              | Usage                               |
+| ------------------- | ----------------------------------- |
+| `cni-documents`     | Photos de CNI pour vérification OCR |
+| `property-photos`   | Photos des biens immobiliers        |
+| `lease-documents`   | Contrats de location signés         |
+| `mandate-documents` | Documents de mandats de gestion     |
+| `payment-proofs`    | Preuves de paiement mobile money    |
 
 > **Rappel** : Aucun bucket ne doit contenir de PDFs générés (quittances, rapports). Ceux-ci sont générés à la volée.
 
 ### 3d. Configurer Supabase Auth
 
 Dans Authentication → Providers :
+
 - Activer **Email** (désactiver la confirmation d'email pour les tests, réactiver en production)
 - URL de redirection : `https://votre-app.vercel.app/auth/callback`
 
@@ -120,7 +122,7 @@ Dans Authentication → Providers :
 ### 4a. Créer le projet Railway
 
 1. Dashboard Railway → New Project → Deploy from GitHub repo
-2. Sélectionner le dépôt DINAWA
+2. Sélectionner le dépôt WARAH
 3. Railway détectera automatiquement le `railway.json` à la racine
 
 ### 4b. Configurer les variables d'environnement Railway
@@ -137,10 +139,10 @@ SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 SUPABASE_JWT_SECRET=...
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=noreply@dinawa.tg
+RESEND_FROM_EMAIL=noreply@warah.tg
 VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
-VAPID_SUBJECT=mailto:contact@dinawa.tg
+VAPID_SUBJECT=mailto:contact@warah.tg
 ALLOWED_ORIGINS=https://votre-app.vercel.app
 ```
 
@@ -169,11 +171,11 @@ Si le health check échoue, le déploiement est marqué en erreur.
 ### 5a. Connecter le dépôt GitHub
 
 1. Vercel Dashboard → Add New → Project → Import GitHub repo
-2. Sélectionner le dépôt DINAWA
+2. Sélectionner le dépôt WARAH
 3. **Framework Preset** : Angular
 4. **Root Directory** : `apps/frontend`
 5. **Build Command** : `npm run build:prod`
-6. **Output Directory** : `dist/dinawa-frontend/browser`
+6. **Output Directory** : `dist/warah-frontend/browser`
 
 > Vercel détecte automatiquement le `vercel.json` dans `apps/frontend/`.
 
@@ -181,10 +183,10 @@ Si le health check échoue, le déploiement est marqué en erreur.
 
 Dans Vercel → Project → Settings → Environment Variables :
 
-| Variable | Valeur |
-|---|---|
-| `NG_APP_API_URL` | `https://votre-service.up.railway.app/api` |
-| `NG_APP_SENTRY_DSN` | DSN du projet `dinawa-frontend` Sentry |
+| Variable                  | Valeur                                       |
+| ------------------------- | -------------------------------------------- |
+| `NG_APP_API_URL`          | `https://votre-service.up.railway.app/api`   |
+| `NG_APP_SENTRY_DSN`       | DSN du projet `warah-frontend` Sentry        |
 | `NG_APP_VAPID_PUBLIC_KEY` | Clé publique VAPID (même valeur que Railway) |
 
 Ces variables sont injectées **à la compilation** par Angular.
@@ -192,6 +194,7 @@ Ces variables sont injectées **à la compilation** par Angular.
 ### 5c. Déploiements automatiques
 
 Vercel déploie automatiquement :
+
 - **main** → environnement **Production**
 - Toute autre branche → **Preview** (URL unique par déploiement)
 
@@ -205,15 +208,15 @@ Dans GitHub → Repository → Settings → Secrets and variables → Actions :
 
 **Secrets** (valeurs sensibles) :
 
-| Secret | Description |
-|---|---|
+| Secret          | Description                                              |
+| --------------- | -------------------------------------------------------- |
 | `RAILWAY_TOKEN` | Token de service Railway (Settings → Tokens → New Token) |
 
 **Variables** (valeurs non sensibles) :
 
-| Variable | Description |
-|---|---|
-| `RAILWAY_SERVICE_NAME` | Nom du service Railway (ex. `dinawa-backend`) |
+| Variable               | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| `RAILWAY_SERVICE_NAME` | Nom du service Railway (ex. `warah-backend`) |
 
 ---
 
@@ -236,7 +239,7 @@ npm install -g @railway/cli
 railway login
 
 # Déployer depuis la racine du monorepo
-railway up --service dinawa-backend
+railway up --service warah-backend
 ```
 
 ---
@@ -258,6 +261,7 @@ curl https://votre-service.up.railway.app/health/ready
 ### Frontend Vercel
 
 Ouvrir l'URL Vercel et vérifier :
+
 - La page se charge correctement
 - La console n'affiche pas d'erreurs CORS
 - Les requêtes réseau vers `/api` pointent bien vers Railway
@@ -271,16 +275,19 @@ Ouvrir l'URL Vercel et vérifier :
 Pour chaque projet (backend + frontend), configurer dans Sentry → Alerts → Alert Rules :
 
 **Alerte 1 — Taux d'erreurs 5xx**
+
 - Condition : `event.type:error http.status_code:[500..599]`
 - Seuil : > 1% des requêtes sur une fenêtre de 5 minutes
 - Action : email + Slack (si configuré)
 
 **Alerte 2 — Latence p95**
+
 - Condition : `transaction.duration:>1000`
 - Seuil : p95 > 1000ms sur 10 minutes
 - Action : email
 
 **Configuration du taux d'échantillonnage Sentry :**
+
 - `tracesSampleRate: 0.1` (10% des transactions) — déjà configuré dans le code
 - Ne pas dépasser 0.1 en production pour maîtriser les coûts
 
@@ -300,20 +307,21 @@ Pour chaque projet (backend + frontend), configurer dans Sentry → Alerts → A
 ### Backend (Railway)
 
 1. Railway → Service → Settings → Domains → Add Domain
-2. Ajouter votre domaine (ex. `api.dinawa.tg`)
+2. Ajouter votre domaine (ex. `api.warah.tg`)
 3. Configurer le CNAME chez votre registrar :
    ```
-   api.dinawa.tg → votre-service.up.railway.app
+   api.warah.tg → votre-service.up.railway.app
    ```
 4. Mettre à jour `ALLOWED_ORIGINS` dans Railway avec le nouveau domaine frontend
 
 ### Frontend (Vercel)
 
 1. Vercel → Project → Settings → Domains → Add
-2. Ajouter votre domaine (ex. `dinawa.tg` et `www.dinawa.tg`)
+2. Ajouter votre domaine (ex. `warah.tg` et `www.warah.tg`)
 3. Configurer les DNS selon les instructions Vercel (CNAME ou A record)
 4. Mettre à jour `NG_APP_API_URL` si l'URL Railway change aussi
 
 > **Temporaire :** En attendant un domaine custom, utiliser les URLs générées :
+>
 > - Backend : `https://votre-service.up.railway.app`
 > - Frontend : `https://votre-projet.vercel.app`

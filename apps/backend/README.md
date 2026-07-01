@@ -1,6 +1,6 @@
-# DINAWA — Backend (NestJS)
+# WARAH — Backend (NestJS)
 
-Backend de la plateforme DINAWA, déployé sur **Railway**.
+Backend de la plateforme WARAH, déployé sur **Railway**.
 
 ## Stack
 
@@ -53,23 +53,23 @@ Swagger est disponible sur `http://localhost:3000/api/docs` (dev uniquement).
 
 ## Health checks
 
-| Endpoint | Usage | Dépendances |
-|---|---|---|
-| `GET /health/live` | Liveness — Railway poll continu | Aucune |
+| Endpoint            | Usage                             | Dépendances       |
+| ------------------- | --------------------------------- | ----------------- |
+| `GET /health/live`  | Liveness — Railway poll continu   | Aucune            |
 | `GET /health/ready` | Readiness — Railway avant routage | Prisma/PostgreSQL |
 
 ## Scripts
 
-| Script | Description |
-|---|---|
-| `npm run dev` | Watch mode |
-| `npm run build` | Compilation TypeScript |
-| `npm run start:prod` | Démarrage production (sans migrations) |
-| `npm run test` | Tests unitaires |
-| `npm run test:e2e` | Tests end-to-end |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | Vérification TypeScript sans compilation |
-| `npm run prisma:generate` | Génération du client Prisma |
+| Script                          | Description                              |
+| ------------------------------- | ---------------------------------------- |
+| `npm run dev`                   | Watch mode                               |
+| `npm run build`                 | Compilation TypeScript                   |
+| `npm run start:prod`            | Démarrage production (sans migrations)   |
+| `npm run test`                  | Tests unitaires                          |
+| `npm run test:e2e`              | Tests end-to-end                         |
+| `npm run lint`                  | ESLint                                   |
+| `npm run typecheck`             | Vérification TypeScript sans compilation |
+| `npm run prisma:generate`       | Génération du client Prisma              |
 | `npm run prisma:migrate:deploy` | Application des migrations en production |
 
 ## Premier déploiement Railway

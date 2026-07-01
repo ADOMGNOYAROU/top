@@ -1,4 +1,4 @@
-# Référence des variables d'environnement — DINAWA
+# Référence des variables d'environnement — WARAH
 
 Liste exhaustive de toutes les variables d'environnement utilisées dans le projet,
 organisée par couche de déploiement.
@@ -24,64 +24,64 @@ obligatoire manque ou a une valeur invalide.
 
 ### Application
 
-| Variable | Obligatoire | Valeur en prod | Description |
-|---|---|---|---|
-| `NODE_ENV` | ✅ | `production` | Environnement d'exécution. Contrôle Swagger, logs, Sentry |
-| `PORT` | ✅ | Injecté par Railway | Port d'écoute du serveur HTTP |
+| Variable   | Obligatoire | Valeur en prod      | Description                                               |
+| ---------- | ----------- | ------------------- | --------------------------------------------------------- |
+| `NODE_ENV` | ✅          | `production`        | Environnement d'exécution. Contrôle Swagger, logs, Sentry |
+| `PORT`     | ✅          | Injecté par Railway | Port d'écoute du serveur HTTP                             |
 
 ### Base de données — Supabase PostgreSQL
 
-| Variable | Obligatoire | Description |
-|---|---|---|
-| `DATABASE_URL` | ✅ | URL PostgreSQL avec transaction pooler (port 6543). Format : `postgresql://postgres.[ref]:[mdp]@aws-0-[region].pooler.supabase.com:6543/postgres` |
+| Variable       | Obligatoire | Description                                                                                                                                       |
+| -------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | ✅          | URL PostgreSQL avec transaction pooler (port 6543). Format : `postgresql://postgres.[ref]:[mdp]@aws-0-[region].pooler.supabase.com:6543/postgres` |
 
 ### Supabase
 
-| Variable | Obligatoire | Où trouver | Description |
-|---|---|---|---|
-| `SUPABASE_URL` | ✅ | Settings → API → Project URL | URL du projet Supabase |
-| `SUPABASE_ANON_KEY` | ✅ | Settings → API → anon public | Clé publique (safe côté client) |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Settings → API → service_role | Clé privée — JAMAIS exposée côté frontend |
-| `SUPABASE_JWT_SECRET` | ✅ | Settings → Auth → JWT Secret | Secret de vérification des JWT Supabase |
+| Variable                    | Obligatoire | Où trouver                    | Description                               |
+| --------------------------- | ----------- | ----------------------------- | ----------------------------------------- |
+| `SUPABASE_URL`              | ✅          | Settings → API → Project URL  | URL du projet Supabase                    |
+| `SUPABASE_ANON_KEY`         | ✅          | Settings → API → anon public  | Clé publique (safe côté client)           |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅          | Settings → API → service_role | Clé privée — JAMAIS exposée côté frontend |
+| `SUPABASE_JWT_SECRET`       | ✅          | Settings → Auth → JWT Secret  | Secret de vérification des JWT Supabase   |
 
 ### Resend (emails)
 
-| Variable | Obligatoire | Description |
-|---|---|---|
-| `RESEND_API_KEY` | ✅ | Clé API Resend (préfixe `re_`) |
-| `RESEND_FROM_EMAIL` | ✅ | Adresse expéditrice (domaine vérifié dans Resend requis) |
-| `RESEND_FROM_NAME` | ➖ | Nom affiché. Défaut : `DINAWA` |
+| Variable            | Obligatoire | Description                                              |
+| ------------------- | ----------- | -------------------------------------------------------- |
+| `RESEND_API_KEY`    | ✅          | Clé API Resend (préfixe `re_`)                           |
+| `RESEND_FROM_EMAIL` | ✅          | Adresse expéditrice (domaine vérifié dans Resend requis) |
+| `RESEND_FROM_NAME`  | ➖          | Nom affiché. Défaut : `WARAH`                            |
 
 ### Web Push — VAPID
 
-| Variable | Obligatoire | Comment générer | Description |
-|---|---|---|---|
-| `VAPID_PUBLIC_KEY` | ✅ | `npx web-push generate-vapid-keys` | Clé publique VAPID (partagée avec le frontend) |
-| `VAPID_PRIVATE_KEY` | ✅ | Idem | Clé privée VAPID — JAMAIS exposée |
-| `VAPID_SUBJECT` | ✅ | — | Contact pour les serveurs push. Format : `mailto:contact@dinawa.tg` |
+| Variable            | Obligatoire | Comment générer                    | Description                                                        |
+| ------------------- | ----------- | ---------------------------------- | ------------------------------------------------------------------ |
+| `VAPID_PUBLIC_KEY`  | ✅          | `npx web-push generate-vapid-keys` | Clé publique VAPID (partagée avec le frontend)                     |
+| `VAPID_PRIVATE_KEY` | ✅          | Idem                               | Clé privée VAPID — JAMAIS exposée                                  |
+| `VAPID_SUBJECT`     | ✅          | —                                  | Contact pour les serveurs push. Format : `mailto:contact@warah.tg` |
 
 ### Cashpay / Semoa (mobile money)
 
 Ces variables sont optionnelles tant que le compte marchand n'est pas créé.
 Sans elles, les endpoints de paiement retournent `503 Service Unavailable`.
 
-| Variable | Obligatoire | Description |
-|---|---|---|
-| `CASHPAY_API_URL` | ➖ | URL de base de l'API Cashpay fournie par Semoa |
-| `CASHPAY_API_KEY` | ➖ | Clé d'authentification API Cashpay |
-| `CASHPAY_WEBHOOK_SECRET` | ➖ | Secret HMAC pour valider la signature des webhooks entrants |
+| Variable                 | Obligatoire | Description                                                 |
+| ------------------------ | ----------- | ----------------------------------------------------------- |
+| `CASHPAY_API_URL`        | ➖          | URL de base de l'API Cashpay fournie par Semoa              |
+| `CASHPAY_API_KEY`        | ➖          | Clé d'authentification API Cashpay                          |
+| `CASHPAY_WEBHOOK_SECRET` | ➖          | Secret HMAC pour valider la signature des webhooks entrants |
 
 ### Sentry (monitoring)
 
-| Variable | Obligatoire | Description |
-|---|---|---|
-| `SENTRY_DSN` | ➖ | DSN du projet `dinawa-backend` dans Sentry. Si absent, Sentry est désactivé (comportement normal en dev) |
+| Variable     | Obligatoire | Description                                                                                             |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------------- |
+| `SENTRY_DSN` | ➖          | DSN du projet `warah-backend` dans Sentry. Si absent, Sentry est désactivé (comportement normal en dev) |
 
 ### CORS
 
-| Variable | Obligatoire | Description |
-|---|---|---|
-| `ALLOWED_ORIGINS` | ➖ | Origines autorisées séparées par des virgules. Défaut : `http://localhost:4200` |
+| Variable          | Obligatoire | Description                                                                     |
+| ----------------- | ----------- | ------------------------------------------------------------------------------- |
+| `ALLOWED_ORIGINS` | ➖          | Origines autorisées séparées par des virgules. Défaut : `http://localhost:4200` |
 
 ---
 
@@ -94,11 +94,11 @@ Elles doivent être configurées dans Vercel → Project → Settings → Enviro
 > comme dans Next.js. Elles sont embarquées dans le bundle JavaScript lors du build.
 > Un redéploiement est nécessaire pour changer leur valeur.
 
-| Variable Vercel | Fichier Angular | Description |
-|---|---|---|
-| `NG_APP_API_URL` | `environment.prod.ts` → `apiUrl` | URL complète de l'API backend Railway avec `/api`. Ex : `https://dinawa-api.up.railway.app/api` |
-| `NG_APP_SENTRY_DSN` | `environment.prod.ts` → `sentryDsn` | DSN du projet `dinawa-frontend` Sentry. Laisser vide pour désactiver |
-| `NG_APP_VAPID_PUBLIC_KEY` | `environment.prod.ts` → `vapidPublicKey` | Clé publique VAPID (même valeur que `VAPID_PUBLIC_KEY` Railway) |
+| Variable Vercel           | Fichier Angular                          | Description                                                                                    |
+| ------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `NG_APP_API_URL`          | `environment.prod.ts` → `apiUrl`         | URL complète de l'API backend Railway avec `/api`. Ex : `https://warah-api.up.railway.app/api` |
+| `NG_APP_SENTRY_DSN`       | `environment.prod.ts` → `sentryDsn`      | DSN du projet `warah-frontend` Sentry. Laisser vide pour désactiver                            |
+| `NG_APP_VAPID_PUBLIC_KEY` | `environment.prod.ts` → `vapidPublicKey` | Clé publique VAPID (même valeur que `VAPID_PUBLIC_KEY` Railway)                                |
 
 ---
 
@@ -108,15 +108,15 @@ Elles doivent être configurées dans Vercel → Project → Settings → Enviro
 
 ### Secrets (chiffrés)
 
-| Secret | Description | Comment obtenir |
-|---|---|---|
+| Secret          | Description                                      | Comment obtenir                            |
+| --------------- | ------------------------------------------------ | ------------------------------------------ |
 | `RAILWAY_TOKEN` | Token de service Railway pour le déploiement CLI | Railway → Settings → Tokens → Create Token |
 
 ### Variables (non chiffrées)
 
-| Variable | Description | Exemple |
-|---|---|---|
-| `RAILWAY_SERVICE_NAME` | Nom du service dans le projet Railway | `dinawa-backend` |
+| Variable               | Description                           | Exemple         |
+| ---------------------- | ------------------------------------- | --------------- |
+| `RAILWAY_SERVICE_NAME` | Nom du service dans le projet Railway | `warah-backend` |
 
 ---
 
@@ -154,10 +154,10 @@ Ne pas générer soi-même, utiliser la valeur fournie par Supabase.
 
 ## Récapitulatif — Où configurer quoi
 
-| Service | Variables à configurer |
-|---|---|
-| **`.env` local** (dev) | Toutes les variables backend (copier `.env.example`) |
-| **Railway** | `NODE_ENV`, `DATABASE_URL`, `SUPABASE_*`, `RESEND_*`, `VAPID_*`, `CASHPAY_*`, `SENTRY_DSN`, `ALLOWED_ORIGINS` |
-| **Vercel** | `NG_APP_API_URL`, `NG_APP_SENTRY_DSN`, `NG_APP_VAPID_PUBLIC_KEY` |
-| **GitHub Secrets** | `RAILWAY_TOKEN` |
-| **GitHub Variables** | `RAILWAY_SERVICE_NAME` |
+| Service                | Variables à configurer                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **`.env` local** (dev) | Toutes les variables backend (copier `.env.example`)                                                          |
+| **Railway**            | `NODE_ENV`, `DATABASE_URL`, `SUPABASE_*`, `RESEND_*`, `VAPID_*`, `CASHPAY_*`, `SENTRY_DSN`, `ALLOWED_ORIGINS` |
+| **Vercel**             | `NG_APP_API_URL`, `NG_APP_SENTRY_DSN`, `NG_APP_VAPID_PUBLIC_KEY`                                              |
+| **GitHub Secrets**     | `RAILWAY_TOKEN`                                                                                               |
+| **GitHub Variables**   | `RAILWAY_SERVICE_NAME`                                                                                        |

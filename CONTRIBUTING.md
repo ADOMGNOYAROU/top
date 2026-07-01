@@ -1,4 +1,4 @@
-# Guide de contribution — DINAWA
+# Guide de contribution — WARAH
 
 ## Table des matières
 
@@ -29,16 +29,16 @@ Les hooks git (`pre-commit` et `commit-msg`) sont activés automatiquement via H
 
 **Types autorisés :**
 
-| Type | Usage |
-|---|---|
-| `feat` | Nouvelle fonctionnalité |
-| `fix` | Correction de bug |
+| Type       | Usage                                       |
+| ---------- | ------------------------------------------- |
+| `feat`     | Nouvelle fonctionnalité                     |
+| `fix`      | Correction de bug                           |
 | `refactor` | Refactoring sans changement de comportement |
-| `docs` | Documentation uniquement |
-| `test` | Ajout ou modification de tests |
-| `chore` | Maintenance, dépendances, config |
-| `ci` | Pipeline CI/CD |
-| `perf` | Amélioration de performance |
+| `docs`     | Documentation uniquement                    |
+| `test`     | Ajout ou modification de tests              |
+| `chore`    | Maintenance, dépendances, config            |
+| `ci`       | Pipeline CI/CD                              |
+| `perf`     | Amélioration de performance                 |
 
 **Exemples :**
 

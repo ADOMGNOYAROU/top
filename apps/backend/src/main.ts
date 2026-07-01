@@ -63,8 +63,8 @@ async function bootstrap(): Promise<void> {
   // Swagger — désactivé en production
   if (process.env['NODE_ENV'] !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('DINAWA API')
-      .setDescription('API de gestion locative DINAWA — marché togolais')
+      .setTitle('WARAH API')
+      .setDescription('API de gestion locative WARAH — marché togolais')
       .setVersion('1.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
       .addTag('Health', 'Sondes de disponibilité Railway')
