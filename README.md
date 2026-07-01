@@ -31,7 +31,7 @@ warah/
 
 ## Prérequis
 
-- **Node.js** `20.18.0` (utilise `.nvmrc` — `nvm use` suffit)
+- **Node.js** `22.12.0` (utilise `.nvmrc` — `nvm use` suffit)
 - **npm** `>=10.0.0`
 - Accès aux services : Supabase, Railway, Vercel, Resend
 

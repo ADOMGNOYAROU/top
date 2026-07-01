@@ -8,7 +8,7 @@
     "apps/frontend"
   ],
   "engines": {
-    "node": ">=20.18.0",
+    "node": ">=22.12.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
@@ -24,7 +24,7 @@
     "lint:backend": "npm run lint --workspace=apps/backend",
     "lint:frontend": "npm run lint --workspace=apps/frontend",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
