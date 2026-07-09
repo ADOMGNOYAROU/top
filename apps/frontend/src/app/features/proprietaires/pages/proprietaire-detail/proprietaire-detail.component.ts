@@ -5,6 +5,7 @@ import { ProprietairesService } from '../../services/proprietaires.service';
 import { Proprietaire, StatutProprietaire } from '@core/models/proprietaire.model';
 import { LokBadgeStatutProprietaireComponent } from '../../../../shared/components/lok-badge-statut-proprietaire/lok-badge-statut-proprietaire.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { LokConfirmModalComponent } from '../../../../shared/components/lok-confirm-modal/lok-confirm-modal.component';
 
 @Component({
   selector: 'app-proprietaire-detail',
@@ -13,7 +14,8 @@ import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton
     CommonModule,
     RouterModule,
     LokBadgeStatutProprietaireComponent,
-    LokSkeletonComponent
+    LokSkeletonComponent,
+    LokConfirmModalComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
@@ -190,11 +192,22 @@ import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton
         </div>
       }
     </div>
+
+    @if (showConfirmModal) {
+      <lok-confirm-modal
+        titre="Supprimer le propriétaire"
+        message="Êtes-vous sûr de vouloir supprimer ce propriétaire ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        (onConfirm)="confirmerSuppression()"
+        (onCancel)="annulerSuppression()"
+      ></lok-confirm-modal>
+    }
   `,
 })
 export class ProprietaireDetailComponent implements OnInit {
   proprietaire: Proprietaire | null = null;
-  loading: boolean = true;
+  loading = true;
+  showConfirmModal = false;
 
   constructor(
     private proprietairesService: ProprietairesService,
@@ -249,13 +262,19 @@ export class ProprietaireDetailComponent implements OnInit {
   }
 
   deleteProprietaire(): void {
-    if (this.proprietaire && confirm('Êtes-vous sûr de vouloir supprimer ce propriétaire ?')) {
+    if (this.proprietaire) this.showConfirmModal = true;
+  }
+
+  confirmerSuppression(): void {
+    if (this.proprietaire) {
       this.proprietairesService.deleteProprietaire(this.proprietaire.id).subscribe({
-        next: () => {
-          this.router.navigate(['/proprietaires']);
-        }
+        next: () => this.router.navigate(['/proprietaires'])
       });
     }
+  }
+
+  annulerSuppression(): void {
+    this.showConfirmModal = false;
   }
 
   viewBiens(): void {

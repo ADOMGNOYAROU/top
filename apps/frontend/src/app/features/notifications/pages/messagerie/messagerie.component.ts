@@ -2,33 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokUploadComponent, UploadedFile } from '../../../../shared/components/lok-upload/lok-upload.component';
 import { CommonModule } from '@angular/common';
-
-export interface Message {
-  id: string;
-  expediteurId: string;
-  expediteurNom: string;
-  destinataireId: string;
-  destinataireNom: string;
-  contenu: string;
-  date: Date;
-  lu: boolean;
-  pieceJointe?: string;
-}
-
-export interface Conversation {
-  id: string;
-  proprietaireId: string;
-  proprietaireNom: string;
-  locataireId: string;
-  locataireNom: string;
-  bienId: string;
-  bienTitre: string;
-  dernierMessage: string;
-  dateDernierMessage: Date;
-  nonLus: number;
-}
+import { NotificationsBackendService, Message, Conversation } from '../../services/notifications-backend.service';
 
 @Component({
   selector: 'app-messagerie',
@@ -38,6 +15,7 @@ export interface Conversation {
     ReactiveFormsModule,
     RouterModule,
     LokAlerteComponent,
+    LokSkeletonComponent,
     LokUploadComponent
   ],
   template: `
@@ -320,7 +298,8 @@ export class MessagerieComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private notificationsService: NotificationsBackendService
   ) {
     this.messageForm = this.fb.group({
       contenu: ['', Validators.required]
@@ -336,54 +315,12 @@ export class MessagerieComponent implements OnInit {
     this.loadConversations();
   }
 
-  /**
-   * Charge les conversations
-   */
   loadConversations(): void {
     this.loading = true;
-    
-    // Simulation de chargement
-    setTimeout(() => {
-      this.conversations = [
-        {
-          id: '1',
-          proprietaireId: 'prop-1',
-          proprietaireNom: 'Jean Kouassi',
-          locataireId: '1',
-          locataireNom: 'Paul Mensah',
-          bienId: '1',
-          bienTitre: 'Appartement Lomé Centre',
-          dernierMessage: 'Merci pour la réponse rapide !',
-          dateDernierMessage: new Date('2024-06-20T14:30:00'),
-          nonLus: 2
-        },
-        {
-          id: '2',
-          proprietaireId: 'prop-1',
-          proprietaireNom: 'Jean Kouassi',
-          locataireId: '2',
-          locataireNom: 'Kofi Adzo',
-          bienId: '2',
-          bienTitre: 'Villa Sokodé',
-          dernierMessage: 'Le loyer a été payé',
-          dateDernierMessage: new Date('2024-06-19T10:15:00'),
-          nonLus: 0
-        },
-        {
-          id: '3',
-          proprietaireId: 'prop-1',
-          proprietaireNom: 'Jean Kouassi',
-          locataireId: '3',
-          locataireNom: 'Mawunyo Koffi',
-          bienId: '3',
-          bienTitre: 'Studio Kara',
-          dernierMessage: 'Demande de réparation',
-          dateDernierMessage: new Date('2024-06-18T16:45:00'),
-          nonLus: 1
-        }
-      ];
-      this.loading = false;
-    }, 500);
+    this.notificationsService.getConversations().subscribe({
+      next: (data) => { this.conversations = data; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
   }
 
   /**
@@ -394,82 +331,39 @@ export class MessagerieComponent implements OnInit {
     this.loadMessages(conversation.id);
   }
 
-  /**
-   * Charge les messages d'une conversation
-   */
   loadMessages(conversationId: string): void {
-    // Simulation de chargement
-    this.messages = [
-      {
-        id: '1',
-        expediteurId: '1',
-        expediteurNom: 'Paul Mensah',
-        destinataireId: 'prop-1',
-        destinataireNom: 'Jean Kouassi',
-        contenu: 'Bonjour, je voulais savoir si je peux payer le loyer en deux fois ce mois-ci ?',
-        date: new Date('2024-06-20T10:00:00'),
-        lu: true
-      },
-      {
-        id: '2',
-        expediteurId: 'prop-1',
-        expediteurNom: 'Jean Kouassi',
-        destinataireId: '1',
-        destinataireNom: 'Paul Mensah',
-        contenu: 'Bonjour Paul, oui c\'est possible. Faites-moi savoir quand vous comptez payer la première moitié.',
-        date: new Date('2024-06-20T11:30:00'),
-        lu: true
-      },
-      {
-        id: '3',
-        expediteurId: '1',
-        expediteurNom: 'Paul Mensah',
-        destinataireId: 'prop-1',
-        destinataireNom: 'Jean Kouassi',
-        contenu: 'Merci pour la réponse rapide ! Je paierai la première moitié demain.',
-        date: new Date('2024-06-20T14:30:00'),
-        lu: false
-      }
-    ];
+    this.notificationsService.getMessages(conversationId).subscribe({
+      next: (data) => { this.messages = data; },
+      error: () => {}
+    });
   }
 
-  /**
-   * Envoie un message
-   */
   envoyerMessage(): void {
-    if (this.messageForm.invalid || !this.conversationSelectionnee) {
-      return;
-    }
+    if (this.messageForm.invalid || !this.conversationSelectionnee) return;
 
     this.isSending = true;
     this.errorMessage = '';
+    const conv = this.conversationSelectionnee;
 
-    const conversation = this.conversationSelectionnee;
-
-    // Simulation d'envoi
-    setTimeout(() => {
-      const nouveauMessage: Message = {
-        id: Math.random().toString(36).substr(2, 9),
-        expediteurId: this.currentUserId,
-        expediteurNom: conversation.proprietaireNom,
-        destinataireId: conversation.locataireId,
-        destinataireNom: conversation.locataireNom,
-        contenu: this.messageForm.value.contenu,
-        date: new Date(),
-        lu: false,
-        pieceJointe: this.attachment?.name
-      };
-
-      this.messages.push(nouveauMessage);
-      this.messageForm.reset();
-      this.attachment = null;
-      this.showAttachment = false;
-      this.isSending = false;
-
-      // Mettre à jour le dernier message de la conversation
-      conversation.dernierMessage = nouveauMessage.contenu;
-      conversation.dateDernierMessage = nouveauMessage.date;
-    }, 1000);
+    this.notificationsService.envoyerMessage({
+      conversationId: conv.id,
+      contenu: this.messageForm.value.contenu,
+      pieceJointe: this.attachment?.name
+    }).subscribe({
+      next: (msg) => {
+        this.messages.push(msg);
+        conv.dernierMessage = msg.contenu;
+        conv.dateDernierMessage = msg.date;
+        this.messageForm.reset();
+        this.attachment = null;
+        this.showAttachment = false;
+        this.isSending = false;
+      },
+      error: () => {
+        this.isSending = false;
+        this.errorMessage = 'Erreur lors de l\'envoi du message';
+      }
+    });
   }
 
   /**
@@ -491,35 +385,25 @@ export class MessagerieComponent implements OnInit {
     }
   }
 
-  /**
-   * Crée une nouvelle conversation
-   */
   creerConversation(): void {
-    if (this.newConversationForm.invalid) {
-      return;
-    }
+    if (this.newConversationForm.invalid) return;
 
-    const locataireId = this.newConversationForm.value.locataireId;
-    const bienId = this.newConversationForm.value.bienId;
-
-    // Simulation de création
-    const nouvelleConversation: Conversation = {
-      id: Math.random().toString(36).substr(2, 9),
-      proprietaireId: this.currentUserId,
-      proprietaireNom: 'Jean Kouassi',
-      locataireId: locataireId,
-      locataireNom: locataireId === '1' ? 'Paul Mensah' : locataireId === '2' ? 'Kofi Adzo' : 'Mawunyo Koffi',
-      bienId: bienId,
-      bienTitre: bienId === '1' ? 'Appartement Lomé Centre' : bienId === '2' ? 'Villa Sokodé' : 'Studio Kara',
-      dernierMessage: 'Nouvelle conversation',
-      dateDernierMessage: new Date(),
-      nonLus: 0
-    };
-
-    this.conversations.unshift(nouvelleConversation);
-    this.showNewConversation = false;
-    this.newConversationForm.reset();
-    this.selectionnerConversation(nouvelleConversation);
+    const { locataireId, bienId } = this.newConversationForm.value;
+    this.notificationsService.creerConversation({
+      locataireId,
+      bienId,
+      messageInitial: ''
+    }).subscribe({
+      next: (conv) => {
+        this.conversations.unshift(conv);
+        this.showNewConversation = false;
+        this.newConversationForm.reset();
+        this.selectionnerConversation(conv);
+      },
+      error: () => {
+        this.errorMessage = 'Erreur lors de la création de la conversation';
+      }
+    });
   }
 
   /**

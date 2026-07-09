@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-proprietaire-layout',
+  selector: 'app-proprietaires-layout',
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
     <div class="layout">
+
       <button class="mobile-btn" type="button" (click)="sidebarOpen = !sidebarOpen" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -17,7 +18,6 @@ import { RouterModule } from '@angular/router';
       }
 
       <aside class="sidebar" [class.open]="sidebarOpen">
-
         <div class="sidebar-logo">
           <div class="logo-wrap">
             <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
@@ -31,7 +31,7 @@ import { RouterModule } from '@angular/router';
         </div>
 
         <nav class="sidebar-nav" (click)="sidebarOpen = false">
-          <a routerLink="/dashboard" routerLinkActive="active"
+          <a routerLink="/proprietaires/dashboard" routerLinkActive="active"
              [routerLinkActiveOptions]="{exact:true}" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -44,12 +44,39 @@ import { RouterModule } from '@angular/router';
 
           <p class="nav-group">Gestion</p>
 
-          <a routerLink="/dashboard/biens" routerLinkActive="active" class="nav-item">
+          <a routerLink="/proprietaires" routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact:true}" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
             <span>Mes biens</span>
+          </a>
+
+          <a routerLink="/proprietaires/new" routerLinkActive="active" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>Ajouter un bien</span>
+          </a>
+
+          <a routerLink="/dashboard/annonces/list" routerLinkActive="active" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span>Annonces</span>
+          </a>
+
+          <p class="nav-group">Finance</p>
+
+          <a routerLink="/dashboard/paiements" routerLinkActive="active" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            <span>Paiements</span>
           </a>
 
           <a routerLink="/dashboard/locataires" routerLinkActive="active" class="nav-item">
@@ -62,38 +89,12 @@ import { RouterModule } from '@angular/router';
             <span>Locataires</span>
           </a>
 
-          <a routerLink="/dashboard/paiements" routerLinkActive="active" class="nav-item">
+          <a routerLink="/dashboard/biens" routerLinkActive="active" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-              <line x1="1" y1="10" x2="23" y2="10"></line>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            <span>Paiements</span>
-          </a>
-
-          <a routerLink="/dashboard/annonces" routerLinkActive="active" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            <span>Annonces</span>
-          </a>
-
-          <p class="nav-group">Compte</p>
-
-          <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            <span>Notifications</span>
-          </a>
-
-          <a routerLink="/dashboard/export" routerLinkActive="active" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Export</span>
+            <span>Contrats</span>
           </a>
         </nav>
 
@@ -123,7 +124,6 @@ import { RouterModule } from '@angular/router';
             </button>
           </div>
         </div>
-
       </aside>
 
       <main class="main-content">
@@ -132,19 +132,12 @@ import { RouterModule } from '@angular/router';
     </div>
   `,
   styles: [`
-    .layout {
-      display: flex;
-      min-height: 100vh;
-      background: #F2EFE9;
-    }
+    .layout { display: flex; min-height: 100vh; background: #F2EFE9; }
 
-    /* ── Bouton hamburger mobile ── */
     .mobile-btn {
-      display: none;
-      position: fixed;
+      display: none; position: fixed;
       top: 1rem; left: 1rem; z-index: 200;
-      width: 44px; height: 44px;
-      border-radius: 10px; border: none;
+      width: 44px; height: 44px; border-radius: 10px; border: none;
       background: var(--color-primary);
       box-shadow: 0 4px 12px rgba(15,76,129,0.35);
       flex-direction: column; align-items: center;
@@ -153,7 +146,6 @@ import { RouterModule } from '@angular/router';
     .mobile-btn span {
       display: block; width: 20px; height: 2px;
       background: white; border-radius: 2px;
-      transition: all 0.2s;
     }
 
     .overlay {
@@ -162,10 +154,8 @@ import { RouterModule } from '@angular/router';
       backdrop-filter: blur(3px);
     }
 
-    /* ── Sidebar ── */
     .sidebar {
-      width: 256px;
-      background: #FFFFFF;
+      width: 256px; background: #FFFFFF;
       border-right: 1px solid #E8E1D8;
       display: flex; flex-direction: column;
       position: fixed; left: 0; top: 0;
@@ -174,7 +164,6 @@ import { RouterModule } from '@angular/router';
       transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
     }
 
-    /* ── Logo ── */
     .sidebar-logo {
       padding: 20px 18px 18px;
       border-bottom: 1px solid #EEE8DF;
@@ -196,7 +185,6 @@ import { RouterModule } from '@angular/router';
     .close-btn svg { width: 20px; height: 20px; }
     .close-btn:hover { color: #4B5563; background: #F3F4F6; }
 
-    /* ── Navigation ── */
     .sidebar-nav {
       flex: 1; padding: 14px 10px;
       overflow-y: auto; scrollbar-width: thin;
@@ -214,14 +202,10 @@ import { RouterModule } from '@angular/router';
       padding: 10px 14px; border-radius: 8px;
       color: #54626E; text-decoration: none;
       font-size: 13.5px; font-weight: 500;
-      transition: all 0.12s ease;
-      margin-bottom: 2px;
+      transition: all 0.12s ease; margin-bottom: 2px;
       border-left: 3px solid transparent;
     }
-    .nav-item:hover {
-      background: #F4F0EA;
-      color: var(--color-primary-dark);
-    }
+    .nav-item:hover { background: #F4F0EA; color: var(--color-primary-dark); }
     .nav-item.active {
       background: rgba(15,76,129,0.07);
       color: var(--color-primary);
@@ -232,9 +216,7 @@ import { RouterModule } from '@angular/router';
     .nav-item:hover .nav-icon,
     .nav-item.active .nav-icon { opacity: 1; }
 
-    /* ── Bas de sidebar : utilisateur + déconnexion ── */
     .sidebar-bottom { border-top: 1px solid #EEE8DF; flex-shrink: 0; }
-
     .user-card {
       padding: 14px 18px; border-bottom: 1px solid #EEE8DF;
       display: flex; align-items: center; gap: 11px;
@@ -245,20 +227,13 @@ import { RouterModule } from '@angular/router';
       font-weight: 700; font-size: 14px;
       display: flex; align-items: center; justify-content: center;
     }
-    .user-name {
-      font-size: 13px; font-weight: 600;
-      color: var(--color-primary-dark); line-height: 1.3;
-    }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--color-primary-dark); line-height: 1.3; }
     .user-role {
       display: inline-block; font-size: 10px; font-weight: 700;
       color: var(--color-accent); letter-spacing: 0.08em;
       text-transform: uppercase; margin-top: 2px;
     }
-
-    .sidebar-footer {
-      padding: 8px 10px 16px;
-      display: flex; flex-direction: column; gap: 1px;
-    }
+    .sidebar-footer { padding: 8px 10px 16px; display: flex; flex-direction: column; gap: 1px; }
     .footer-item, .logout-btn {
       display: flex; align-items: center; gap: 10px;
       padding: 9px 14px; border-radius: 7px;
@@ -267,23 +242,16 @@ import { RouterModule } from '@angular/router';
       background: none; border: none; cursor: pointer;
       width: 100%; text-align: left;
     }
-    .footer-item svg, .logout-btn svg {
-      width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7;
-    }
+    .footer-item svg, .logout-btn svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
     .footer-item:hover { background: #F4F0EA; color: var(--color-primary-dark); }
-    .logout-btn:hover { background: rgba(220,38,38,0.07); color: #DC2626; }
+    .logout-btn:hover  { background: rgba(220,38,38,0.07); color: #DC2626; }
 
-    /* ── Contenu principal ── */
-    .main-content {
-      flex: 1; margin-left: 256px;
-      min-height: 100vh; overflow-x: hidden;
-    }
+    .main-content { flex: 1; margin-left: 256px; min-height: 100vh; overflow-x: hidden; }
 
     @media (max-width: 1024px) {
       .sidebar { width: 240px; }
       .main-content { margin-left: 240px; }
     }
-
     @media (max-width: 768px) {
       .mobile-btn { display: flex; }
       .close-btn  { display: flex; }
@@ -293,19 +261,19 @@ import { RouterModule } from '@angular/router';
     }
   `]
 })
-export class ProprietaireLayoutComponent implements OnInit {
+export class ProprietairesLayoutComponent implements OnInit {
   sidebarOpen = false;
-  prenom = '';
-  nom = '';
-  initiales = 'P';
+  prenom      = '';
+  nom         = '';
+  initiales   = 'P';
 
   ngOnInit(): void {
     try {
       const raw = localStorage.getItem('warah_user');
       if (raw) {
         const u = JSON.parse(raw);
-        this.prenom = u.prenom || '';
-        this.nom = u.nom || '';
+        this.prenom   = u.prenom || '';
+        this.nom      = u.nom || '';
         this.initiales = ((u.prenom?.[0] || '') + (u.nom?.[0] || '')).toUpperCase() || 'P';
       }
     } catch {}

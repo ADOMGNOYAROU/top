@@ -258,7 +258,10 @@ import { TypeAnnonce } from '@core/models/annonce.model';
             <button type="button" class="btn-next" (click)="nextStep()" *ngIf="currentStep < 3">Suivant →</button>
             <div class="final-actions" *ngIf="currentStep === 3">
               <a href="/annonces/list" class="btn-cancel">Annuler</a>
-              <button type="button" class="btn-draft" (click)="saveDraft()">Brouillon</button>
+              <button type="button" class="btn-draft" (click)="saveDraft()">
+                <span *ngIf="!draftSaved">Brouillon</span>
+                <span *ngIf="draftSaved">✓ Sauvegardé</span>
+              </button>
               <button type="submit" class="btn-publish" [disabled]="annonceForm.invalid || submitting" (click)="onSubmit()">
                 <span *ngIf="!submitting">Publier</span>
                 <span *ngIf="submitting">Publication...</span>
@@ -374,10 +377,11 @@ import { TypeAnnonce } from '@core/models/annonce.model';
 })
 export class AnnonceFormComponent implements OnInit {
   annonceForm: FormGroup;
-  isEditMode: boolean = false;
-  annonceId: string = '';
-  currentStep: number = 1;
-  submitting: boolean = false;
+  isEditMode = false;
+  annonceId = '';
+  currentStep = 1;
+  submitting = false;
+  draftSaved = false;
   photos: string[] = [];
   shakeFields: any = {};
 
@@ -576,7 +580,9 @@ export class AnnonceFormComponent implements OnInit {
 
   saveDraft(): void {
     localStorage.setItem('annonce_draft', JSON.stringify(this.annonceForm.value));
-    alert('Brouillon sauvegardé !');
+    this.draftSaved = true;
+    this.cdr.markForCheck();
+    setTimeout(() => { this.draftSaved = false; this.cdr.markForCheck(); }, 3000);
   }
 
   onSubmit(): void {

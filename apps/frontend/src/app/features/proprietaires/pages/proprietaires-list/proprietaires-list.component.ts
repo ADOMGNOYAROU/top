@@ -7,6 +7,7 @@ import { Proprietaire, StatutProprietaire } from '@core/models/proprietaire.mode
 import { LokBadgeStatutProprietaireComponent } from '../../../../shared/components/lok-badge-statut-proprietaire/lok-badge-statut-proprietaire.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
+import { LokConfirmModalComponent } from '../../../../shared/components/lok-confirm-modal/lok-confirm-modal.component';
 
 @Component({
   selector: 'app-proprietaires-list',
@@ -17,7 +18,8 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
     RouterModule,
     LokBadgeStatutProprietaireComponent,
     LokSkeletonComponent,
-    LokEmptyStateComponent
+    LokEmptyStateComponent,
+    LokConfirmModalComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
@@ -179,16 +181,28 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
         </div>
       }
     </div>
+
+    @if (showConfirmModal) {
+      <lok-confirm-modal
+        titre="Supprimer le propriétaire"
+        message="Êtes-vous sûr de vouloir supprimer ce propriétaire ?"
+        confirmLabel="Supprimer"
+        (onConfirm)="confirmerSuppression()"
+        (onCancel)="annulerSuppression()"
+      ></lok-confirm-modal>
+    }
   `,
 })
 export class ProprietairesListComponent implements OnInit {
   proprietaires: Proprietaire[] = [];
   filteredProprietaires: Proprietaire[] = [];
-  loading: boolean = true;
+  loading = true;
+  showConfirmModal = false;
+  proprietaireIdPendingDelete: string | null = null;
 
-  StatutProprietaire = StatutProprietaire; // Pour l'accès dans le template
+  StatutProprietaire = StatutProprietaire;
 
-  recherche: string = '';
+  recherche = '';
   filters: ProprietairesFilters = {
     statut: undefined
   };
@@ -263,12 +277,22 @@ export class ProprietairesListComponent implements OnInit {
   }
 
   deleteProprietaire(id: string): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce propriétaire ?')) {
-      this.proprietairesService.deleteProprietaire(id).subscribe({
-        next: () => {
-          this.loadProprietaires();
-        }
-      });
-    }
+    this.proprietaireIdPendingDelete = id;
+    this.showConfirmModal = true;
+  }
+
+  confirmerSuppression(): void {
+    if (!this.proprietaireIdPendingDelete) return;
+    this.proprietairesService.deleteProprietaire(this.proprietaireIdPendingDelete).subscribe({
+      next: () => {
+        this.annulerSuppression();
+        this.loadProprietaires();
+      }
+    });
+  }
+
+  annulerSuppression(): void {
+    this.showConfirmModal = false;
+    this.proprietaireIdPendingDelete = null;
   }
 }

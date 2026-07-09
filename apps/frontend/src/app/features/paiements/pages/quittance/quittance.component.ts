@@ -35,6 +35,9 @@ import { CommonModule } from '@angular/common';
 
       <!-- Contenu principal -->
       <div class="p-6 max-w-4xl mx-auto">
+        @if (successMessage) {
+          <lok-alerte type="success" [message]="successMessage"></lok-alerte>
+        }
         <!-- Alerte d'erreur -->
         @if (errorMessage) {
           <lok-alerte type="error" [message]="errorMessage"></lok-alerte>
@@ -225,18 +228,18 @@ import { CommonModule } from '@angular/common';
 })
 export class QuittanceComponent implements OnInit {
   paiement: Paiement | null = null;
-  loading: boolean = false;
-  errorMessage: string = '';
-  isDownloading: boolean = false;
-  isSending: boolean = false;
-  
-  // Données mockées pour l'affichage
-  proprietaireNom: string = 'Jean Kouassi';
-  proprietaireTelephone: string = '+228 90 01 02 03';
-  locataireNom: string = 'Paul Mensah';
-  locataireTelephone: string = '+228 91 02 23 45';
-  bienTitre: string = 'Appartement Lomé Centre';
-  bienAdresse: string = '123 Rue de la Paix, Lomé';
+  loading = false;
+  errorMessage = '';
+  successMessage = '';
+  isDownloading = false;
+  isSending = false;
+
+  proprietaireNom = '';
+  proprietaireTelephone = '';
+  locataireNom = '';
+  locataireTelephone = '';
+  bienTitre = '';
+  bienAdresse = '';
 
   constructor(
     private paiementsService: PaiementsService,
@@ -266,8 +269,7 @@ export class QuittanceComponent implements OnInit {
         this.paiement = paiement;
         this.loading = false;
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement du paiement:', error);
+      error: () => {
         this.errorMessage = 'Erreur lors du chargement du paiement';
         this.loading = false;
       }
@@ -292,26 +294,35 @@ export class QuittanceComponent implements OnInit {
    * Télécharge la quittance en PDF
    */
   downloadPDF(): void {
+    if (!this.paiement) return;
     this.isDownloading = true;
-    
-    // Simulation de téléchargement PDF
-    setTimeout(() => {
-      this.isDownloading = false;
-      alert('Quittance téléchargée avec succès !');
-    }, 2000);
+    this.paiementsService.telechargerQuittance(this.paiement.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quittance-${this.paiement!.id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isDownloading = false;
+        this.successMessage = 'Quittance téléchargée avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => { this.isDownloading = false; }
+    });
   }
 
-  /**
-   * Envoie la quittance par email
-   */
   sendByEmail(): void {
+    if (!this.paiement) return;
     this.isSending = true;
-    
-    // Simulation d'envoi par email
-    setTimeout(() => {
-      this.isSending = false;
-      alert('Quittance envoyée par email avec succès !');
-    }, 2000);
+    this.paiementsService.envoyerQuittanceEmail(this.paiement.id).subscribe({
+      next: () => {
+        this.isSending = false;
+        this.successMessage = 'Quittance envoyée par email avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => { this.isSending = false; }
+    });
   }
 
   /**

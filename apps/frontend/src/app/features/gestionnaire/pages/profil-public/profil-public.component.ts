@@ -4,7 +4,9 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
 import { LokUploadComponent, UploadedFile } from '../../../../shared/components/lok-upload/lok-upload.component';
 import { LokTelephoneTogoComponent } from '../../../../shared/components/lok-telephone-togo/lok-telephone-togo.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { CommonModule } from '@angular/common';
+import { GestionnaireService, ProfilGestionnaire } from '../../services/gestionnaire.service';
 
 @Component({
   selector: 'app-profil-public',
@@ -15,7 +17,8 @@ import { CommonModule } from '@angular/common';
     RouterModule,
     LokAlerteComponent,
     LokUploadComponent,
-    LokTelephoneTogoComponent
+    LokTelephoneTogoComponent,
+    LokSkeletonComponent
   ],
   styles: `
     /* Global SVG Icon Sizing Fix */
@@ -56,6 +59,12 @@ import { CommonModule } from '@angular/common';
         }
 
         <!-- Aperçu du profil -->
+        @if (loadingProfil) {
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+            <lok-skeleton type="text"></lok-skeleton>
+          </div>
+        }
+        @if (!loadingProfil && profil) {
         <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
           <!-- En-tête du profil -->
           <div class="bg-gradient-to-r from-primary to-primary-dark text-white p-8">
@@ -105,7 +114,7 @@ import { CommonModule } from '@angular/common';
               </div>
               <div>
                 <p class="text-sm text-gray-500">Zone d'intervention</p>
-                <p class="font-medium text-gray-900">{{ profil.zoneIntervention.join(', ') }}</p>
+                <p class="font-medium text-gray-900">{{ (profil.zoneIntervention ?? []).join(', ') }}</p>
               </div>
               <div>
                 <p class="text-sm text-gray-500">Tarifs</p>
@@ -131,6 +140,7 @@ import { CommonModule } from '@angular/common';
             </div>
           </div>
         </div>
+        } <!-- fin @if profil -->
 
         <!-- Formulaire d'édition -->
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -284,105 +294,93 @@ import { CommonModule } from '@angular/common';
 })
 export class ProfilPublicComponent implements OnInit {
   profilForm: FormGroup;
-  isSaving: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
+  isSaving = false;
+  loadingProfil = false;
+  errorMessage = '';
+  successMessage = '';
   photo: File | null = null;
   documents: File[] = [];
-
-  profil = {
-    prenom: 'Jean',
-    nom: 'Kouassi',
-    specialite: 'Gestion résidentielle et commerciale',
-    telephone: '+228 90 01 02 03',
-    email: 'jean.kouassi@warah.tg',
-    zoneIntervention: ['Lomé', 'Kpalimé', 'Aného'],
-    tarifs: 'Pourcentage du loyer (8%)',
-    description: 'Gestionnaire immobilier certifié avec 5 ans d\'expérience dans la gestion de biens résidentiels et commerciaux. Je m\'engage à fournir un service de qualité personnalisé à chaque propriétaire.',
-    verifie: true,
-    biensGeres: 15,
-    references: [
-      { proprietaire: 'M. Adzo Kofi', bien: 'Villa Sokodé' },
-      { proprietaire: 'Mme Afi Agbessi', bien: 'Appartement Lomé Centre' },
-      { proprietaire: 'M. Yao Komlan', bien: 'Bureau Kpalimé' }
-    ]
-  };
+  profil: ProfilGestionnaire | null = null;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private gestionnaireService: GestionnaireService
   ) {
     this.profilForm = this.fb.group({
       prenom: ['', Validators.required],
       nom: ['', Validators.required],
       specialite: ['', Validators.required],
-      telephone: ['', Validators.required],
+      telephone: [''],
       zoneIntervention: [[]],
       tarifs: ['', Validators.required],
       description: ['', Validators.required],
-      references: ['', Validators.required]
+      references: ['']
     });
   }
 
   ngOnInit(): void {
-    this.profilForm.patchValue({
-      prenom: this.profil.prenom,
-      nom: this.profil.nom,
-      specialite: this.profil.specialite,
-      telephone: this.profil.telephone,
-      zoneIntervention: this.profil.zoneIntervention,
-      tarifs: 'pourcentage',
-      description: this.profil.description,
-      references: this.profil.references.map(r => `${r.proprietaire} - ${r.bien}`).join('\n')
+    this.chargerProfil();
+  }
+
+  private chargerProfil(): void {
+    this.loadingProfil = true;
+    this.gestionnaireService.getProfil().subscribe({
+      next: (data) => {
+        this.profil = data;
+        this.loadingProfil = false;
+        this.profilForm.patchValue({
+          prenom: data.prenom,
+          nom: data.nom,
+          specialite: data.specialite,
+          telephone: data.telephone ?? '',
+          zoneIntervention: data.zoneIntervention ?? [],
+          tarifs: data.tarifs,
+          description: data.description,
+          references: (data.references ?? []).map(r => `${r.proprietaire} - ${r.bien}`).join('\n')
+        });
+      },
+      error: () => { this.loadingProfil = false; }
     });
   }
 
-  /**
-   * Gère le changement de photo
-   */
   onPhotoChange(files: UploadedFile[]): void {
-    if (files.length > 0) {
-      this.photo = files[0].file;
-    }
+    if (files.length > 0) this.photo = files[0].file;
   }
 
-  /**
-   * Gère le changement de documents
-   */
   onDocumentsChange(files: UploadedFile[]): void {
     this.documents = files.map(f => f.file);
   }
 
-  /**
-   * Soumet le formulaire
-   */
   onSubmit(): void {
-    if (this.profilForm.invalid) {
-      return;
-    }
+    if (this.profilForm.invalid) return;
 
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simulation de sauvegarde
-    setTimeout(() => {
-      this.isSaving = false;
-      this.successMessage = 'Profil mis à jour avec succès !';
-      
-      // Mettre à jour le profil local
-      this.profil.prenom = this.profilForm.value.prenom;
-      this.profil.nom = this.profilForm.value.nom;
-      this.profil.specialite = this.profilForm.value.specialite;
-      this.profil.telephone = this.profilForm.value.telephone;
-      this.profil.zoneIntervention = this.profilForm.value.zoneIntervention;
-      this.profil.tarifs = this.profilForm.value.tarifs;
-      this.profil.description = this.profilForm.value.description;
-      
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }, 1500);
+    const partiel: Partial<ProfilGestionnaire> = {
+      prenom: this.profilForm.value.prenom,
+      nom: this.profilForm.value.nom,
+      specialite: this.profilForm.value.specialite,
+      telephone: this.profilForm.value.telephone,
+      zoneIntervention: this.profilForm.value.zoneIntervention,
+      tarifs: this.profilForm.value.tarifs,
+      description: this.profilForm.value.description
+    };
+
+    this.gestionnaireService.sauvegarderProfil(partiel).subscribe({
+      next: (profilMisAJour) => {
+        this.profil = profilMisAJour;
+        this.isSaving = false;
+        this.successMessage = 'Profil mis à jour avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => {
+        this.isSaving = false;
+        this.errorMessage = 'Erreur lors de la mise à jour du profil';
+      }
+    });
   }
 }

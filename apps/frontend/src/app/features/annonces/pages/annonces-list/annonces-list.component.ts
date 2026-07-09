@@ -8,6 +8,7 @@ import { LokBadgeStatutAnnonceComponent } from '../../../../shared/components/lo
 import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
+import { LokConfirmModalComponent } from '../../../../shared/components/lok-confirm-modal/lok-confirm-modal.component';
 
 @Component({
   selector: 'app-annonces-list',
@@ -15,7 +16,7 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
   imports: [
     CommonModule, FormsModule, RouterModule,
     LokBadgeStatutAnnonceComponent, LokMontantFcfaComponent,
-    LokSkeletonComponent, LokEmptyStateComponent
+    LokSkeletonComponent, LokEmptyStateComponent, LokConfirmModalComponent
   ],
   template: `
     <div class="ann-page">
@@ -197,6 +198,16 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
         </div>
       }
     </div>
+
+    @if (showConfirmModal) {
+      <lok-confirm-modal
+        titre="Supprimer l'annonce"
+        message="Êtes-vous sûr de vouloir supprimer cette annonce ?"
+        confirmLabel="Supprimer"
+        (onConfirm)="confirmerSuppression()"
+        (onCancel)="annulerSuppression()"
+      ></lok-confirm-modal>
+    }
   `,
   styles: `
     .ann-page {
@@ -561,6 +572,8 @@ export class AnnoncesListComponent implements OnInit {
   annonces: Annonce[] = [];
   filteredAnnonces: Annonce[] = [];
   loading = true;
+  showConfirmModal = false;
+  annonceIdPendingDelete: string | null = null;
 
   TypeAnnonce = TypeAnnonce;
   StatutAnnonce = StatutAnnonce;
@@ -612,8 +625,22 @@ export class AnnoncesListComponent implements OnInit {
   editAnnonce(id: string): void { this.router.navigate(['/annonces/list', id, 'edit']); }
 
   deleteAnnonce(id: string): void {
-    if (confirm('Supprimer cette annonce ?')) {
-      this.annoncesService.deleteAnnonce(id).subscribe({ next: () => this.loadAnnonces() });
-    }
+    this.annonceIdPendingDelete = id;
+    this.showConfirmModal = true;
+  }
+
+  confirmerSuppression(): void {
+    if (!this.annonceIdPendingDelete) return;
+    this.annoncesService.deleteAnnonce(this.annonceIdPendingDelete).subscribe({
+      next: () => {
+        this.annulerSuppression();
+        this.loadAnnonces();
+      }
+    });
+  }
+
+  annulerSuppression(): void {
+    this.showConfirmModal = false;
+    this.annonceIdPendingDelete = null;
   }
 }

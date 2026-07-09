@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
 import { CommonModule } from '@angular/common';
+import { GestionnaireService, Rapport, RapportRequest } from '../../services/gestionnaire.service';
 
 @Component({
   selector: 'app-rapports',
@@ -11,7 +14,9 @@ import { CommonModule } from '@angular/common';
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    LokAlerteComponent
+    LokAlerteComponent,
+    LokSkeletonComponent,
+    LokEmptyStateComponent
   ],
   styles: `
     /* Global SVG Icon Sizing Fix */
@@ -107,17 +112,6 @@ import { CommonModule } from '@angular/common';
                 </select>
               </div>
 
-              <!-- Format -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
-                <select
-                  formControlName="format"
-                  class="input-field"
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="excel">Excel</option>
-                </select>
-              </div>
             </div>
 
             <button
@@ -146,10 +140,16 @@ import { CommonModule } from '@angular/common';
             <h2 class="text-lg font-semibold text-gray-900">Rapports récents</h2>
           </div>
           
-          @if (rapports.length === 0) {
-            <div class="p-6 text-center text-gray-500">
-              Aucun rapport généré récemment
+          @if (loadingRapports) {
+            <div class="p-6">
+              <lok-skeleton type="text"></lok-skeleton>
             </div>
+          } @else if (rapports.length === 0) {
+            <lok-empty-state
+              icon="document"
+              titre="Aucun rapport"
+              description="Générez votre premier rapport ci-dessus"
+            ></lok-empty-state>
           } @else {
             <div class="divide-y divide-gray-200">
               @for (rapport of rapports; track rapport.id) {
@@ -162,7 +162,7 @@ import { CommonModule } from '@angular/common';
                     </div>
                     <div>
                       <p class="font-medium text-gray-900">{{ rapport.titre }}</p>
-                      <p class="text-sm text-gray-600">{{ rapport.periode }} • {{ rapport.format }}</p>
+                      <p class="text-sm text-gray-600">{{ rapport.periode }} • {{ rapport.type }}</p>
                     </div>
                   </div>
                   
@@ -196,20 +196,10 @@ import { CommonModule } from '@angular/common';
           }
         </div>
 
-        <!-- Statistiques de rapports -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Rapports ce mois</p>
-            <p class="text-3xl font-bold text-gray-900">{{ statistiques.ceMois }}</p>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Total rapports</p>
-            <p class="text-3xl font-bold text-gray-900">{{ statistiques.total }}</p>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Dernier rapport</p>
-            <p class="text-lg font-semibold text-gray-900">{{ statistiques.dernier }}</p>
-          </div>
+        <!-- Compteur rapports -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-6">
+          <p class="text-sm text-gray-600">Total rapports générés</p>
+          <p class="text-3xl font-bold text-gray-900">{{ rapports.length }}</p>
         </div>
       </div>
     </div>
@@ -217,122 +207,97 @@ import { CommonModule } from '@angular/common';
 })
 export class RapportsComponent implements OnInit {
   rapportForm: FormGroup;
-  isGenerating: boolean = false;
-  isDownloading: boolean = false;
-  isSending: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
-
-  rapports = [
-    {
-      id: '1',
-      titre: 'Rapport global - Juin 2024',
-      periode: 'Juin 2024',
-      format: 'PDF',
-      date: new Date('2024-06-30')
-    },
-    {
-      id: '2',
-      titre: 'Rapport revenus - Mai 2024',
-      periode: 'Mai 2024',
-      format: 'PDF',
-      date: new Date('2024-05-31')
-    },
-    {
-      id: '3',
-      titre: 'Rapport occupations - Avril 2024',
-      periode: 'Avril 2024',
-      format: 'Excel',
-      date: new Date('2024-04-30')
-    }
-  ];
-
-  statistiques = {
-    ceMois: 3,
-    total: 24,
-    dernier: '30 Juin 2024'
-  };
+  rapports: Rapport[] = [];
+  isGenerating = false;
+  isDownloading = false;
+  isSending = false;
+  loadingRapports = false;
+  errorMessage = '';
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private gestionnaireService: GestionnaireService
   ) {
-    const currentDate = new Date();
+    const now = new Date();
     this.rapportForm = this.fb.group({
-      mois: [currentDate.getMonth() + 1, Validators.required],
-      annee: [currentDate.getFullYear(), Validators.required],
+      mois: [String(now.getMonth() + 1), Validators.required],
+      annee: [String(now.getFullYear()), Validators.required],
       typeRapport: ['global', Validators.required],
-      format: ['pdf', Validators.required]
+      includeDetails: [false]
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.chargerRapports();
+  }
 
-  /**
-   * Génère un rapport
-   */
+  private chargerRapports(): void {
+    this.loadingRapports = true;
+    this.gestionnaireService.getRapports().subscribe({
+      next: (data) => { this.rapports = data; this.loadingRapports = false; },
+      error: () => { this.loadingRapports = false; }
+    });
+  }
+
   genererRapport(): void {
-    if (this.rapportForm.invalid) {
-      return;
-    }
+    if (this.rapportForm.invalid) return;
 
     this.isGenerating = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simulation de génération
-    setTimeout(() => {
-      this.isGenerating = false;
-      this.successMessage = 'Rapport généré avec succès !';
-      
-      // Ajouter à la liste des rapports
-      const mois = this.rapportForm.value.mois;
-      const annee = this.rapportForm.value.annee;
-      const type = this.rapportForm.value.typeRapport;
-      const format = this.rapportForm.value.format;
-      
-      const moisNoms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-      
-      this.rapports.unshift({
-        id: Math.random().toString(36).substr(2, 9),
-        titre: `Rapport ${type} - ${moisNoms[mois - 1]} ${annee}`,
-        periode: `${moisNoms[mois - 1]} ${annee}`,
-        format: format.toUpperCase(),
-        date: new Date()
-      });
-      
-      this.statistiques.ceMois++;
-      this.statistiques.total++;
-      
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }, 2000);
+    const req: RapportRequest = {
+      mois: this.rapportForm.value.mois,
+      annee: this.rapportForm.value.annee,
+      type: this.rapportForm.value.typeRapport,
+      includeDetails: this.rapportForm.value.includeDetails
+    };
+
+    this.gestionnaireService.genererRapport(req).subscribe({
+      next: (rapport) => {
+        this.rapports.unshift(rapport);
+        this.isGenerating = false;
+        this.successMessage = 'Rapport généré avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => {
+        this.isGenerating = false;
+        this.errorMessage = 'Erreur lors de la génération du rapport';
+      }
+    });
   }
 
-  /**
-   * Télécharge un rapport
-   */
   telechargerRapport(rapportId: string): void {
     this.isDownloading = true;
-    
-    // Simulation de téléchargement
-    setTimeout(() => {
-      this.isDownloading = false;
-      alert('Rapport téléchargé avec succès !');
-    }, 1500);
+    this.gestionnaireService.telechargerRapport(rapportId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rapport-${rapportId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isDownloading = false;
+        this.successMessage = 'Rapport téléchargé !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => { this.isDownloading = false; }
+    });
   }
 
-  /**
-   * Envoie un rapport par email
-   */
   envoyerRapport(rapportId: string): void {
     this.isSending = true;
-    
-    // Simulation d'envoi
-    setTimeout(() => {
-      this.isSending = false;
-      alert('Rapport envoyé par email avec succès !');
-    }, 1500);
+    this.gestionnaireService.envoyerRapportParEmail(rapportId).subscribe({
+      next: () => {
+        this.isSending = false;
+        this.successMessage = 'Rapport envoyé par email !';
+        const rapport = this.rapports.find(r => r.id === rapportId);
+        if (rapport) rapport.statut = 'envoye';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => { this.isSending = false; }
+    });
   }
 }

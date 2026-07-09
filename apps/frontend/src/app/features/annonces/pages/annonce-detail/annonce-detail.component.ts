@@ -5,11 +5,12 @@ import { AnnoncesService } from '../../services/annonces.service';
 import { Annonce, StatutAnnonce, TypeAnnonce } from '@core/models/annonce.model';
 import { LokBadgeStatutAnnonceComponent } from '../../../../shared/components/lok-badge-statut-annonce/lok-badge-statut-annonce.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { LokConfirmModalComponent } from '../../../../shared/components/lok-confirm-modal/lok-confirm-modal.component';
 
 @Component({
   selector: 'app-annonce-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, LokBadgeStatutAnnonceComponent, LokSkeletonComponent],
+  imports: [CommonModule, RouterModule, LokBadgeStatutAnnonceComponent, LokSkeletonComponent, LokConfirmModalComponent],
   template: `
     <div class="detail-page">
 
@@ -172,6 +173,16 @@ import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton
         </div>
       }
     </div>
+
+    @if (showConfirmModal) {
+      <lok-confirm-modal
+        titre="Supprimer l'annonce"
+        message="Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        (onConfirm)="confirmerSuppression()"
+        (onCancel)="annulerSuppression()"
+      ></lok-confirm-modal>
+    }
   `,
   styles: `
     .detail-page {
@@ -486,6 +497,7 @@ import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton
 export class AnnonceDetailComponent implements OnInit {
   annonce: Annonce | null = null;
   loading = true;
+  showConfirmModal = false;
   TypeAnnonce = TypeAnnonce;
   photoPrincipale = '';
 
@@ -521,11 +533,19 @@ export class AnnonceDetailComponent implements OnInit {
   }
 
   deleteAnnonce(): void {
-    if (this.annonce && confirm('Supprimer cette annonce ?')) {
+    if (this.annonce) this.showConfirmModal = true;
+  }
+
+  confirmerSuppression(): void {
+    if (this.annonce) {
       this.annoncesService.deleteAnnonce(this.annonce.id).subscribe({
         next: () => this.router.navigate(['/annonces/list'])
       });
     }
+  }
+
+  annulerSuppression(): void {
+    this.showConfirmModal = false;
   }
 
   viewBien(): void {

@@ -8,6 +8,7 @@ import { LokMontantFcfaComponent } from '../../../../shared/components/lok-monta
 import { LokBadgePaiementComponent } from '../../../../shared/components/lok-badge-paiement/lok-badge-paiement.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
+import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
 
 @Component({
   selector: 'app-paiements-list',
@@ -19,37 +20,41 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
     LokMontantFcfaComponent,
     LokBadgePaiementComponent,
     LokSkeletonComponent,
-    LokEmptyStateComponent
+    LokEmptyStateComponent,
+    LokAlerteComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
       <!-- Header -->
-      <div class="bg-white border-b border-gray-200 px-6 py-4 animate-fade-in">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <div class="logo">
-              <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
-            </div>
-            <div class="h-8 w-px bg-gray-200"></div>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">Paiements</h1>
-              <p class="text-sm text-gray-600">Gestion des loyers et paiements</p>
-            </div>
+      <div class="pmt-header">
+        <div class="pmt-header-left">
+          <div class="logo pmt-logo-desktop">
+            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
           </div>
-          <button
-            routerLink="/dashboard/paiements/nouveau"
-            class="btn-primary flex items-center gap-2"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Enregistrer un paiement
-          </button>
+          <div class="pmt-divider"></div>
+          <div>
+            <h1 class="pmt-title">Paiements</h1>
+            <p class="pmt-sub">Gestion des loyers et paiements</p>
+          </div>
         </div>
+        <!-- Bouton complet sur desktop, icône + texte court sur mobile -->
+        <button routerLink="/dashboard/paiements/nouveau" class="btn-primary pmt-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="pmt-btn-full">Enregistrer un paiement</span>
+          <span class="pmt-btn-short">Nouveau</span>
+        </button>
       </div>
 
       <!-- Contenu principal -->
       <div class="p-6">
+        @if (successMessage) {
+          <lok-alerte type="success" [message]="successMessage" class="mb-4 block"></lok-alerte>
+        }
+        @if (errorMessage) {
+          <lok-alerte type="error" [message]="errorMessage" class="mb-4 block"></lok-alerte>
+        }
         <!-- Statistiques rapides -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
@@ -233,12 +238,6 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
     </div>
   `,
   styles: [`
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
     .logo-img {
       height: 88px;
       width: auto;
@@ -247,18 +246,61 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
       mix-blend-mode: multiply;
     }
 
-    .logo-text {
-      font-size: 1.25rem;
+    /* ── Header responsive ── */
+    .pmt-header {
+      background: white;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pmt-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+    .pmt-divider {
+      width: 1px;
+      height: 32px;
+      background: #E5E7EB;
+      flex-shrink: 0;
+    }
+    .pmt-title {
+      font-size: 22px;
       font-weight: 700;
-      color: var(--color-primary);
-      letter-spacing: 0.5px;
+      color: #111827;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .pmt-sub {
+      font-size: 13px;
+      color: #6B7280;
+      margin-top: 1px;
+    }
+    .pmt-btn { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .pmt-btn-short { display: none; }
+
+    @media (max-width: 640px) {
+      .pmt-header { padding: 12px 16px 12px 64px; }
+      .pmt-logo-desktop { display: none; }
+      .pmt-divider { display: none; }
+      .pmt-title { font-size: 18px; }
+      .pmt-sub { display: none; }
+      .pmt-btn-full { display: none; }
+      .pmt-btn-short { display: inline; }
+      .pmt-btn { padding: 8px 14px; font-size: 13px; }
     }
   `]
 })
 export class PaiementsListComponent implements OnInit {
   paiements: Paiement[] = [];
   filteredPaiements: Paiement[] = [];
-  loading: boolean = true;
+  loading = true;
+  successMessage = '';
+  errorMessage = '';
 
   StatutPaiement = StatutPaiement; // Pour l'accès dans le template
   statistiques: any = {
@@ -396,11 +438,12 @@ export class PaiementsListComponent implements OnInit {
   envoyerRappel(id: string): void {
     this.paiementsService.envoyerRappel(id).subscribe({
       next: () => {
-        alert('Rappel envoyé avec succès');
+        this.successMessage = 'Rappel envoyé avec succès';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
       },
-      error: (error: any) => {
-        console.error('Erreur lors de l\'envoi du rappel:', error);
-        alert('Erreur lors de l\'envoi du rappel');
+      error: () => {
+        this.errorMessage = 'Erreur lors de l\'envoi du rappel';
+        setTimeout(() => { this.errorMessage = ''; }, 4000);
       }
     });
   }

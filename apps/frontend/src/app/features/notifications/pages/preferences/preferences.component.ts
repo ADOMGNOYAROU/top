@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { CommonModule } from '@angular/common';
+import { NotificationsBackendService, NotificationPreferences } from '../../services/notifications-backend.service';
 
 @Component({
   selector: 'app-preferences',
@@ -11,7 +13,8 @@ import { CommonModule } from '@angular/common';
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    LokAlerteComponent
+    LokAlerteComponent,
+    LokSkeletonComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
@@ -276,56 +279,89 @@ import { CommonModule } from '@angular/common';
 })
 export class PreferencesComponent implements OnInit {
   preferencesForm: FormGroup;
-  isSaving: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
+  isSaving = false;
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private notificationsService: NotificationsBackendService
   ) {
     this.preferencesForm = this.fb.group({
-      // Notifications de paiement
       rappelsLoyer: [true],
       alertesImpayes: [true],
       confirmationPaiement: [true],
-      // Notifications de bien
       demandesVisite: [true],
       alertesMaintenance: [true],
       expirationContrat: [true],
-      // Canaux de notification
       notificationEmail: [true],
       notificationSMS: [false],
       notificationWhatsApp: [true],
-      // Fréquence
       rappelAvantEcheance: ['3'],
       rappelApresEcheance: ['1'],
       frequenceRappels: ['quotidien']
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.chargerPreferences();
+  }
 
-  /**
-   * Soumet le formulaire
-   */
+  private chargerPreferences(): void {
+    this.isLoading = true;
+    this.notificationsService.getPreferences().subscribe({
+      next: (prefs) => {
+        this.preferencesForm.patchValue({
+          rappelsLoyer: prefs.paiementsEcheance,
+          alertesImpayes: prefs.paiementsRetard,
+          confirmationPaiement: prefs.paiementsConfirmation,
+          demandesVisite: prefs.biensNouvellesAnnonces,
+          alertesMaintenance: prefs.biensChangementsStatut,
+          expirationContrat: prefs.biensEcheancesContrats,
+          notificationEmail: prefs.canalEmail,
+          notificationSMS: prefs.canalSms,
+          notificationWhatsApp: prefs.canalApp
+        });
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
+  }
+
   onSubmit(): void {
-    if (this.preferencesForm.invalid) {
-      return;
-    }
-
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simulation de sauvegarde
-    setTimeout(() => {
-      this.isSaving = false;
-      this.successMessage = 'Préférences enregistrées avec succès !';
-      
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }, 1500);
+    const v = this.preferencesForm.value;
+    const prefs: NotificationPreferences = {
+      paiementsRetard: v.alertesImpayes,
+      paiementsConfirmation: v.confirmationPaiement,
+      paiementsEcheance: v.rappelsLoyer,
+      messagesNouveaux: true,
+      messagesReponses: true,
+      biensNouvellesAnnonces: v.demandesVisite,
+      biensChangementsStatut: v.alertesMaintenance,
+      biensEcheancesContrats: v.expirationContrat,
+      systemeConnexions: false,
+      systemeRapports: false,
+      canalEmail: v.notificationEmail,
+      canalSms: v.notificationSMS,
+      canalApp: v.notificationWhatsApp
+    };
+
+    this.notificationsService.sauvegarderPreferences(prefs).subscribe({
+      next: () => {
+        this.isSaving = false;
+        this.successMessage = 'Préférences enregistrées avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => {
+        this.isSaving = false;
+        this.errorMessage = 'Erreur lors de la sauvegarde des préférences';
+      }
+    });
   }
 }

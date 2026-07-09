@@ -2,19 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { NotificationsBackendService, NotificationRecord, NotificationType } from '../../services/notifications-backend.service';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
 
-export type NotificationType = 'paiement' | 'bien' | 'contrat' | 'maintenance' | 'systeme';
-
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  titre: string;
-  message: string;
-  date: Date;
-  lu: boolean;
-  priorite: 'haute' | 'moyenne' | 'basse';
-  lien?: string;
-}
+type Notification = NotificationRecord;
 
 @Component({
   selector: 'app-historique',
@@ -22,7 +14,9 @@ export interface Notification {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterModule
+    RouterModule,
+    LokSkeletonComponent,
+    LokEmptyStateComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
@@ -234,7 +228,8 @@ export class HistoriqueComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private notificationsService: NotificationsBackendService
   ) {
     this.filterForm = this.fb.group({
       type: ['tous'],
@@ -247,80 +242,18 @@ export class HistoriqueComponent implements OnInit {
     this.loadNotifications();
   }
 
-  /**
-   * Charge les notifications
-   */
   loadNotifications(): void {
     this.loading = true;
-    
-    // Simulation de chargement
-    setTimeout(() => {
-      this.notifications = [
-        {
-          id: '1',
-          type: 'paiement',
-          titre: 'Paiement reçu',
-          message: 'Paul Mensah a payé son loyer pour Juin 2024',
-          date: new Date('2024-06-20T10:30:00'),
-          lu: false,
-          priorite: 'haute',
-          lien: '/paiements/1'
-        },
-        {
-          id: '2',
-          type: 'bien',
-          titre: 'Nouvelle demande de visite',
-          message: 'Kofi Adzo souhaite visiter le Studio Kara',
-          date: new Date('2024-06-19T14:15:00'),
-          lu: false,
-          priorite: 'moyenne',
-          lien: '/biens/3'
-        },
-        {
-          id: '3',
-          type: 'contrat',
-          titre: 'Contrat expire bientôt',
-          message: 'Le bail de Mawunyo Koffi expire dans 15 jours',
-          date: new Date('2024-06-18T09:00:00'),
-          lu: true,
-          priorite: 'haute',
-          lien: '/contrats/2'
-        },
-        {
-          id: '4',
-          type: 'maintenance',
-          titre: 'Maintenance requise',
-          message: 'Réparation de la plomberie nécessaire pour Villa Sokodé',
-          date: new Date('2024-06-17T16:45:00'),
-          lu: true,
-          priorite: 'moyenne',
-          lien: '/biens/2'
-        },
-        {
-          id: '5',
-          type: 'paiement',
-          titre: 'Rappel de loyer',
-          message: 'Yao Komlan n\'a pas encore payé son loyer',
-          date: new Date('2024-06-15T08:00:00'),
-          lu: true,
-          priorite: 'haute',
-          lien: '/paiements/4'
-        },
-        {
-          id: '6',
-          type: 'systeme',
-          titre: 'Mise à jour système',
-          message: 'Nouvelle fonctionnalité disponible : Rapports PDF',
-          date: new Date('2024-06-10T11:20:00'),
-          lu: true,
-          priorite: 'basse'
-        }
-      ];
-      
-      this.notificationsFiltrees = [...this.notifications];
-      this.updateStatistiques();
-      this.loading = false;
-    }, 500);
+    const filters = this.filterForm.value;
+    this.notificationsService.getNotifications(filters).subscribe({
+      next: (data) => {
+        this.notifications = data;
+        this.notificationsFiltrees = [...data];
+        this.updateStatistiques();
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
+    });
   }
 
   /**
@@ -352,34 +285,33 @@ export class HistoriqueComponent implements OnInit {
     this.applyFilters();
   }
 
-  /**
-   * Marque une notification comme lue
-   */
   marquerCommeLu(notificationId: string): void {
-    const notification = this.notifications.find(n => n.id === notificationId);
-    if (notification) {
-      notification.lu = true;
-      this.updateStatistiques();
-      this.applyFilters();
-    }
+    this.notificationsService.marquerLue(notificationId).subscribe({
+      next: () => {
+        const n = this.notifications.find(n => n.id === notificationId);
+        if (n) { n.lu = true; this.updateStatistiques(); this.applyFilters(); }
+      }
+    });
   }
 
-  /**
-   * Marque toutes les notifications comme lues
-   */
   markAllAsRead(): void {
-    this.notifications.forEach(n => n.lu = true);
-    this.updateStatistiques();
-    this.applyFilters();
+    this.notificationsService.marquerToutesLues().subscribe({
+      next: () => {
+        this.notifications.forEach(n => n.lu = true);
+        this.updateStatistiques();
+        this.applyFilters();
+      }
+    });
   }
 
-  /**
-   * Supprime une notification
-   */
   supprimerNotification(notificationId: string): void {
-    this.notifications = this.notifications.filter(n => n.id !== notificationId);
-    this.applyFilters();
-    this.updateStatistiques();
+    this.notificationsService.supprimer(notificationId).subscribe({
+      next: () => {
+        this.notifications = this.notifications.filter(n => n.id !== notificationId);
+        this.applyFilters();
+        this.updateStatistiques();
+      }
+    });
   }
 
   /**

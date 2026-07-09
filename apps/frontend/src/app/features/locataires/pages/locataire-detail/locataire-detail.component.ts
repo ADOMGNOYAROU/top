@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { LocatairesService } from '../../services/locataires.service';
 import { Locataire, StatutLocataire } from '@core/models/locataire.model';
+import { BiensService } from '../../../biens/services/biens.service';
+import { Bien } from '@core/models/bien.model';
 import { LokBadgeStatutLocataireComponent } from '../../../../shared/components/lok-badge-statut-locataire/lok-badge-statut-locataire.component';
 import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
@@ -144,7 +146,7 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
                 <div class="space-y-3">
                   <div>
                     <p class="text-sm text-gray-600">Bien occupé</p>
-                    <p class="font-medium text-gray-900">Bien #{{ locataire.bienId }}</p>
+                    <p class="font-medium text-gray-900">{{ bienOccupe ? bienOccupe.titre : 'Bien #' + locataire.bienId }}</p>
                   </div>
                   <div>
                     <p class="text-sm text-gray-600">Date de début</p>
@@ -249,15 +251,17 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
 })
 export class LocataireDetailComponent implements OnInit {
   locataire: Locataire | null = null;
-  loading: boolean = true;
+  bienOccupe: Bien | null = null;
+  loading = true;
 
-  StatutLocataire = StatutLocataire; // Pour l'accès dans le template
-  showDeleteModal: boolean = false;
-  errorMessage: string = '';
-  locataireId: string = '';
+  StatutLocataire = StatutLocataire;
+  showDeleteModal = false;
+  errorMessage = '';
+  locataireId = '';
 
   constructor(
     private locatairesService: LocatairesService,
+    private biensService: BiensService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -278,9 +282,14 @@ export class LocataireDetailComponent implements OnInit {
       next: (locataire: Locataire) => {
         this.locataire = locataire;
         this.loading = false;
+        if (locataire.bienId) {
+          this.biensService.getBienById(locataire.bienId).subscribe({
+            next: (bien) => { this.bienOccupe = bien; },
+            error: () => {}
+          });
+        }
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement du locataire:', error);
+      error: () => {
         this.errorMessage = 'Erreur lors du chargement du locataire';
         this.loading = false;
       }

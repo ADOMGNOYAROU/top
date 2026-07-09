@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
-import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
 import { CommonModule } from '@angular/common';
+import { GestionnaireService, Mandat, MandatRequest } from '../../services/gestionnaire.service';
 
 @Component({
   selector: 'app-portefeuille',
@@ -12,8 +12,7 @@ import { CommonModule } from '@angular/common';
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    LokAlerteComponent,
-    LokMontantFcfaComponent
+    LokAlerteComponent
   ],
   styles: `
     /* Global SVG Icon Sizing Fix */
@@ -59,26 +58,14 @@ import { CommonModule } from '@angular/common';
         }
 
         <!-- Statistiques du portefeuille -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Total mandats</p>
-            <p class="text-3xl font-bold text-gray-900">{{ statistiques.totalMandats }}</p>
+            <p class="text-3xl font-bold text-gray-900">{{ mandats.length }}</p>
           </div>
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Mandats actifs</p>
-            <p class="text-3xl font-bold text-green-600">{{ statistiques.mandatsActifs }}</p>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Revenus mensuels</p>
-            <p class="text-3xl font-bold text-primary">
-              <lok-montant-fcfa [montant]="statistiques.revenusMensuels"></lok-montant-fcfa>
-            </p>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Commissions</p>
-            <p class="text-3xl font-bold text-orange-600">
-              <lok-montant-fcfa [montant]="statistiques.commissions"></lok-montant-fcfa>
-            </p>
+            <p class="text-3xl font-bold text-green-600">{{ mandatsActifsCount }}</p>
           </div>
         </div>
 
@@ -95,12 +82,13 @@ import { CommonModule } from '@angular/common';
           </button>
           <button
             (click)="exporterPortefeuille()"
+            [disabled]="isExporting"
             class="btn-secondary"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            Exporter
+            {{ isExporting ? 'Export en cours...' : 'Exporter PDF' }}
           </button>
         </div>
 
@@ -113,51 +101,35 @@ import { CommonModule } from '@angular/common';
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Propriétaire -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Propriétaire</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Nom du propriétaire</label>
                   <input
                     type="text"
-                    formControlName="proprietaire"
+                    formControlName="proprietaireNom"
                     class="input-field"
-                    placeholder="Nom du propriétaire"
+                    placeholder="Nom complet"
+                  />
+                </div>
+
+                <!-- Téléphone propriétaire -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone propriétaire</label>
+                  <input
+                    type="tel"
+                    formControlName="proprietaireTelephone"
+                    class="input-field"
+                    placeholder="+228 XX XX XX XX"
                   />
                 </div>
 
                 <!-- Bien -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Bien</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Bien immobilier</label>
                   <input
                     type="text"
-                    formControlName="bien"
+                    formControlName="bienTitre"
                     class="input-field"
-                    placeholder="Adresse du bien"
+                    placeholder="Titre ou adresse du bien"
                   />
-                </div>
-
-                <!-- Type de mandat -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Type de mandat</label>
-                  <select
-                    formControlName="typeMandat"
-                    class="input-field"
-                  >
-                    <option value="gestion_complete">Gestion complète</option>
-                    <option value="location_seule">Location seule</option>
-                    <option value="encaissement">Encaissement loyers</option>
-                  </select>
-                </div>
-
-                <!-- Durée -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Durée</label>
-                  <select
-                    formControlName="duree"
-                    class="input-field"
-                  >
-                    <option value="1_an">1 an</option>
-                    <option value="2_ans">2 ans</option>
-                    <option value="3_ans">3 ans</option>
-                    <option value="indetermine">Durée indéterminée</option>
-                  </select>
                 </div>
 
                 <!-- Commission -->
@@ -173,14 +145,23 @@ import { CommonModule } from '@angular/common';
                   />
                 </div>
 
-                <!-- Loyer mensuel -->
+                <!-- Date début -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Loyer mensuel (FCFA)</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
                   <input
-                    type="number"
-                    formControlName="loyerMensuel"
+                    type="date"
+                    formControlName="dateDebut"
                     class="input-field"
-                    placeholder="Ex: 100000"
+                  />
+                </div>
+
+                <!-- Date fin -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                  <input
+                    type="date"
+                    formControlName="dateFin"
+                    class="input-field"
                   />
                 </div>
               </div>
@@ -238,26 +219,17 @@ import { CommonModule } from '@angular/common';
                     <div class="flex-1">
                       <div class="flex items-center gap-3 mb-2">
                         <span
-                          [class]="mandat.statut === 'actif' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                          [class]="mandat.statut === 'actif' ? 'bg-green-100 text-green-800' : mandat.statut === 'expire' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
                           class="px-3 py-1 rounded-full text-xs font-medium"
                         >
-                          {{ mandat.statut === 'actif' ? 'Actif' : 'Bientôt expiré' }}
-                        </span>
-                        <span class="text-sm text-gray-600">
-                          {{ mandat.typeMandat }}
+                          {{ mandat.statut === 'actif' ? 'Actif' : mandat.statut === 'expire' ? 'Expiré' : 'Suspendu' }}
                         </span>
                       </div>
-                      
-                      <h3 class="font-semibold text-gray-900 mb-1">{{ mandat.bien }}</h3>
-                      <p class="text-sm text-gray-600 mb-2">Propriétaire: {{ mandat.proprietaire }}</p>
-                      
-                      <div class="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p class="text-gray-500">Loyer</p>
-                          <p class="font-medium">
-                            <lok-montant-fcfa [montant]="mandat.loyerMensuel"></lok-montant-fcfa>/mois
-                          </p>
-                        </div>
+
+                      <h3 class="font-semibold text-gray-900 mb-1">{{ mandat.bienTitre }}</h3>
+                      <p class="text-sm text-gray-600 mb-2">Propriétaire : {{ mandat.proprietaireNom }} — {{ mandat.proprietaireTelephone }}</p>
+
+                      <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p class="text-gray-500">Commission</p>
                           <p class="font-medium">{{ mandat.commission }}%</p>
@@ -268,14 +240,8 @@ import { CommonModule } from '@angular/common';
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="flex gap-2 ml-4">
-                      <button
-                        routerLink="/biens/{{ mandat.bienId }}"
-                        class="btn-secondary text-sm px-4 py-2"
-                      >
-                        Détails
-                      </button>
                       <button
                         (click)="renouvelerMandat(mandat.id)"
                         class="btn-primary text-sm px-4 py-2"
@@ -290,192 +256,107 @@ import { CommonModule } from '@angular/common';
           }
         </div>
 
-        <!-- Historique des mandats -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mt-6">
-          <div class="p-6 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Historique des mandats</h2>
-          </div>
-          
-          @if (historique.length === 0) {
-            <div class="p-6 text-center text-gray-500">
-              Aucun mandat terminé
-            </div>
-          } @else {
-            <div class="divide-y divide-gray-200">
-              @for (mandat of historique; track mandat.id) {
-                <div class="p-4 flex items-center justify-between">
-                  <div>
-                    <p class="font-medium text-gray-900">{{ mandat.bien }}</p>
-                    <p class="text-sm text-gray-600">{{ mandat.proprietaire }} • Terminé le {{ mandat.dateFin | date:'dd/MM/yyyy' }}</p>
-                  </div>
-                  <span class="text-gray-500 text-sm">
-                    <lok-montant-fcfa [montant]="mandat.totalCommissions"></lok-montant-fcfa> gagnés
-                  </span>
-                </div>
-              }
-            </div>
-          }
-        </div>
       </div>
     </div>
   `,
 })
 export class PortefeuilleComponent implements OnInit {
   mandatForm: FormGroup;
-  showAddMandatForm: boolean = false;
-  isAdding: boolean = false;
-  loading: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
-
-  statistiques = {
-    totalMandats: 15,
-    mandatsActifs: 12,
-    revenusMensuels: 1250000,
-    commissions: 100000
-  };
-
-  mandats = [
-    {
-      id: '1',
-      proprietaire: 'M. Adzo Kofi',
-      bien: 'Villa Sokodé',
-      typeMandat: 'Gestion complète',
-      duree: '3_ans',
-      commission: 8,
-      loyerMensuel: 150000,
-      dateDebut: new Date('2023-01-01'),
-      dateFin: new Date('2026-01-01'),
-      statut: 'actif',
-      bienId: '2'
-    },
-    {
-      id: '2',
-      proprietaire: 'Mme Afi Agbessi',
-      bien: 'Appartement Lomé Centre',
-      typeMandat: 'Gestion complète',
-      duree: 'indetermine',
-      commission: 10,
-      loyerMensuel: 100000,
-      dateDebut: new Date('2022-06-01'),
-      dateFin: new Date('2025-06-01'),
-      statut: 'actif',
-      bienId: '1'
-    },
-    {
-      id: '3',
-      proprietaire: 'M. Yao Komlan',
-      bien: 'Bureau Kpalimé',
-      typeMandat: 'Location seule',
-      duree: '1_an',
-      commission: 5,
-      loyerMensuel: 125000,
-      dateDebut: new Date('2024-01-01'),
-      dateFin: new Date('2024-12-31'),
-      statut: 'expire',
-      bienId: '4'
-    }
-  ];
-
-  historique = [
-    {
-      id: 'h1',
-      proprietaire: 'M. Koffi Mensah',
-      bien: 'Studio Atakpamé',
-      dateFin: new Date('2023-12-31'),
-      totalCommissions: 45000
-    },
-    {
-      id: 'h2',
-      proprietaire: 'Mme Akossiwa',
-      bien: 'Chambre Tsévié',
-      dateFin: new Date('2023-11-30'),
-      totalCommissions: 30000
-    }
-  ];
+  showAddMandatForm = false;
+  isAdding = false;
+  loading = false;
+  isExporting = false;
+  errorMessage = '';
+  successMessage = '';
+  mandats: Mandat[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private gestionnaireService: GestionnaireService
   ) {
     this.mandatForm = this.fb.group({
-      proprietaire: ['', Validators.required],
-      bien: ['', Validators.required],
-      typeMandat: ['gestion_complete', Validators.required],
-      duree: ['1_an', Validators.required],
+      proprietaireNom: ['', Validators.required],
+      proprietaireTelephone: ['', Validators.required],
+      bienTitre: ['', Validators.required],
       commission: ['', [Validators.required, Validators.min(0), Validators.max(20)]],
-      loyerMensuel: ['', [Validators.required, Validators.min(0)]]
+      dateDebut: ['', Validators.required],
+      dateFin: ['', Validators.required]
     });
   }
 
-  ngOnInit(): void {}
+  get mandatsActifsCount(): number {
+    return this.mandats.filter(m => m.statut === 'actif').length;
+  }
 
-  /**
-   * Ajoute un nouveau mandat
-   */
+  ngOnInit(): void {
+    this.chargerMandats();
+  }
+
+  private chargerMandats(): void {
+    this.loading = true;
+    this.gestionnaireService.getMandats().subscribe({
+      next: (data) => { this.mandats = data; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
+  }
+
   addMandat(): void {
-    if (this.mandatForm.invalid) {
-      return;
-    }
+    if (this.mandatForm.invalid) return;
 
     this.isAdding = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simulation d'ajout
-    setTimeout(() => {
-      this.isAdding = false;
-      this.successMessage = 'Mandat ajouté avec succès !';
-      
-      const dureeAnnees = this.mandatForm.value.duree === 'indetermine' ? 3 : 
-                         parseInt(this.mandatForm.value.duree);
-      
-      this.mandats.unshift({
-        id: Math.random().toString(36).substr(2, 9),
-        proprietaire: this.mandatForm.value.proprietaire,
-        bien: this.mandatForm.value.bien,
-        typeMandat: this.mandatForm.value.typeMandat.replace('_', ' '),
-        duree: this.mandatForm.value.duree,
-        commission: this.mandatForm.value.commission,
-        loyerMensuel: this.mandatForm.value.loyerMensuel,
-        dateDebut: new Date(),
-        dateFin: new Date(Date.now() + dureeAnnees * 365 * 24 * 60 * 60 * 1000),
-        statut: 'actif',
-        bienId: 'new'
-      });
-      
-      this.statistiques.totalMandats++;
-      this.statistiques.mandatsActifs++;
-      this.statistiques.revenusMensuels += this.mandatForm.value.loyerMensuel;
-      this.statistiques.commissions += Math.round(this.mandatForm.value.loyerMensuel * this.mandatForm.value.commission / 100);
-      
-      this.showAddMandatForm = false;
-      this.mandatForm.reset();
-      
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }, 1500);
+    const req: MandatRequest = {
+      proprietaireNom: this.mandatForm.value.proprietaireNom,
+      proprietaireTelephone: this.mandatForm.value.proprietaireTelephone,
+      bienTitre: this.mandatForm.value.bienTitre,
+      commission: this.mandatForm.value.commission,
+      dateDebut: new Date(this.mandatForm.value.dateDebut),
+      dateFin: new Date(this.mandatForm.value.dateFin)
+    };
+
+    this.gestionnaireService.ajouterMandat(req).subscribe({
+      next: (mandat) => {
+        this.mandats.unshift(mandat);
+        this.isAdding = false;
+        this.successMessage = 'Mandat ajouté avec succès !';
+        this.showAddMandatForm = false;
+        this.mandatForm.reset();
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => {
+        this.isAdding = false;
+        this.errorMessage = 'Erreur lors de l\'ajout du mandat';
+      }
+    });
   }
 
-  /**
-   * Renouvelle un mandat
-   */
   renouvelerMandat(mandatId: string): void {
-    const mandat = this.mandats.find(m => m.id === mandatId);
-    if (mandat) {
-      mandat.dateFin = new Date(mandat.dateFin.getTime() + 365 * 24 * 60 * 60 * 1000);
-      this.successMessage = 'Mandat renouvelé avec succès !';
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }
+    this.gestionnaireService.renouvelerMandat(mandatId).subscribe({
+      next: (mandatMisAJour) => {
+        const idx = this.mandats.findIndex(m => m.id === mandatId);
+        if (idx !== -1) this.mandats[idx] = mandatMisAJour;
+        this.successMessage = 'Mandat renouvelé avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      }
+    });
   }
 
-  /**
-   * Exporte le portefeuille
-   */
   exporterPortefeuille(): void {
-    alert('Export du portefeuille en cours...');
+    this.isExporting = true;
+    this.gestionnaireService.exporterPortefeuille('pdf').subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'portefeuille.pdf';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExporting = false;
+      },
+      error: () => { this.isExporting = false; }
+    });
   }
 }

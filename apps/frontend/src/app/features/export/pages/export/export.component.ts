@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { CommonModule } from '@angular/common';
+import { GestionnaireService, ExportRequest, ExportRecord } from '../../../gestionnaire/services/gestionnaire.service';
 
 @Component({
   selector: 'app-export',
@@ -11,7 +13,8 @@ import { CommonModule } from '@angular/common';
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    LokAlerteComponent
+    LokAlerteComponent,
+    LokSkeletonComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
@@ -171,17 +174,21 @@ import { CommonModule } from '@angular/common';
             <h2 class="text-lg font-semibold text-gray-900">Exports récents</h2>
           </div>
           
-          @if (exportsRecents.length === 0) {
+          @if (loadingExports) {
+            <div class="p-6">
+              <lok-skeleton type="text"></lok-skeleton>
+            </div>
+          } @else if (exportsRecents.length === 0) {
             <div class="p-6 text-center text-gray-500">
               Aucun export récent
             </div>
           } @else {
             <div class="divide-y divide-gray-200">
-              @for (export of exportsRecents; track export.id) {
+              @for (exp of exportsRecents; track exp.id) {
                 <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div class="flex items-center gap-4">
                     <div
-                      [class]="export.format === 'pdf' ? 'bg-red-100 text-red-600' : export.format === 'excel' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'"
+                      [class]="exp.format === 'pdf' ? 'bg-red-100 text-red-600' : exp.format === 'excel' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'"
                       class="w-10 h-10 rounded-lg flex items-center justify-center"
                     >
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,14 +196,14 @@ import { CommonModule } from '@angular/common';
                       </svg>
                     </div>
                     <div>
-                      <p class="font-medium text-gray-900">{{ export.titre }}</p>
-                      <p class="text-sm text-gray-600">{{ export.date | date:'dd/MM/yyyy HH:mm' }} • {{ export.format.toUpperCase() }}</p>
+                      <p class="font-medium text-gray-900">{{ exp.titre }}</p>
+                      <p class="text-sm text-gray-600">{{ exp.date | date:'dd/MM/yyyy HH:mm' }} • {{ exp.format.toUpperCase() }}</p>
                     </div>
                   </div>
-                  
+
                   <div class="flex gap-2">
                     <button
-                      (click)="telechargerExport(export.id)"
+                      (click)="telechargerExport(exp.id)"
                       [disabled]="isDownloading"
                       class="btn-primary text-sm px-4 py-2"
                     >
@@ -207,7 +214,7 @@ import { CommonModule } from '@angular/common';
                       }
                     </button>
                     <button
-                      (click)="supprimerExport(export.id)"
+                      (click)="supprimerExport(exp.id)"
                       class="text-gray-400 hover:text-red-600"
                     >
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,38 +287,17 @@ import { CommonModule } from '@angular/common';
 })
 export class ExportComponent implements OnInit {
   exportForm: FormGroup;
-  isExporting: boolean = false;
-  isDownloading: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
-
-  exportsRecents = [
-    {
-      id: '1',
-      titre: 'Rapport mensuel - Juin 2024',
-      typeDonnees: 'rapports',
-      format: 'pdf',
-      date: new Date('2024-06-30T10:00:00')
-    },
-    {
-      id: '2',
-      titre: 'États financiers - T2 2024',
-      typeDonnees: 'paiements',
-      format: 'excel',
-      date: new Date('2024-06-28T14:30:00')
-    },
-    {
-      id: '3',
-      titre: 'Inventaire biens',
-      typeDonnees: 'biens',
-      format: 'excel',
-      date: new Date('2024-06-25T09:15:00')
-    }
-  ];
+  exportsRecents: ExportRecord[] = [];
+  isExporting = false;
+  isDownloading = false;
+  loadingExports = false;
+  errorMessage = '';
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private gestionnaireService: GestionnaireService
   ) {
     this.exportForm = this.fb.group({
       typeDonnees: ['biens', Validators.required],
@@ -328,82 +314,77 @@ export class ExportComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.chargerExports();
+  }
 
-  /**
-   * Exporte les données
-   */
+  private chargerExports(): void {
+    this.loadingExports = true;
+    this.gestionnaireService.getExports().subscribe({
+      next: (data) => { this.exportsRecents = data; this.loadingExports = false; },
+      error: () => { this.loadingExports = false; }
+    });
+  }
+
   exporterDonnees(): void {
-    if (this.exportForm.invalid) {
-      return;
-    }
+    if (this.exportForm.invalid) return;
 
     this.isExporting = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simulation d'export
-    setTimeout(() => {
-      this.isExporting = false;
-      this.successMessage = 'Export généré avec succès !';
-      
-      const typeDonnees = this.exportForm.value.typeDonnees;
-      const format = this.exportForm.value.format;
-      const periode = this.exportForm.value.periode;
-      
-      const periodeLabels: Record<string, string> = {
-        'tout': 'Tout',
-        'ce_mois': 'Ce mois',
-        'ce_trimestre': 'Ce trimestre',
-        'cette_annee': 'Cette année',
-        'personnalise': 'Personnalisé'
-      };
+    const v = this.exportForm.value;
+    const req: ExportRequest = {
+      type: v.typeDonnees,
+      format: v.format as 'pdf' | 'excel',
+      dateDebut: v.dateDebut || undefined,
+      dateFin: v.dateFin || undefined
+    };
 
-      const typeLabels: Record<string, string> = {
-        'biens': 'Biens',
-        'locataires': 'Locataires',
-        'paiements': 'Paiements',
-        'contrats': 'Contrats',
-        'rapports': 'Rapports'
-      };
-
-      this.exportsRecents.unshift({
-        id: Math.random().toString(36).substr(2, 9),
-        titre: `${typeLabels[typeDonnees]} - ${periodeLabels[periode]}`,
-        typeDonnees: typeDonnees,
-        format: format,
-        date: new Date()
-      });
-      
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }, 2000);
+    this.gestionnaireService.exporterDonnees(req).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `export-${req.type}.${req.format}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExporting = false;
+        this.successMessage = 'Export téléchargé avec succès !';
+        this.chargerExports();
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => {
+        this.isExporting = false;
+        this.errorMessage = 'Erreur lors de la génération de l\'export';
+      }
+    });
   }
 
-  /**
-   * Télécharge un export
-   */
   telechargerExport(exportId: string): void {
     this.isDownloading = true;
-    
-    // Simulation de téléchargement
-    setTimeout(() => {
-      this.isDownloading = false;
-      alert('Export téléchargé avec succès !');
-    }, 1500);
+    this.gestionnaireService.telechargerExport(exportId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `export-${exportId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isDownloading = false;
+      },
+      error: () => { this.isDownloading = false; }
+    });
   }
 
-  /**
-   * Supprime un export
-   */
   supprimerExport(exportId: string): void {
-    this.exportsRecents = this.exportsRecents.filter(e => e.id !== exportId);
+    this.gestionnaireService.supprimerExport(exportId).subscribe({
+      next: () => {
+        this.exportsRecents = this.exportsRecents.filter(e => e.id !== exportId);
+      }
+    });
   }
 
-  /**
-   * Utilise un modèle d'export
-   */
   utiliserModele(modele: string): void {
     switch (modele) {
       case 'rapport_mensuel':

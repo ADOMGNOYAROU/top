@@ -61,7 +61,6 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
               <option value="maison">Maison</option>
               <option value="appartement">Appartement</option>
               <option value="bureau">Bureau</option>
-              <option value="terrain">Terrain</option>
               <option value="villa">Villa</option>
             </select>
           </div>
