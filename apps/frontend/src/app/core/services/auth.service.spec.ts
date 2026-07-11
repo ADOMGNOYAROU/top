@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { AuthService, WarahUser } from './auth.service';
+import { AuthService, WARAHUser } from './auth.service';
 import { SupabaseService } from './supabase.service';
 import { environment } from '@env/environment';
 
@@ -95,7 +95,7 @@ describe('AuthService', () => {
       ['MANAGER', '/gestionnaire'],
       ['ADMIN', '/admin'],
     ])('role %s → route %s', (role, expectedRoute) => {
-      (service as any).currentUserSubject.next({ role } as WarahUser);
+      (service as any).currentUserSubject.next({ role } as WARAHUser);
       expect(service.getDefaultRoute()).toBe(expectedRoute);
     });
 

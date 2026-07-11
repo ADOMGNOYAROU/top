@@ -15,6 +15,14 @@ import { PushModule } from './modules/push/push.module';
 import { NotifyModule } from './modules/notify/notify.module';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { PropertiesModule } from './modules/properties/properties.module';
+import { TenantsModule } from './modules/tenants/tenants.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { ListingsModule } from './modules/listings/listings.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { GestionnaireModule } from './modules/gestionnaire/gestionnaire.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SupabaseAuthGuard } from './common/guards/supabase-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -67,6 +75,18 @@ import { RolesGuard } from './common/guards/roles.guard';
 
     // Authentification et profil courant
     AuthModule,
+
+    // KPIs, alertes, revenus du tableau de bord
+    DashboardModule,
+
+    // Modules métier
+    PropertiesModule,
+    TenantsModule,
+    PaymentsModule,
+    ListingsModule,
+    AdminModule,
+    GestionnaireModule,
+    NotificationsModule,
   ],
   providers: [
     {

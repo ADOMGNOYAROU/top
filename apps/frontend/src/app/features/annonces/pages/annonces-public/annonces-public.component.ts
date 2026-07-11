@@ -24,7 +24,7 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
         <div class="hero-content">
           <div class="hero-nav">
             <a routerLink="/" class="hero-logo">
-              <img src="/assets/warah-logo.png" alt="WARAH" class="nav-logo-img">
+              <img src="/assets/WARAH-logo.png" alt="WARAH" class="nav-logo-img">
             </a>
             <a routerLink="/auth/login" class="hero-login-btn">Se connecter</a>
           </div>

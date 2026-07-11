@@ -30,7 +30,7 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
             <button
-              routerLink="/locataires"
+              routerLink='/dashboard/locataires'
               class="p-2 text-gray-600 hover:text-primary transition-colors"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,7 +300,7 @@ export class LocataireDetailComponent implements OnInit {
    * Modifie le locataire
    */
   editLocataire(): void {
-    this.router.navigate(['/locataires', this.locataireId, 'edit']);
+    this.router.navigate(['/dashboard/locataires', this.locataireId, 'edit']);
   }
 
   /**
@@ -310,7 +310,7 @@ export class LocataireDetailComponent implements OnInit {
     this.locatairesService.deleteLocataire(this.locataireId).subscribe({
       next: () => {
         this.showDeleteModal = false;
-        this.router.navigate(['/locataires']);
+        this.router.navigate(['/dashboard/locataires']);
       },
       error: (error: any) => {
         console.error('Erreur lors de la suppression du locataire:', error);

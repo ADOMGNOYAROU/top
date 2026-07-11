@@ -44,7 +44,7 @@ import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, Gest
       <aside class="sidebar" style="display:none">
         <div class="sidebar-header">
           <div class="logo">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
         </div>
 
@@ -1136,7 +1136,7 @@ export class GestionnaireDashboardComponent implements OnInit {
     this.updateDate();
     this.chargerDonnees();
     try {
-      const raw = localStorage.getItem('warah_user');
+      const raw = localStorage.getItem('WARAH_user');
       if (raw) { const u = JSON.parse(raw); this.prenomGestionnaire = u.prenom || 'Gestionnaire'; }
     } catch {}
   }

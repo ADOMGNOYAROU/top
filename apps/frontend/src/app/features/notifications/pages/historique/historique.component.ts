@@ -3,9 +3,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { NotificationsBackendService, NotificationRecord, NotificationType } from '../../services/notifications-backend.service';
-import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
-import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
-
 type Notification = NotificationRecord;
 
 @Component({
@@ -15,8 +12,6 @@ type Notification = NotificationRecord;
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    LokSkeletonComponent,
-    LokEmptyStateComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">

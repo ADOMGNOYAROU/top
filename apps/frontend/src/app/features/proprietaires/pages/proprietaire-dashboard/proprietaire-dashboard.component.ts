@@ -263,7 +263,7 @@ export class ProprietaireDashboardComponent implements OnInit {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     try {
-      const raw = localStorage.getItem('warah_user');
+      const raw = localStorage.getItem('WARAH_user');
       if (raw) {
         const u = JSON.parse(raw);
         this.prenomUtilisateur = u.prenom || 'Propriétaire';

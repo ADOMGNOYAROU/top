@@ -145,7 +145,7 @@ export class Verify2FAComponent implements OnInit {
   ngOnInit(): void {
     // Récupérer l'email depuis les query params ou le localStorage
     this.email = this.route.snapshot.queryParamMap.get('email') ||
-                 localStorage.getItem('warah_2fa_email') || '';
+                 localStorage.getItem('WARAH_2fa_email') || '';
 
     if (!this.email) {
       this.errorMessage = 'Email non trouvé. Veuillez vous reconnecter.';
@@ -153,7 +153,7 @@ export class Verify2FAComponent implements OnInit {
         this.router.navigate(['/auth/login']);
       }, 3000);
     } else {
-      localStorage.setItem('warah_2fa_email', this.email);
+      localStorage.setItem('WARAH_2fa_email', this.email);
       this.startCountdown();
     }
   }
@@ -230,7 +230,7 @@ export class Verify2FAComponent implements OnInit {
         this.successMessage = 'Vérification réussie ! Redirection vers le tableau de bord...';
 
         // Nettoyer le localStorage
-        localStorage.removeItem('warah_2fa_email');
+        localStorage.removeItem('WARAH_2fa_email');
 
         // Rediriger vers le dashboard après 2 secondes
         setTimeout(() => {
@@ -248,7 +248,7 @@ export class Verify2FAComponent implements OnInit {
    * Annule la vérification et retourne à la connexion
    */
   cancel(): void {
-    localStorage.removeItem('warah_2fa_email');
+    localStorage.removeItem('WARAH_2fa_email');
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
     }

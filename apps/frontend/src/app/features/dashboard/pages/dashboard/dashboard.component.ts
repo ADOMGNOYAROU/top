@@ -834,11 +834,12 @@ export class DashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
-    this.dashboardService.getKPIs().subscribe({ next: d => { this.kpis = d; this.loadingKPIs = false; } });
-    this.dashboardService.getRevenusMensuels().subscribe({ next: d => { this.revenus = d; this.loadingRevenus = false; } });
-    this.dashboardService.getAlertes().subscribe({ next: d => { this.alertes = d; this.loadingAlertes = false; } });
-    this.dashboardService.getDerniersPaiements().subscribe({ next: d => { this.derniersPaiements = d; this.loadingPaiements = false; } });
-    this.dashboardService.getDerniersBiens().subscribe({ next: d => { this.derniersBiens = d; this.loadingBiens = false; } });
+    const done = (flag: keyof this) => () => { (this as any)[flag] = false; };
+    this.dashboardService.getKPIs().subscribe({ next: d => { this.kpis = d; this.loadingKPIs = false; }, error: done('loadingKPIs') });
+    this.dashboardService.getRevenusMensuels().subscribe({ next: d => { this.revenus = d; this.loadingRevenus = false; }, error: done('loadingRevenus') });
+    this.dashboardService.getAlertes().subscribe({ next: d => { this.alertes = d; this.loadingAlertes = false; }, error: done('loadingAlertes') });
+    this.dashboardService.getDerniersPaiements().subscribe({ next: d => { this.derniersPaiements = d; this.loadingPaiements = false; }, error: done('loadingPaiements') });
+    this.dashboardService.getDerniersBiens().subscribe({ next: d => { this.derniersBiens = d; this.loadingBiens = false; }, error: done('loadingBiens') });
   }
 
   setDateCourante(): void {
@@ -849,7 +850,7 @@ export class DashboardComponent implements OnInit {
 
   loadUtilisateur(): void {
     try {
-      const raw = localStorage.getItem('warah_user');
+      const raw = localStorage.getItem('WARAH_user');
       if (raw) {
         const u = JSON.parse(raw);
         this.utilisateurPrenom = u.prenom || 'Propriétaire';

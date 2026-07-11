@@ -3,10 +3,10 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Router, ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
-import { AuthService, WarahUser } from '../../../../core/services/auth.service';
+import { AuthService, WARAHUser } from '../../../../core/services/auth.service';
 import { ParticlesBackgroundComponent } from '../../../../shared/components/particles-background/particles-background.component';
 
-const userMock: WarahUser = {
+const userMock: WARAHUser = {
   id: 'u1',
   email: 'test@example.com',
   firstName: 'Kofi',

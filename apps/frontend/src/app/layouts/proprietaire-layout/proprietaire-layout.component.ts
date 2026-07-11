@@ -20,7 +20,7 @@ import { RouterModule } from '@angular/router';
 
         <div class="sidebar-logo">
           <div class="logo-wrap">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
           <button class="close-btn" type="button" (click)="sidebarOpen = false" aria-label="Fermer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -301,7 +301,7 @@ export class ProprietaireLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     try {
-      const raw = localStorage.getItem('warah_user');
+      const raw = localStorage.getItem('WARAH_user');
       if (raw) {
         const u = JSON.parse(raw);
         this.prenom = u.prenom || '';
@@ -312,8 +312,8 @@ export class ProprietaireLayoutComponent implements OnInit {
   }
 
   deconnecter(): void {
-    localStorage.removeItem('warah_token');
-    localStorage.removeItem('warah_user');
+    localStorage.removeItem('WARAH_token');
+    localStorage.removeItem('WARAH_user');
     window.location.href = '/auth/login';
   }
 }

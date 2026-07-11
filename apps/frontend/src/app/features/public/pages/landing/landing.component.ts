@@ -22,7 +22,7 @@ import { isPlatformBrowser } from '@angular/common';
 
           <!-- Logo -->
           <a href="/" class="navbar-logo">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </a>
 
           <!-- Navigation principale (desktop) -->
@@ -889,7 +889,7 @@ import { isPlatformBrowser } from '@angular/common';
         <div class="footer-container">
           <div class="footer-section footer-brand">
             <div class="footer-logo">
-              <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+              <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
             </div>
             <p class="footer-description">La plateforme immobilière n°1 au Togo. Trouvez votre logement ou gérez vos biens facilement.</p>
             <div class="footer-payment">
@@ -954,12 +954,12 @@ import { isPlatformBrowser } from '@angular/common';
               </svg>
               +228 90 00 00 00
             </a>
-            <a href="mailto:contact@warah.tg" class="footer-link">
+            <a href="mailto:contact@WARAH.tg" class="footer-link">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="footer-link-icon">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
-              contact@warah.tg
+              contact@WARAH.tg
             </a>
           </div>
         </div>

@@ -31,7 +31,7 @@ import { CommonModule } from '@angular/common';
             <p class="text-sm text-gray-600">{{ isEditMode ? 'Modifiez les informations du locataire' : 'Remplissez les informations pour ajouter un nouveau locataire' }}</p>
           </div>
           <button
-            routerLink="/locataires"
+            routerLink='/dashboard/locataires'
             class="btn-secondary"
           >
             Annuler
@@ -309,7 +309,7 @@ import { CommonModule } from '@angular/common';
             <div class="flex justify-end gap-3">
               <button
                 type="button"
-                routerLink="/locataires"
+                routerLink='/dashboard/locataires'
                 class="btn-secondary"
               >
                 Annuler
@@ -467,7 +467,7 @@ export class LocataireFormComponent implements OnInit {
       this.locatairesService.updateLocataire(this.locataireId, locataireData).subscribe({
         next: () => {
           this.isSubmitting = false;
-          this.router.navigate(['/locataires']);
+          this.router.navigate(['/dashboard/locataires']);
         },
         error: (error: any) => {
           this.isSubmitting = false;
@@ -478,7 +478,7 @@ export class LocataireFormComponent implements OnInit {
       this.locatairesService.createLocataire(locataireData).subscribe({
         next: () => {
           this.isSubmitting = false;
-          this.router.navigate(['/locataires']);
+          this.router.navigate(['/dashboard/locataires']);
         },
         error: (error: any) => {
           this.isSubmitting = false;

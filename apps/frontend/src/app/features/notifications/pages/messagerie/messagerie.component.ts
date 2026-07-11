@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
-import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokUploadComponent, UploadedFile } from '../../../../shared/components/lok-upload/lok-upload.component';
 import { CommonModule } from '@angular/common';
 import { NotificationsBackendService, Message, Conversation } from '../../services/notifications-backend.service';
@@ -15,7 +14,6 @@ import { NotificationsBackendService, Message, Conversation } from '../../servic
     ReactiveFormsModule,
     RouterModule,
     LokAlerteComponent,
-    LokSkeletonComponent,
     LokUploadComponent
   ],
   template: `

@@ -23,7 +23,7 @@ import { RouterModule } from '@angular/router';
       <aside class="sidebar" [class.open]="sidebarOpen">
         <div class="sidebar-header">
           <div class="logo">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
           <button class="sidebar-close-btn" type="button" (click)="closeSidebar()" aria-label="Fermer le menu">×</button>
         </div>
@@ -33,7 +33,7 @@ import { RouterModule } from '@angular/router';
             <span class="nav-icon">🏠</span>
             <span class="nav-text">Accueil</span>
           </a>
-          <a routerLink="/locataires/dashboard" class="nav-item active">
+          <a routerLink="/dashboard/locataires/dashboard" class="nav-item active">
             <span class="nav-icon">📊</span>
             <span class="nav-text">Dashboard</span>
           </a>
@@ -41,7 +41,7 @@ import { RouterModule } from '@angular/router';
             <span class="nav-icon">🔍</span>
             <span class="nav-text">Rechercher</span>
           </a>
-          <a routerLink="/locataires" class="nav-item">
+          <a routerLink='/dashboard/locataires' class="nav-item">
             <span class="nav-icon">⭐</span>
             <span class="nav-text">Favoris</span>
           </a>
@@ -110,7 +110,7 @@ import { RouterModule } from '@angular/router';
             <button routerLink="/annonces" class="action-btn primary">
               <span>🔍</span> Rechercher un logement
             </button>
-            <button routerLink="/locataires" class="action-btn secondary">
+            <button routerLink='/dashboard/locataires' class="action-btn secondary">
               <span>⭐</span> Voir mes favoris
             </button>
           </div>

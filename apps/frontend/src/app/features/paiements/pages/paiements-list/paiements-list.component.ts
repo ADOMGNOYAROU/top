@@ -29,7 +29,7 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
       <div class="pmt-header">
         <div class="pmt-header-left">
           <div class="logo pmt-logo-desktop">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
           <div class="pmt-divider"></div>
           <div>

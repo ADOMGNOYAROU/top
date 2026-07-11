@@ -17,8 +17,11 @@ export const authInterceptor = (
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      // 401 = session expirée — Supabase gère le refresh automatiquement via onAuthStateChange
-      if (error.status === 401) {
+      // 401 sur un endpoint protégé = session expirée → déconnexion
+      // Exclure les appels d'auth eux-mêmes (register, me) pour éviter une boucle
+      // lors du provisioning en arrière-plan après un login optimiste
+      const isAuthEndpoint = request.url.includes('/api/auth/');
+      if (error.status === 401 && !isAuthEndpoint) {
         authService.logout();
       }
       return throwError(() => error);

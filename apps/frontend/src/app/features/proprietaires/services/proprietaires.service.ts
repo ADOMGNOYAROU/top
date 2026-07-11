@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { environment } from '@env/environment';
 import { Proprietaire, StatutProprietaire } from '@core/models/proprietaire.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProprietairesService {
-  private apiUrl = 'http://localhost:3000/api/proprietaires';
+  private apiUrl = `${environment.apiUrl}/proprietaires`;
 
   constructor(private http: HttpClient) {}
 

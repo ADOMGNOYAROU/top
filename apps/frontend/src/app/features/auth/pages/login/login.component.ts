@@ -32,7 +32,7 @@ import { AuthService } from '../../../../core/services/auth.service';
       <div class="login-card">
         <!-- Logo et badge -->
         <div class="card-logo">
-          <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+          <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
         </div>
         <div class="security-badge">
           <span class="badge-icon">🔒</span>

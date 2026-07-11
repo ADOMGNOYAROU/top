@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '@env/environment';
 import {
   CompteUtilisateur,
   RoleUtilisateur,
@@ -18,7 +19,7 @@ import {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://localhost:3000/api/admin';
+  private apiUrl = `${environment.apiUrl}/admin`;
 
   constructor(private http: HttpClient) {}
 
@@ -83,12 +84,12 @@ export class AdminService {
 
   private getMockComptes(): CompteUtilisateur[] {
     return [
-      { id: '1', nom: 'Kouassi', prenom: 'Jean', email: 'jean.kouassi@warah.tg', telephone: '+228 90 12 34 56', role: RoleUtilisateur.PROPRIETAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-01-15', derniereConnexion: '2026-06-28', nombreBiens: 5 },
+      { id: '1', nom: 'Kouassi', prenom: 'Jean', email: 'jean.kouassi@WARAH.tg', telephone: '+228 90 12 34 56', role: RoleUtilisateur.PROPRIETAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-01-15', derniereConnexion: '2026-06-28', nombreBiens: 5 },
       { id: '2', nom: 'Adjavon', prenom: 'Akossiwa', email: 'akossiwa.adjavon@gmail.com', telephone: '+228 91 22 33 44', role: RoleUtilisateur.LOCATAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-02-03', derniereConnexion: '2026-06-29' },
-      { id: '3', nom: 'Mensah', prenom: 'Komi', email: 'komi.mensah@warah.tg', telephone: '+228 92 33 44 55', role: RoleUtilisateur.GESTIONNAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-01-20', derniereConnexion: '2026-06-27', nombreBiens: 18 },
+      { id: '3', nom: 'Mensah', prenom: 'Komi', email: 'komi.mensah@WARAH.tg', telephone: '+228 92 33 44 55', role: RoleUtilisateur.GESTIONNAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-01-20', derniereConnexion: '2026-06-27', nombreBiens: 18 },
       { id: '4', nom: 'Agbodjan', prenom: 'Yawa', email: 'yawa.agbodjan@hotmail.com', telephone: '+228 93 44 55 66', role: RoleUtilisateur.PROPRIETAIRE, statut: StatutCompte.SUSPENDU, dateInscription: '2026-03-10', derniereConnexion: '2026-05-02', nombreBiens: 2 },
       { id: '5', nom: 'Dossou', prenom: 'Kossi', email: 'kossi.dossou@yahoo.fr', telephone: '+228 94 55 66 77', role: RoleUtilisateur.LOCATAIRE, statut: StatutCompte.EN_ATTENTE, dateInscription: '2026-06-25' },
-      { id: '6', nom: 'Tchamie', prenom: 'Essowavana', email: 'essowavana.tchamie@warah.tg', telephone: '+228 95 66 77 88', role: RoleUtilisateur.PROPRIETAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-04-12', derniereConnexion: '2026-06-29', nombreBiens: 9 }
+      { id: '6', nom: 'Tchamie', prenom: 'Essowavana', email: 'essowavana.tchamie@WARAH.tg', telephone: '+228 95 66 77 88', role: RoleUtilisateur.PROPRIETAIRE, statut: StatutCompte.ACTIF, dateInscription: '2026-04-12', derniereConnexion: '2026-06-29', nombreBiens: 9 }
     ];
   }
 
