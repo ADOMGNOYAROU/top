@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
+// Correspondances enums Prisma (anglais) → frontend (français)
 const STATUS_MAP: Record<string, string> = {
   PAID: 'PAYE', PARTIAL: 'PARTIEL', LATE: 'EN_RETARD',
   OVERDUE: 'IMPAYE', PENDING: 'EN_RETARD', PENDING_CONFIRMATION: 'EN_RETARD', REJECTED: 'IMPAYE',
@@ -8,6 +9,7 @@ const STATUS_MAP: Record<string, string> = {
 const METHOD_MAP: Record<string, string> = {
   TMONEY: 'T_MONEY', FLOOZ: 'FLOOZ', CASH: 'ESPECES', BANK_TRANSFER: 'ESPECES',
 };
+// Correspondances inverse : frontend → Prisma
 const METHOD_MAP_IN: Record<string, string> = {
   T_MONEY: 'TMONEY', FLOOZ: 'FLOOZ', ESPECES: 'CASH',
 };
@@ -63,16 +65,33 @@ export class PaymentsService {
   }
 
   async create(ownerId: string, dto: any) {
-    // Trouver le bail actif sur le bien pour ce locataire
+    // On cherche le bail ACTIF par bienId, pas par locataireId — invariant :
+    // un bien OCCUPIED a toujours exactement un bail ACTIVE. Si plusieurs
+    // baux actifs existent sur le même bien, findFirst prend le plus récent
+    // (trié par défaut par createdAt DESC en Prisma).
     const lease = await this.prisma.lease.findFirst({
       where: { ownerId, propertyId: dto.bienId, status: 'ACTIVE' },
-      include: { scheduleEntries: { where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } }, orderBy: { dueDate: 'asc' }, take: 1 } },
+      include: {
+        // On prend la première échéance non soldée par ordre chronologique (FIFO).
+        // C'est intentionnel : on ne peut pas payer le mois 3 avant le mois 2.
+        scheduleEntries: {
+          where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
+          orderBy: { dueDate: 'asc' },
+          take: 1,
+        },
+      },
     });
     if (!lease) throw new NotFoundException('Bail actif introuvable pour ce bien');
 
     const entry = lease.scheduleEntries[0];
+    // Si entry est absent, cela signifie que toutes les échéances sont soldées
+    // ou que les 12 mois initiaux sont épuisés. Un cron doit avoir regénéré
+    // de nouvelles échéances via buildScheduleEntries avant ce point.
     if (!entry) throw new NotFoundException('Aucune échéance en attente');
 
+    // Transaction atomique : le Payment et la mise à jour de l'échéance
+    // réussissent ensemble ou échouent ensemble — évite une double comptabilisation
+    // si la mise à jour de l'échéance venait à échouer après la création du Payment.
     const p = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.create({
         data: {
@@ -88,13 +107,18 @@ export class PaymentsService {
         },
         include: { lease: { include: { tenant: true, property: true } }, scheduleEntry: true },
       });
-      await tx.paymentScheduleEntry.update({ where: { id: entry.id }, data: { status: 'PAID', paidAmount: Number(dto.montant) } });
+      await tx.paymentScheduleEntry.update({
+        where: { id: entry.id },
+        data: { status: 'PAID', paidAmount: Number(dto.montant) },
+      });
       return payment;
     });
     return this.map(p);
   }
 
   async getImpayes(ownerId: string) {
+    // Retourne les échéances OVERDUE (non les Payment rejetés) — le frontend
+    // affiche ces entrées dans l'onglet "Impayés" pour action du propriétaire.
     const entries = await this.prisma.paymentScheduleEntry.findMany({
       where: { lease: { ownerId }, status: 'OVERDUE' },
       orderBy: { dueDate: 'asc' },

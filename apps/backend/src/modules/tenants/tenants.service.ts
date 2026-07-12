@@ -5,6 +5,10 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class TenantsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Le statut est calculé à la volée depuis les échéances — il n'est pas stocké.
+  // Pour que OVERDUE apparaisse ici, un cron job doit d'abord marquer les
+  // PaymentScheduleEntry dépassées (status PENDING → OVERDUE). Sans ce cron,
+  // tous les locataires en retard affichent ACTIF.
   private async getStatut(userId: string, ownerId: string): Promise<string> {
     const overdue = await this.prisma.paymentScheduleEntry.count({
       where: { lease: { tenantUserId: userId, ownerId }, status: 'OVERDUE' },
@@ -17,6 +21,8 @@ export class TenantsService {
   }
 
   private async mapTenant(user: any, ownerId: string) {
+    // On prend le bail le plus récent — un locataire peut avoir eu plusieurs baux
+    // successifs sur des biens différents du même propriétaire.
     const lease = await this.prisma.lease.findFirst({
       where: { tenantUserId: user.id, ownerId },
       orderBy: { createdAt: 'desc' },
@@ -28,6 +34,8 @@ export class TenantsService {
       prenoms: user.firstName,
       email: user.email,
       telephone: user.phone ?? '',
+      // L'adresse et la pièce d'identité ne sont pas stockées sur User — champs
+      // réservés pour une future saisie lors de l'invitation du locataire.
       adresse: { quartier: '', ville: '', adresseComplete: '' },
       pieceIdentite: { type: 'CNI', numero: '', dateExpiration: null },
       bienId: lease?.propertyId ?? '',
@@ -40,6 +48,9 @@ export class TenantsService {
   }
 
   async findAll(ownerId: string, filters: any = {}) {
+    // On passe par les baux plutôt que par User.role = TENANT pour n'exposer
+    // que les locataires qui ont un bail avec CE propriétaire — un même
+    // utilisateur TENANT peut être locataire de plusieurs propriétaires.
     const leaseWhere: any = { ownerId };
     if (filters.bienId) leaseWhere.propertyId = filters.bienId;
 
@@ -73,6 +84,8 @@ export class TenantsService {
   }
 
   async create(ownerId: string, dto: any) {
+    // La transaction garantit l'atomicité : si la création des échéances échoue,
+    // l'utilisateur et le bail sont annulés — la base reste cohérente.
     const user = await this.prisma.$transaction(async (tx) => {
       const u = await tx.user.create({
         data: {
@@ -84,6 +97,7 @@ export class TenantsService {
         },
       });
       await tx.tenantProfile.create({ data: { userId: u.id, invitedByUserId: ownerId } });
+
       if (dto.bienId && dto.dateDebutBail) {
         const property = await tx.property.findFirst({ where: { id: dto.bienId, ownerId } });
         if (property) {
@@ -94,6 +108,8 @@ export class TenantsService {
               propertyId: dto.bienId,
               ownerId,
               tenantUserId: u.id,
+              // Le loyer et les charges sont figés au moment de la signature du bail —
+              // modifier le loyer du bien ultérieurement n'affecte pas les baux existants.
               monthlyRent: property.monthlyRent,
               monthlyCharges: property.monthlyCharges,
               paymentFrequency: 'MONTHLY',
@@ -102,8 +118,12 @@ export class TenantsService {
               securityDeposit: dto.caution ?? 0,
             },
           });
+          // Marquer le bien comme occupé dès la création du bail
           await tx.property.update({ where: { id: dto.bienId }, data: { status: 'OCCUPIED' } });
-          // Générer les échéances mensuelles (12 mois ou jusqu'à la fin du bail)
+
+          // Créer les échéances initiales — sans elles POST /api/paiements retourne 404.
+          // Pour les baux > 12 mois, un cron job devra générer les échéances suivantes
+          // avant que la 12e ne soit consommée.
           const expectedAmount = property.monthlyRent + property.monthlyCharges;
           const entries = this.buildScheduleEntries(lease.id, startDate, endDate, expectedAmount);
           await tx.paymentScheduleEntry.createMany({ data: entries });
@@ -114,6 +134,8 @@ export class TenantsService {
     return this.mapTenant(user, ownerId);
   }
 
+  // Génère au maximum 12 échéances mensuelles à partir de startDate.
+  // dueDate = premier jour de chaque période (le locataire doit payer en début de mois).
   private buildScheduleEntries(leaseId: string, startDate: Date, endDate: Date | null, expectedAmount: number) {
     const entries: any[] = [];
     const maxMonths = 12;
@@ -124,7 +146,6 @@ export class TenantsService {
       periodEnd.setMonth(periodEnd.getMonth() + 1);
       periodEnd.setDate(periodEnd.getDate() - 1);
       const dueDate = new Date(periodStart);
-      // Stopper si on dépasse la fin de bail
       if (endDate && periodStart > endDate) break;
       entries.push({ leaseId, periodStart, periodEnd, dueDate, expectedAmount });
     }
