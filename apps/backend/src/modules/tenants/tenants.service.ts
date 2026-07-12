@@ -87,7 +87,9 @@ export class TenantsService {
       if (dto.bienId && dto.dateDebutBail) {
         const property = await tx.property.findFirst({ where: { id: dto.bienId, ownerId } });
         if (property) {
-          await tx.lease.create({
+          const startDate = new Date(dto.dateDebutBail);
+          const endDate = dto.dateFinBail ? new Date(dto.dateFinBail) : null;
+          const lease = await tx.lease.create({
             data: {
               propertyId: dto.bienId,
               ownerId,
@@ -95,17 +97,38 @@ export class TenantsService {
               monthlyRent: property.monthlyRent,
               monthlyCharges: property.monthlyCharges,
               paymentFrequency: 'MONTHLY',
-              startDate: new Date(dto.dateDebutBail),
-              endDate: dto.dateFinBail ? new Date(dto.dateFinBail) : null,
+              startDate,
+              endDate,
               securityDeposit: dto.caution ?? 0,
             },
           });
           await tx.property.update({ where: { id: dto.bienId }, data: { status: 'OCCUPIED' } });
+          // Générer les échéances mensuelles (12 mois ou jusqu'à la fin du bail)
+          const expectedAmount = property.monthlyRent + property.monthlyCharges;
+          const entries = this.buildScheduleEntries(lease.id, startDate, endDate, expectedAmount);
+          await tx.paymentScheduleEntry.createMany({ data: entries });
         }
       }
       return u;
     });
     return this.mapTenant(user, ownerId);
+  }
+
+  private buildScheduleEntries(leaseId: string, startDate: Date, endDate: Date | null, expectedAmount: number) {
+    const entries: any[] = [];
+    const maxMonths = 12;
+    for (let i = 0; i < maxMonths; i++) {
+      const periodStart = new Date(startDate);
+      periodStart.setMonth(periodStart.getMonth() + i);
+      const periodEnd = new Date(periodStart);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+      periodEnd.setDate(periodEnd.getDate() - 1);
+      const dueDate = new Date(periodStart);
+      // Stopper si on dépasse la fin de bail
+      if (endDate && periodStart > endDate) break;
+      entries.push({ leaseId, periodStart, periodEnd, dueDate, expectedAmount });
+    }
+    return entries;
   }
 
   async update(id: string, ownerId: string, dto: any) {
