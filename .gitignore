@@ -62,3 +62,6 @@ apps/backend/node_modules/.prisma/
 *.temp
 .tmp/
 .temp/
+
+# ── Fixtures locales sensibles (pièces d'identité réelles, jamais commit) ──
+apps/backend/.local-fixtures/

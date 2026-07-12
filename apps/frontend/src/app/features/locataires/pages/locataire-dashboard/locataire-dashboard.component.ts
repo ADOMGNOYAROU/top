@@ -1,34 +1,58 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Component, ChangeDetectionStrategy } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { RouterModule } from "@angular/router";
 
 @Component({
-  selector: 'app-locataire-dashboard',
+  selector: "app-locataire-dashboard",
   standalone: true,
   imports: [CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dashboard-layout">
       <!-- Bouton menu mobile -->
-      <button class="mobile-menu-btn" type="button" (click)="toggleSidebar()" aria-label="Ouvrir le menu">
+      <button
+        class="mobile-menu-btn"
+        type="button"
+        (click)="toggleSidebar()"
+        aria-label="Ouvrir le menu"
+      >
         <span></span><span></span><span></span>
       </button>
 
       <!-- Overlay mobile -->
       @if (sidebarOpen) {
-        <div class="sidebar-overlay" (click)="closeSidebar()"></div>
+        <div
+          class="sidebar-overlay"
+          (click)="closeSidebar()"
+          (keydown.enter)="closeSidebar()"
+          (keydown.space)="closeSidebar()"
+          role="button"
+          tabindex="0"
+        ></div>
       }
 
       <!-- Sidebar -->
       <aside class="sidebar" [class.open]="sidebarOpen">
         <div class="sidebar-header">
           <div class="logo">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img">
+            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img" />
           </div>
-          <button class="sidebar-close-btn" type="button" (click)="closeSidebar()" aria-label="Fermer le menu">×</button>
+          <button
+            class="sidebar-close-btn"
+            type="button"
+            (click)="closeSidebar()"
+            aria-label="Fermer le menu"
+          >
+            ×
+          </button>
         </div>
 
-        <nav class="sidebar-nav" (click)="closeSidebar()">
+        <nav
+          class="sidebar-nav"
+          (click)="closeSidebar()"
+          (keydown.enter)="closeSidebar()"
+          tabindex="0"
+        >
           <a routerLink="/" class="nav-item">
             <span class="nav-icon">🏠</span>
             <span class="nav-text">Accueil</span>
@@ -72,7 +96,9 @@ import { RouterModule } from '@angular/router';
         <div class="dashboard-container">
           <div class="dashboard-header">
             <h1 class="dashboard-title">Espace Locataire</h1>
-            <p class="dashboard-subtitle">Trouvez votre logement idéal au Togo</p>
+            <p class="dashboard-subtitle">
+              Trouvez votre logement idéal au Togo
+            </p>
           </div>
 
           <div class="dashboard-stats">
@@ -163,7 +189,11 @@ import { RouterModule } from '@angular/router';
     /* Sidebar Styles */
     .sidebar {
       width: 260px;
-      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      background: linear-gradient(
+        180deg,
+        var(--color-primary) 0%,
+        var(--color-primary-dark) 100%
+      );
       display: flex;
       flex-direction: column;
       position: fixed;
@@ -437,7 +467,7 @@ import { RouterModule } from '@angular/router';
         grid-template-columns: 1fr;
       }
     }
-  `
+  `,
 })
 export class LocataireDashboardComponent {
   sidebarOpen = false;

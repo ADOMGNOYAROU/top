@@ -1,19 +1,41 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
-import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from "@angular/core";
+import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
+import { RouterModule } from "@angular/router";
+import { LokAlerteComponent } from "../../../../shared/components/lok-alerte/lok-alerte.component";
+import { LokMontantFcfaComponent } from "../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component";
+import { CommonModule } from "@angular/common";
+
+interface Mandat {
+  id: string;
+  proprietaire: string;
+  bien: string;
+  typeMandat: string;
+  duree: string;
+  commission: number;
+  loyerMensuel: number;
+  dateDebut: Date;
+  dateFin: Date;
+  statut: string;
+  bienId: string;
+}
+
+interface MandatHistorique {
+  id: string;
+  proprietaire: string;
+  bien: string;
+  dateFin: Date;
+  totalCommissions: number;
+}
 
 @Component({
-  selector: 'app-portefeuille',
+  selector: "app-portefeuille",
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
     LokAlerteComponent,
-    LokMontantFcfaComponent
+    LokMontantFcfaComponent,
   ],
   styles: `
     /* Global SVG Icon Sizing Fix */
@@ -34,13 +56,14 @@ import { CommonModule } from '@angular/common';
       <div class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">Portefeuille de Mandats</h1>
-            <p class="text-sm text-gray-600">Gérez vos mandats de gestion immobilière</p>
+            <h1 class="text-2xl font-bold text-gray-900">
+              Portefeuille de Mandats
+            </h1>
+            <p class="text-sm text-gray-600">
+              Gérez vos mandats de gestion immobilière
+            </p>
           </div>
-          <button
-            routerLink="/gestionnaire/dashboard"
-            class="btn-secondary"
-          >
+          <button routerLink="/gestionnaire/dashboard" class="btn-secondary">
             Retour
           </button>
         </div>
@@ -62,22 +85,30 @@ import { CommonModule } from '@angular/common';
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Total mandats</p>
-            <p class="text-3xl font-bold text-gray-900">{{ statistiques.totalMandats }}</p>
+            <p class="text-3xl font-bold text-gray-900">
+              {{ statistiques.totalMandats }}
+            </p>
           </div>
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Mandats actifs</p>
-            <p class="text-3xl font-bold text-green-600">{{ statistiques.mandatsActifs }}</p>
+            <p class="text-3xl font-bold text-green-600">
+              {{ statistiques.mandatsActifs }}
+            </p>
           </div>
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Revenus mensuels</p>
             <p class="text-3xl font-bold text-primary">
-              <lok-montant-fcfa [montant]="statistiques.revenusMensuels"></lok-montant-fcfa>
+              <lok-montant-fcfa
+                [montant]="statistiques.revenusMensuels"
+              ></lok-montant-fcfa>
             </p>
           </div>
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Commissions</p>
             <p class="text-3xl font-bold text-orange-600">
-              <lok-montant-fcfa [montant]="statistiques.commissions"></lok-montant-fcfa>
+              <lok-montant-fcfa
+                [montant]="statistiques.commissions"
+              ></lok-montant-fcfa>
             </p>
           </div>
         </div>
@@ -88,17 +119,34 @@ import { CommonModule } from '@angular/common';
             (click)="showAddMandatForm = !showAddMandatForm"
             class="btn-primary"
           >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
             </svg>
             Nouveau mandat
           </button>
-          <button
-            (click)="exporterPortefeuille()"
-            class="btn-secondary"
-          >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          <button (click)="exporterPortefeuille()" class="btn-secondary">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
             </svg>
             Exporter
           </button>
@@ -106,15 +154,28 @@ import { CommonModule } from '@angular/common';
 
         <!-- Formulaire d'ajout de mandat -->
         @if (showAddMandatForm) {
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Nouveau mandat de gestion</h2>
-            
-            <form [formGroup]="mandatForm" (ngSubmit)="addMandat()" class="space-y-4">
+          <div
+            class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6"
+          >
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+              Nouveau mandat de gestion
+            </h2>
+
+            <form
+              [formGroup]="mandatForm"
+              (ngSubmit)="addMandat()"
+              class="space-y-4"
+            >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Propriétaire -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Propriétaire</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="mandat-proprietaire"
+                    >Propriétaire</label
+                  >
                   <input
+                    id="mandat-proprietaire"
                     type="text"
                     formControlName="proprietaire"
                     class="input-field"
@@ -124,8 +185,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Bien -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Bien</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="mandat-bien"
+                    >Bien</label
+                  >
                   <input
+                    id="mandat-bien"
                     type="text"
                     formControlName="bien"
                     class="input-field"
@@ -135,8 +201,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Type de mandat -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Type de mandat</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="mandat-type"
+                    >Type de mandat</label
+                  >
                   <select
+                    id="mandat-type"
                     formControlName="typeMandat"
                     class="input-field"
                   >
@@ -148,8 +219,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Durée -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Durée</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="mandat-duree"
+                    >Durée</label
+                  >
                   <select
+                    id="mandat-duree"
                     formControlName="duree"
                     class="input-field"
                   >
@@ -162,8 +238,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Commission -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Commission (%)</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="mandat-commission"
+                    >Commission (%)</label
+                  >
                   <input
+                    id="mandat-commission"
                     type="number"
                     formControlName="commission"
                     class="input-field"
@@ -175,8 +256,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Loyer mensuel -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Loyer mensuel (FCFA)</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="mandat-loyer"
+                    >Loyer mensuel (FCFA)</label
+                  >
                   <input
+                    id="mandat-loyer"
                     type="number"
                     formControlName="loyerMensuel"
                     class="input-field"
@@ -211,8 +297,12 @@ import { CommonModule } from '@angular/common';
 
         <!-- Liste des mandats -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Mandats en cours</h2>
+          <div
+            class="p-6 border-b border-gray-200 flex items-center justify-between"
+          >
+            <h2 class="text-lg font-semibold text-gray-900">
+              Mandats en cours
+            </h2>
             <div class="flex gap-2">
               <select class="input-field text-base py-2">
                 <option value="tous">Tous les mandats</option>
@@ -221,11 +311,9 @@ import { CommonModule } from '@angular/common';
               </select>
             </div>
           </div>
-          
+
           @if (loading) {
-            <div class="p-6 text-center text-gray-500">
-              Chargement...
-            </div>
+            <div class="p-6 text-center text-gray-500">Chargement...</div>
           } @else if (mandats.length === 0) {
             <div class="p-6 text-center text-gray-500">
               Aucun mandat en cours
@@ -238,24 +326,39 @@ import { CommonModule } from '@angular/common';
                     <div class="flex-1">
                       <div class="flex items-center gap-3 mb-2">
                         <span
-                          [class]="mandat.statut === 'actif' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                          [class]="
+                            mandat.statut === 'actif'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          "
                           class="px-3 py-1 rounded-full text-xs font-medium"
                         >
-                          {{ mandat.statut === 'actif' ? 'Actif' : 'Bientôt expiré' }}
+                          {{
+                            mandat.statut === "actif"
+                              ? "Actif"
+                              : "Bientôt expiré"
+                          }}
                         </span>
                         <span class="text-sm text-gray-600">
                           {{ mandat.typeMandat }}
                         </span>
                       </div>
-                      
-                      <h3 class="font-semibold text-gray-900 mb-1">{{ mandat.bien }}</h3>
-                      <p class="text-sm text-gray-600 mb-2">Propriétaire: {{ mandat.proprietaire }}</p>
-                      
+
+                      <h3 class="font-semibold text-gray-900 mb-1">
+                        {{ mandat.bien }}
+                      </h3>
+                      <p class="text-sm text-gray-600 mb-2">
+                        Propriétaire: {{ mandat.proprietaire }}
+                      </p>
+
                       <div class="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p class="text-gray-500">Loyer</p>
                           <p class="font-medium">
-                            <lok-montant-fcfa [montant]="mandat.loyerMensuel"></lok-montant-fcfa>/mois
+                            <lok-montant-fcfa
+                              [montant]="mandat.loyerMensuel"
+                            ></lok-montant-fcfa
+                            >/mois
                           </p>
                         </div>
                         <div>
@@ -264,11 +367,13 @@ import { CommonModule } from '@angular/common';
                         </div>
                         <div>
                           <p class="text-gray-500">Expiration</p>
-                          <p class="font-medium">{{ mandat.dateFin | date:'dd/MM/yyyy' }}</p>
+                          <p class="font-medium">
+                            {{ mandat.dateFin | date: "dd/MM/yyyy" }}
+                          </p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="flex gap-2 ml-4">
                       <button
                         routerLink="/biens/{{ mandat.bienId }}"
@@ -293,9 +398,11 @@ import { CommonModule } from '@angular/common';
         <!-- Historique des mandats -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mt-6">
           <div class="p-6 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Historique des mandats</h2>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Historique des mandats
+            </h2>
           </div>
-          
+
           @if (historique.length === 0) {
             <div class="p-6 text-center text-gray-500">
               Aucun mandat terminé
@@ -306,10 +413,16 @@ import { CommonModule } from '@angular/common';
                 <div class="p-4 flex items-center justify-between">
                   <div>
                     <p class="font-medium text-gray-900">{{ mandat.bien }}</p>
-                    <p class="text-sm text-gray-600">{{ mandat.proprietaire }} • Terminé le {{ mandat.dateFin | date:'dd/MM/yyyy' }}</p>
+                    <p class="text-sm text-gray-600">
+                      {{ mandat.proprietaire }} • Terminé le
+                      {{ mandat.dateFin | date: "dd/MM/yyyy" }}
+                    </p>
                   </div>
                   <span class="text-gray-500 text-sm">
-                    <lok-montant-fcfa [montant]="mandat.totalCommissions"></lok-montant-fcfa> gagnés
+                    <lok-montant-fcfa
+                      [montant]="mandat.totalCommissions"
+                    ></lok-montant-fcfa>
+                    gagnés
                   </span>
                 </div>
               }
@@ -320,95 +433,101 @@ import { CommonModule } from '@angular/common';
     </div>
   `,
 })
-export class PortefeuilleComponent implements OnInit {
-  mandatForm: FormGroup;
+export class PortefeuilleComponent {
+  // Type inféré depuis fb.nonNullable.group() — jamais annoter en
+  // `FormGroup` nu (voir /review frontend).
+  mandatForm: ReturnType<PortefeuilleComponent["buildForm"]>;
   showAddMandatForm: boolean = false;
   isAdding: boolean = false;
   loading: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
+  errorMessage: string = "";
+  successMessage: string = "";
 
   statistiques = {
     totalMandats: 15,
     mandatsActifs: 12,
     revenusMensuels: 1250000,
-    commissions: 100000
+    commissions: 100000,
   };
 
-  mandats = [
+  mandats: Mandat[] = [
     {
-      id: '1',
-      proprietaire: 'M. Adzo Kofi',
-      bien: 'Villa Sokodé',
-      typeMandat: 'Gestion complète',
-      duree: '3_ans',
+      id: "1",
+      proprietaire: "M. Adzo Kofi",
+      bien: "Villa Sokodé",
+      typeMandat: "Gestion complète",
+      duree: "3_ans",
       commission: 8,
       loyerMensuel: 150000,
-      dateDebut: new Date('2023-01-01'),
-      dateFin: new Date('2026-01-01'),
-      statut: 'actif',
-      bienId: '2'
+      dateDebut: new Date("2023-01-01"),
+      dateFin: new Date("2026-01-01"),
+      statut: "actif",
+      bienId: "2",
     },
     {
-      id: '2',
-      proprietaire: 'Mme Afi Agbessi',
-      bien: 'Appartement Lomé Centre',
-      typeMandat: 'Gestion complète',
-      duree: 'indetermine',
+      id: "2",
+      proprietaire: "Mme Afi Agbessi",
+      bien: "Appartement Lomé Centre",
+      typeMandat: "Gestion complète",
+      duree: "indetermine",
       commission: 10,
       loyerMensuel: 100000,
-      dateDebut: new Date('2022-06-01'),
-      dateFin: new Date('2025-06-01'),
-      statut: 'actif',
-      bienId: '1'
+      dateDebut: new Date("2022-06-01"),
+      dateFin: new Date("2025-06-01"),
+      statut: "actif",
+      bienId: "1",
     },
     {
-      id: '3',
-      proprietaire: 'M. Yao Komlan',
-      bien: 'Bureau Kpalimé',
-      typeMandat: 'Location seule',
-      duree: '1_an',
+      id: "3",
+      proprietaire: "M. Yao Komlan",
+      bien: "Bureau Kpalimé",
+      typeMandat: "Location seule",
+      duree: "1_an",
       commission: 5,
       loyerMensuel: 125000,
-      dateDebut: new Date('2024-01-01'),
-      dateFin: new Date('2024-12-31'),
-      statut: 'expire',
-      bienId: '4'
-    }
+      dateDebut: new Date("2024-01-01"),
+      dateFin: new Date("2024-12-31"),
+      statut: "expire",
+      bienId: "4",
+    },
   ];
 
-  historique = [
+  historique: MandatHistorique[] = [
     {
-      id: 'h1',
-      proprietaire: 'M. Koffi Mensah',
-      bien: 'Studio Atakpamé',
-      dateFin: new Date('2023-12-31'),
-      totalCommissions: 45000
+      id: "h1",
+      proprietaire: "M. Koffi Mensah",
+      bien: "Studio Atakpamé",
+      dateFin: new Date("2023-12-31"),
+      totalCommissions: 45000,
     },
     {
-      id: 'h2',
-      proprietaire: 'Mme Akossiwa',
-      bien: 'Chambre Tsévié',
-      dateFin: new Date('2023-11-30'),
-      totalCommissions: 30000
-    }
+      id: "h2",
+      proprietaire: "Mme Akossiwa",
+      bien: "Chambre Tsévié",
+      dateFin: new Date("2023-11-30"),
+      totalCommissions: 30000,
+    },
   ];
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router
-  ) {
-    this.mandatForm = this.fb.group({
-      proprietaire: ['', Validators.required],
-      bien: ['', Validators.required],
-      typeMandat: ['gestion_complete', Validators.required],
-      duree: ['1_an', Validators.required],
-      commission: ['', [Validators.required, Validators.min(0), Validators.max(20)]],
-      loyerMensuel: ['', [Validators.required, Validators.min(0)]]
-    });
+  private readonly fb = inject(FormBuilder);
+
+  constructor() {
+    this.mandatForm = this.buildForm();
   }
 
-  ngOnInit(): void {}
+  private buildForm() {
+    return this.fb.nonNullable.group({
+      proprietaire: ["", Validators.required],
+      bien: ["", Validators.required],
+      typeMandat: ["gestion_complete", Validators.required],
+      duree: ["1_an", Validators.required],
+      commission: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(20)],
+      ],
+      loyerMensuel: [0, [Validators.required, Validators.min(0)]],
+    });
+  }
 
   /**
    * Ajoute un nouveau mandat
@@ -419,41 +538,44 @@ export class PortefeuilleComponent implements OnInit {
     }
 
     this.isAdding = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.errorMessage = "";
+    this.successMessage = "";
 
     // Simulation d'ajout
     setTimeout(() => {
       this.isAdding = false;
-      this.successMessage = 'Mandat ajouté avec succès !';
-      
-      const dureeAnnees = this.mandatForm.value.duree === 'indetermine' ? 3 : 
-                         parseInt(this.mandatForm.value.duree);
-      
+      this.successMessage = "Mandat ajouté avec succès !";
+
+      const formValue = this.mandatForm.getRawValue();
+      const dureeAnnees =
+        formValue.duree === "indetermine" ? 3 : parseInt(formValue.duree, 10);
+
       this.mandats.unshift({
-        id: Math.random().toString(36).substr(2, 9),
-        proprietaire: this.mandatForm.value.proprietaire,
-        bien: this.mandatForm.value.bien,
-        typeMandat: this.mandatForm.value.typeMandat.replace('_', ' '),
-        duree: this.mandatForm.value.duree,
-        commission: this.mandatForm.value.commission,
-        loyerMensuel: this.mandatForm.value.loyerMensuel,
+        id: Math.random().toString(36).substring(2, 11),
+        proprietaire: formValue.proprietaire,
+        bien: formValue.bien,
+        typeMandat: formValue.typeMandat.replace("_", " "),
+        duree: formValue.duree,
+        commission: formValue.commission,
+        loyerMensuel: formValue.loyerMensuel,
         dateDebut: new Date(),
         dateFin: new Date(Date.now() + dureeAnnees * 365 * 24 * 60 * 60 * 1000),
-        statut: 'actif',
-        bienId: 'new'
+        statut: "actif",
+        bienId: "new",
       });
-      
+
       this.statistiques.totalMandats++;
       this.statistiques.mandatsActifs++;
-      this.statistiques.revenusMensuels += this.mandatForm.value.loyerMensuel;
-      this.statistiques.commissions += Math.round(this.mandatForm.value.loyerMensuel * this.mandatForm.value.commission / 100);
-      
+      this.statistiques.revenusMensuels += formValue.loyerMensuel;
+      this.statistiques.commissions += Math.round(
+        (formValue.loyerMensuel * formValue.commission) / 100,
+      );
+
       this.showAddMandatForm = false;
       this.mandatForm.reset();
-      
+
       setTimeout(() => {
-        this.successMessage = '';
+        this.successMessage = "";
       }, 3000);
     }, 1500);
   }
@@ -462,12 +584,14 @@ export class PortefeuilleComponent implements OnInit {
    * Renouvelle un mandat
    */
   renouvelerMandat(mandatId: string): void {
-    const mandat = this.mandats.find(m => m.id === mandatId);
+    const mandat = this.mandats.find((m) => m.id === mandatId);
     if (mandat) {
-      mandat.dateFin = new Date(mandat.dateFin.getTime() + 365 * 24 * 60 * 60 * 1000);
-      this.successMessage = 'Mandat renouvelé avec succès !';
+      mandat.dateFin = new Date(
+        mandat.dateFin.getTime() + 365 * 24 * 60 * 60 * 1000,
+      );
+      this.successMessage = "Mandat renouvelé avec succès !";
       setTimeout(() => {
-        this.successMessage = '';
+        this.successMessage = "";
       }, 3000);
     }
   }
@@ -476,6 +600,6 @@ export class PortefeuilleComponent implements OnInit {
    * Exporte le portefeuille
    */
   exporterPortefeuille(): void {
-    alert('Export du portefeuille en cours...');
+    alert("Export du portefeuille en cours...");
   }
 }

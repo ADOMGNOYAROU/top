@@ -1,15 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { LocatairesService, LocataireRequest } from '../../services/locataires.service';
-import { Locataire, StatutLocataire } from '@core/models/locataire.model';
-import { LokTelephoneTogoComponent } from '../../../../shared/components/lok-telephone-togo/lok-telephone-togo.component';
-import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
-import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from "@angular/core";
+import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
+import { Router, ActivatedRoute, RouterModule } from "@angular/router";
+import { HttpErrorResponse } from "@angular/common/http";
+import {
+  LocatairesService,
+  LocataireRequest,
+} from "../../services/locataires.service";
+import { Locataire } from "@core/models/locataire.model";
+import { LokTelephoneTogoComponent } from "../../../../shared/components/lok-telephone-togo/lok-telephone-togo.component";
+import { LokAlerteComponent } from "../../../../shared/components/lok-alerte/lok-alerte.component";
+import { LokSkeletonComponent } from "../../../../shared/components/lok-skeleton/lok-skeleton.component";
+import { CommonModule } from "@angular/common";
+import { extractErrorMessage } from "@core/utils/http-error.util";
+import { toDateInputValue } from "@core/utils/date.util";
 
 @Component({
-  selector: 'app-locataire-form',
+  selector: "app-locataire-form",
   standalone: true,
   imports: [
     CommonModule,
@@ -17,7 +23,7 @@ import { CommonModule } from '@angular/common';
     RouterModule,
     LokTelephoneTogoComponent,
     LokAlerteComponent,
-    LokSkeletonComponent
+    LokSkeletonComponent,
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
@@ -25,13 +31,20 @@ import { CommonModule } from '@angular/common';
       <div class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ isEditMode ? 'Modifier le locataire' : 'Ajouter un locataire' }}</h1>
-            <p class="text-sm text-gray-600">{{ isEditMode ? 'Modifiez les informations du locataire' : 'Remplissez les informations pour ajouter un nouveau locataire' }}</p>
+            <h1 class="text-2xl font-bold text-gray-900">
+              {{
+                isEditMode ? "Modifier le locataire" : "Ajouter un locataire"
+              }}
+            </h1>
+            <p class="text-sm text-gray-600">
+              {{
+                isEditMode
+                  ? "Modifiez les informations du locataire"
+                  : "Remplissez les informations pour ajouter un nouveau locataire"
+              }}
+            </p>
           </div>
-          <button
-            routerLink="/locataires"
-            class="btn-secondary"
-          >
+          <button routerLink="/locataires" class="btn-secondary">
             Annuler
           </button>
         </div>
@@ -48,44 +61,75 @@ import { CommonModule } from '@angular/common';
         @if (loading) {
           <lok-skeleton type="card"></lok-skeleton>
         } @else {
-          <form [formGroup]="locataireForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <form
+            [formGroup]="locataireForm"
+            (ngSubmit)="onSubmit()"
+            class="space-y-6"
+          >
             <!-- Informations personnelles -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h2>
-              
+            <div
+              class="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
+              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Informations personnelles
+              </h2>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Nom -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-nom"
+                    >Nom *</label
+                  >
                   <input
+                    id="locataire-nom"
                     type="text"
                     formControlName="nom"
                     class="input-field"
                     placeholder="Ex: Mensah"
                   />
-                  @if (locataireForm.get('nom')?.touched && locataireForm.get('nom')?.invalid) {
+                  @if (
+                    locataireForm.get("nom")?.touched &&
+                    locataireForm.get("nom")?.invalid
+                  ) {
                     <p class="text-red-500 text-xs mt-1">Le nom est requis</p>
                   }
                 </div>
 
                 <!-- Prénoms -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Prénoms *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-prenoms"
+                    >Prénoms *</label
+                  >
                   <input
+                    id="locataire-prenoms"
                     type="text"
                     formControlName="prenoms"
                     class="input-field"
                     placeholder="Ex: Kofi"
                   />
-                  @if (locataireForm.get('prenoms')?.touched && locataireForm.get('prenoms')?.invalid) {
-                    <p class="text-red-500 text-xs mt-1">Les prénoms sont requis</p>
+                  @if (
+                    locataireForm.get("prenoms")?.touched &&
+                    locataireForm.get("prenoms")?.invalid
+                  ) {
+                    <p class="text-red-500 text-xs mt-1">
+                      Les prénoms sont requis
+                    </p>
                   }
                 </div>
 
                 <!-- Email -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-email"
+                    >Email</label
+                  >
                   <input
+                    id="locataire-email"
                     type="email"
                     formControlName="email"
                     class="input-field"
@@ -95,19 +139,31 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Téléphone -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
+                  <span class="block text-sm font-medium text-gray-700 mb-2"
+                    >Téléphone *</span
+                  >
                   <lok-telephone-togo
                     formControlName="telephone"
                   ></lok-telephone-togo>
-                  @if (locataireForm.get('telephone')?.touched && locataireForm.get('telephone')?.invalid) {
-                    <p class="text-red-500 text-xs mt-1">Le téléphone est requis</p>
+                  @if (
+                    locataireForm.get("telephone")?.touched &&
+                    locataireForm.get("telephone")?.invalid
+                  ) {
+                    <p class="text-red-500 text-xs mt-1">
+                      Le téléphone est requis
+                    </p>
                   }
                 </div>
 
                 <!-- Date de naissance -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-date-naissance"
+                    >Date de naissance</label
+                  >
                   <input
+                    id="locataire-date-naissance"
                     type="date"
                     formControlName="dateNaissance"
                     class="input-field"
@@ -117,29 +173,49 @@ import { CommonModule } from '@angular/common';
             </div>
 
             <!-- Adresse -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div
+              class="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
               <h2 class="text-lg font-semibold text-gray-900 mb-4">Adresse</h2>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                formGroupName="adresse"
+              >
                 <!-- Quartier -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Quartier *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-quartier"
+                    >Quartier *</label
+                  >
                   <input
+                    id="locataire-quartier"
                     type="text"
-                    formControlName="adresse.quartier"
+                    formControlName="quartier"
                     class="input-field"
                     placeholder="Ex: Centre"
                   />
-                  @if (locataireForm.get('adresse.quartier')?.touched && locataireForm.get('adresse.quartier')?.invalid) {
-                    <p class="text-red-500 text-xs mt-1">Le quartier est requis</p>
+                  @if (
+                    locataireForm.get("adresse.quartier")?.touched &&
+                    locataireForm.get("adresse.quartier")?.invalid
+                  ) {
+                    <p class="text-red-500 text-xs mt-1">
+                      Le quartier est requis
+                    </p>
                   }
                 </div>
 
                 <!-- Ville -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Ville *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-ville"
+                    >Ville *</label
+                  >
                   <select
-                    formControlName="adresse.ville"
+                    id="locataire-ville"
+                    formControlName="ville"
                     class="input-field"
                   >
                     <option value="">Sélectionnez une ville</option>
@@ -149,17 +225,27 @@ import { CommonModule } from '@angular/common';
                     <option value="Atakpamé">Atakpamé</option>
                     <option value="Kpalimé">Kpalimé</option>
                   </select>
-                  @if (locataireForm.get('adresse.ville')?.touched && locataireForm.get('adresse.ville')?.invalid) {
-                    <p class="text-red-500 text-xs mt-1">La ville est requise</p>
+                  @if (
+                    locataireForm.get("adresse.ville")?.touched &&
+                    locataireForm.get("adresse.ville")?.invalid
+                  ) {
+                    <p class="text-red-500 text-xs mt-1">
+                      La ville est requise
+                    </p>
                   }
                 </div>
 
                 <!-- Adresse complète -->
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Adresse complète</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-adresse-complete"
+                    >Adresse complète</label
+                  >
                   <input
+                    id="locataire-adresse-complete"
                     type="text"
-                    formControlName="adresse.adresseComplete"
+                    formControlName="adresseComplete"
                     class="input-field"
                     placeholder="Ex: 123 Rue de la Paix, Lomé"
                   />
@@ -168,15 +254,27 @@ import { CommonModule } from '@angular/common';
             </div>
 
             <!-- Pièce d'identité -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Pièce d'identité</h2>
-              
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div
+              class="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
+              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Pièce d'identité
+              </h2>
+
+              <div
+                class="grid grid-cols-1 md:grid-cols-3 gap-4"
+                formGroupName="pieceIdentite"
+              >
                 <!-- Type -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-piece-type"
+                    >Type *</label
+                  >
                   <select
-                    formControlName="pieceIdentite.type"
+                    id="locataire-piece-type"
+                    formControlName="type"
                     class="input-field"
                   >
                     <option value="">Sélectionnez</option>
@@ -184,31 +282,49 @@ import { CommonModule } from '@angular/common';
                     <option value="PASSEPORT">Passeport</option>
                     <option value="CARTE_RESIDENCE">Carte de résidence</option>
                   </select>
-                  @if (locataireForm.get('pieceIdentite.type')?.touched && locataireForm.get('pieceIdentite.type')?.invalid) {
+                  @if (
+                    locataireForm.get("pieceIdentite.type")?.touched &&
+                    locataireForm.get("pieceIdentite.type")?.invalid
+                  ) {
                     <p class="text-red-500 text-xs mt-1">Le type est requis</p>
                   }
                 </div>
 
                 <!-- Numéro -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Numéro *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-piece-numero"
+                    >Numéro *</label
+                  >
                   <input
+                    id="locataire-piece-numero"
                     type="text"
-                    formControlName="pieceIdentite.numero"
+                    formControlName="numero"
                     class="input-field"
                     placeholder="Ex: 1234567890123"
                   />
-                  @if (locataireForm.get('pieceIdentite.numero')?.touched && locataireForm.get('pieceIdentite.numero')?.invalid) {
-                    <p class="text-red-500 text-xs mt-1">Le numéro est requis</p>
+                  @if (
+                    locataireForm.get("pieceIdentite.numero")?.touched &&
+                    locataireForm.get("pieceIdentite.numero")?.invalid
+                  ) {
+                    <p class="text-red-500 text-xs mt-1">
+                      Le numéro est requis
+                    </p>
                   }
                 </div>
 
                 <!-- Date d'expiration -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date d'expiration</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-piece-expiration"
+                    >Date d'expiration</label
+                  >
                   <input
+                    id="locataire-piece-expiration"
                     type="date"
-                    formControlName="pieceIdentite.dateExpiration"
+                    formControlName="dateExpiration"
                     class="input-field"
                   />
                 </div>
@@ -216,14 +332,23 @@ import { CommonModule } from '@angular/common';
             </div>
 
             <!-- Bail -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Informations du bail</h2>
-              
+            <div
+              class="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
+              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Informations du bail
+              </h2>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Bien -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Bien *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-bien"
+                    >Bien *</label
+                  >
                   <select
+                    id="locataire-bien"
                     formControlName="bienId"
                     class="input-field"
                   >
@@ -234,28 +359,46 @@ import { CommonModule } from '@angular/common';
                     <option value="4">Bureau Kpalimé</option>
                     <option value="5">Local Commercial Lomé</option>
                   </select>
-                  @if (locataireForm.get('bienId')?.touched && locataireForm.get('bienId')?.invalid) {
+                  @if (
+                    locataireForm.get("bienId")?.touched &&
+                    locataireForm.get("bienId")?.invalid
+                  ) {
                     <p class="text-red-500 text-xs mt-1">Le bien est requis</p>
                   }
                 </div>
 
                 <!-- Date de début -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de début du bail *</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-date-debut-bail"
+                    >Date de début du bail *</label
+                  >
                   <input
+                    id="locataire-date-debut-bail"
                     type="date"
                     formControlName="dateDebutBail"
                     class="input-field"
                   />
-                  @if (locataireForm.get('dateDebutBail')?.touched && locataireForm.get('dateDebutBail')?.invalid) {
-                    <p class="text-red-500 text-xs mt-1">La date de début est requise</p>
+                  @if (
+                    locataireForm.get("dateDebutBail")?.touched &&
+                    locataireForm.get("dateDebutBail")?.invalid
+                  ) {
+                    <p class="text-red-500 text-xs mt-1">
+                      La date de début est requise
+                    </p>
                   }
                 </div>
 
                 <!-- Date de fin -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin du bail</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-date-fin-bail"
+                    >Date de fin du bail</label
+                  >
                   <input
+                    id="locataire-date-fin-bail"
                     type="date"
                     formControlName="dateFinBail"
                     class="input-field"
@@ -264,8 +407,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Caution -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Caution (FCFA)</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-caution"
+                    >Caution (FCFA)</label
+                  >
                   <input
+                    id="locataire-caution"
                     type="number"
                     formControlName="caution"
                     class="input-field"
@@ -276,14 +424,23 @@ import { CommonModule } from '@angular/common';
             </div>
 
             <!-- Garant -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Informations du garant (optionnel)</h2>
-              
+            <div
+              class="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
+              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Informations du garant (optionnel)
+              </h2>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Nom du garant -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Nom du garant</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-garant-nom"
+                    >Nom du garant</label
+                  >
                   <input
+                    id="locataire-garant-nom"
                     type="text"
                     formControlName="garantNom"
                     class="input-field"
@@ -293,8 +450,13 @@ import { CommonModule } from '@angular/common';
 
                 <!-- Téléphone du garant -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone du garant</label>
+                  <label
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    for="locataire-garant-telephone"
+                    >Téléphone du garant</label
+                  >
                   <input
+                    id="locataire-garant-telephone"
                     type="text"
                     formControlName="garantTelephone"
                     class="input-field"
@@ -319,13 +481,28 @@ import { CommonModule } from '@angular/common';
                 class="btn-primary"
               >
                 @if (isSubmitting) {
-                  <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    class="animate-spin h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Enregistrement...
                 } @else {
-                  {{ isEditMode ? 'Modifier' : 'Créer' }}
+                  {{ isEditMode ? "Modifier" : "Créer" }}
                 }
               </button>
             </div>
@@ -336,47 +513,54 @@ import { CommonModule } from '@angular/common';
   `,
 })
 export class LocataireFormComponent implements OnInit {
-  locataireForm: FormGroup;
+  // Type inféré depuis fb.nonNullable.group() — jamais annoter en
+  // `FormGroup` nu (voir /review frontend).
+  locataireForm: ReturnType<LocataireFormComponent["buildForm"]>;
   isEditMode: boolean = false;
   loading: boolean = false;
   isSubmitting: boolean = false;
-  errorMessage: string = '';
+  errorMessage: string = "";
   locataireId: string | null = null;
-  telephone: string = '';
+  telephone: string = "";
 
-  constructor(
-    private fb: FormBuilder,
-    private locatairesService: LocatairesService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
-    this.locataireForm = this.fb.group({
-      nom: ['', Validators.required],
-      prenoms: ['', Validators.required],
-      email: [''],
-      telephone: ['', Validators.required],
-      dateNaissance: [''],
-      adresse: this.fb.group({
-        quartier: ['', Validators.required],
-        ville: ['', Validators.required],
-        adresseComplete: ['']
+  private readonly fb = inject(FormBuilder);
+  private readonly locatairesService = inject(LocatairesService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  constructor() {
+    this.locataireForm = this.buildForm();
+  }
+
+  private buildForm() {
+    return this.fb.nonNullable.group({
+      nom: ["", Validators.required],
+      prenoms: ["", Validators.required],
+      email: [""],
+      telephone: ["", Validators.required],
+      dateNaissance: [""],
+      adresse: this.fb.nonNullable.group({
+        quartier: ["", Validators.required],
+        ville: ["", Validators.required],
+        adresseComplete: [""],
       }),
-      pieceIdentite: this.fb.group({
-        type: ['', Validators.required],
-        numero: ['', Validators.required],
-        dateExpiration: ['']
+      pieceIdentite: this.fb.nonNullable.group({
+        type: ["", Validators.required],
+        numero: ["", Validators.required],
+        dateExpiration: [""],
       }),
-      bienId: ['', Validators.required],
-      dateDebutBail: ['', Validators.required],
-      dateFinBail: [''],
-      caution: [''],
-      garantNom: [''],
-      garantTelephone: ['']
+      bienId: ["", Validators.required],
+      dateDebutBail: ["", Validators.required],
+      dateFinBail: [""],
+      // Type number — `type="number"`, comme surface/loyer sur bien-form.
+      caution: [0],
+      garantNom: [""],
+      garantTelephone: [""],
     });
   }
 
   ngOnInit(): void {
-    this.locataireId = this.route.snapshot.paramMap.get('id');
+    this.locataireId = this.route.snapshot.paramMap.get("id");
     if (this.locataireId) {
       this.isEditMode = true;
       this.loadLocataire(this.locataireId);
@@ -390,29 +574,39 @@ export class LocataireFormComponent implements OnInit {
     this.loading = true;
     this.locatairesService.getLocataireById(id).subscribe({
       next: (locataire: Locataire) => {
+        // toDateInputValue() — `locataire.*` sont des Date (API), mais un
+        // <input type="date"> attend une chaîne 'yyyy-MM-dd' ; patcher avec
+        // un objet Date brut ne s'affichait pas correctement (bug latent
+        // masqué par l'ancien typage `any`, voir /review frontend).
         this.locataireForm.patchValue({
           nom: locataire.nom,
           prenoms: locataire.prenoms,
           email: locataire.email,
           telephone: locataire.telephone,
-          dateNaissance: locataire.dateNaissance,
+          dateNaissance: toDateInputValue(locataire.dateNaissance),
           adresse: locataire.adresse,
-          pieceIdentite: locataire.pieceIdentite,
+          pieceIdentite: {
+            type: locataire.pieceIdentite.type,
+            numero: locataire.pieceIdentite.numero,
+            dateExpiration: toDateInputValue(
+              locataire.pieceIdentite.dateExpiration,
+            ),
+          },
           bienId: locataire.bienId,
-          dateDebutBail: locataire.dateDebutBail,
-          dateFinBail: locataire.dateFinBail,
-          caution: locataire.caution,
+          dateDebutBail: toDateInputValue(locataire.dateDebutBail),
+          dateFinBail: toDateInputValue(locataire.dateFinBail),
+          caution: locataire.caution ?? 0,
           garantNom: locataire.garantNom,
-          garantTelephone: locataire.garantTelephone
+          garantTelephone: locataire.garantTelephone,
         });
         this.telephone = locataire.telephone;
         this.loading = false;
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement du locataire:', error);
-        this.errorMessage = 'Erreur lors du chargement du locataire';
+      error: (error: HttpErrorResponse) => {
+        console.error("Erreur lors du chargement du locataire:", error);
+        this.errorMessage = "Erreur lors du chargement du locataire";
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -432,45 +626,69 @@ export class LocataireFormComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.errorMessage = '';
+    this.errorMessage = "";
 
+    // .getRawValue() — .value reste Partial<T> même en nonNullable.
+    const formValue = this.locataireForm.getRawValue();
     const locataireData: LocataireRequest = {
-      nom: this.locataireForm.value.nom,
-      prenoms: this.locataireForm.value.prenoms,
-      email: this.locataireForm.value.email,
-      telephone: this.locataireForm.value.telephone,
-      adresse: this.locataireForm.value.adresse,
-      dateNaissance: this.locataireForm.value.dateNaissance ? new Date(this.locataireForm.value.dateNaissance) : undefined,
-      pieceIdentite: this.locataireForm.value.pieceIdentite,
-      bienId: this.locataireForm.value.bienId,
-      dateDebutBail: new Date(this.locataireForm.value.dateDebutBail),
-      dateFinBail: this.locataireForm.value.dateFinBail ? new Date(this.locataireForm.value.dateFinBail) : undefined,
-      caution: this.locataireForm.value.caution,
-      garantNom: this.locataireForm.value.garantNom,
-      garantTelephone: this.locataireForm.value.garantTelephone
+      nom: formValue.nom,
+      prenoms: formValue.prenoms,
+      email: formValue.email,
+      telephone: formValue.telephone,
+      adresse: formValue.adresse,
+      dateNaissance: formValue.dateNaissance
+        ? new Date(formValue.dateNaissance)
+        : undefined,
+      // Écart déjà présent avant ce nettoyage (options du <select> alignées
+      // sur l'union, mais le contrôle reste typé string) — hors périmètre
+      // d'une passe qualité de code, voir /review frontend.
+      pieceIdentite: {
+        type: formValue.pieceIdentite
+          .type as LocataireRequest["pieceIdentite"]["type"],
+        numero: formValue.pieceIdentite.numero,
+        dateExpiration: formValue.pieceIdentite.dateExpiration
+          ? new Date(formValue.pieceIdentite.dateExpiration)
+          : undefined,
+      },
+      bienId: formValue.bienId,
+      dateDebutBail: new Date(formValue.dateDebutBail),
+      dateFinBail: formValue.dateFinBail
+        ? new Date(formValue.dateFinBail)
+        : undefined,
+      caution: formValue.caution,
+      garantNom: formValue.garantNom,
+      garantTelephone: formValue.garantTelephone,
     };
 
     if (this.isEditMode && this.locataireId) {
-      this.locatairesService.updateLocataire(this.locataireId, locataireData).subscribe({
-        next: () => {
-          this.isSubmitting = false;
-          this.router.navigate(['/locataires']);
-        },
-        error: (error: any) => {
-          this.isSubmitting = false;
-          this.errorMessage = error.error?.message || 'Erreur lors de la modification du locataire';
-        }
-      });
+      this.locatairesService
+        .updateLocataire(this.locataireId, locataireData)
+        .subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            void this.router.navigate(["/locataires"]);
+          },
+          error: (error: HttpErrorResponse) => {
+            this.isSubmitting = false;
+            this.errorMessage = extractErrorMessage(
+              error,
+              "Erreur lors de la modification du locataire",
+            );
+          },
+        });
     } else {
       this.locatairesService.createLocataire(locataireData).subscribe({
         next: () => {
           this.isSubmitting = false;
-          this.router.navigate(['/locataires']);
+          void this.router.navigate(["/locataires"]);
         },
-        error: (error: any) => {
+        error: (error: HttpErrorResponse) => {
           this.isSubmitting = false;
-          this.errorMessage = error.error?.message || 'Erreur lors de la création du locataire';
-        }
+          this.errorMessage = extractErrorMessage(
+            error,
+            "Erreur lors de la création du locataire",
+          );
+        },
       });
     }
   }

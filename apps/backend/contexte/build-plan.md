@@ -173,7 +173,7 @@ Stack : NestJS 10+ (TypeScript strict), Prisma comme ORM, PostgreSQL via Supabas
 - Endpoint `DELETE /api/properties/:id/photos/:photoId` — supprime la ligne Prisma et le fichier Storage
 - Endpoint `POST /api/properties/:id/documents` — upload de documents (état des lieux, titre, assurance), max 20 par bien, 10 Mo par fichier, types acceptés PDF/JPG/PNG
 - Endpoint `GET /api/properties/:id/documents` — liste des documents avec URLs signées (expiration 15 min)
-- Toutes les URLs servies aux clients sont signées et non publiques
+- Toutes les URLs servies aux clients sont signées et non publiques/
 
 ### 14 Locataires
 

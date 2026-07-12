@@ -13,6 +13,9 @@ node_modules/
 # Coverage
 coverage/
 
+# SonarQube scanner cache/report
+.scannerwork/
+
 # Prisma generated client (re-généré au build)
 node_modules/.prisma/
 

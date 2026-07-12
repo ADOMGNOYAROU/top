@@ -1,10 +1,11 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
-import { Router } from '@angular/router';
+import { Injectable, PLATFORM_ID, inject } from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { Observable, BehaviorSubject, tap, catchError, throwError } from "rxjs";
+import { Router } from "@angular/router";
 
-export type UserType = 'proprietaire_local' | 'proprietaire_diaspora' | 'locataire' | 'gestionnaire';
+export type UserType =
+  "proprietaire_local" | "proprietaire_diaspora" | "locataire" | "gestionnaire";
 
 export interface RegisterRequest {
   prenom: string;
@@ -27,17 +28,19 @@ export interface LoginRequest {
   motDePasse: string;
 }
 
+export interface AuthenticatedUser {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  ville: string;
+}
+
 export interface LoginResponse {
   token: string;
   refreshToken: string;
-  utilisateur: {
-    id: string;
-    prenom: string;
-    nom: string;
-    email: string;
-    telephone: string;
-    ville: string;
-  };
+  utilisateur: AuthenticatedUser;
 }
 
 export interface ForgotPasswordRequest {
@@ -55,18 +58,20 @@ export interface Verify2FARequest {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api/auth'; // À remplacer par l'URL réelle de l'API
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private apiUrl = "http://localhost:3000/api/auth"; // À remplacer par l'URL réelle de l'API
+  private currentUserSubject = new BehaviorSubject<AuthenticatedUser | null>(
+    null,
+  );
   public currentUser$ = this.currentUserSubject.asObservable();
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+
+  constructor() {
     // Vérifier si un token existe au démarrage
     this.loadUserFromStorage();
   }
@@ -79,56 +84,61 @@ export class AuthService {
     if (!this.isBrowser) {
       return;
     }
-    const token = localStorage.getItem('warah_token');
-    const user = localStorage.getItem('warah_user');
+    const token = localStorage.getItem("warah_token");
+    const user = localStorage.getItem("warah_user");
 
     if (token && user) {
-      this.currentUserSubject.next(JSON.parse(user));
+      this.currentUserSubject.next(JSON.parse(user) as AuthenticatedUser);
     }
   }
 
   /**
    * Inscription d'un nouvel utilisateur
    */
-  register(data: RegisterRequest): Observable<any> {
+  register(data: RegisterRequest): Observable<LoginResponse> {
     const formData = new FormData();
-    formData.append('prenom', data.prenom);
-    formData.append('nom', data.nom);
-    formData.append('email', data.email);
-    formData.append('telephone', data.telephone);
-    formData.append('motDePasse', data.motDePasse);
-    formData.append('typeUtilisateur', data.typeUtilisateur);
-    
+    formData.append("prenom", data.prenom);
+    formData.append("nom", data.nom);
+    formData.append("email", data.email);
+    formData.append("telephone", data.telephone);
+    formData.append("motDePasse", data.motDePasse);
+    formData.append("typeUtilisateur", data.typeUtilisateur);
+
     // Champs conditionnels
     if (data.ville) {
-      formData.append('ville', data.ville);
+      formData.append("ville", data.ville);
     }
     if (data.paysResidence) {
-      formData.append('paysResidence', data.paysResidence);
+      formData.append("paysResidence", data.paysResidence);
     }
     if (data.zoneIntervention && data.zoneIntervention.length > 0) {
-      formData.append('zoneIntervention', JSON.stringify(data.zoneIntervention));
+      formData.append(
+        "zoneIntervention",
+        JSON.stringify(data.zoneIntervention),
+      );
     }
     if (data.tarifs) {
-      formData.append('tarifs', data.tarifs);
+      formData.append("tarifs", data.tarifs);
     }
     if (data.references) {
-      formData.append('references', data.references);
+      formData.append("references", data.references);
     }
     if (data.pieceIdentite) {
-      formData.append('pieceIdentite', data.pieceIdentite);
+      formData.append("pieceIdentite", data.pieceIdentite);
     }
 
-    return this.http.post(`${this.apiUrl}/register`, formData).pipe(
-      tap((response: any) => {
-        // Stocker le token et l'utilisateur
-        this.setSession(response);
-      }),
-      catchError((error: any) => {
-        console.error('Erreur d\'inscription:', error);
-        return of(error);
-      })
-    );
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/register`, formData)
+      .pipe(
+        tap((response: LoginResponse) => {
+          // Stocker le token et l'utilisateur
+          this.setSession(response);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error("Erreur d'inscription:", error);
+          return throwError(() => error);
+        }),
+      );
   }
 
   /**
@@ -140,10 +150,10 @@ export class AuthService {
         // Stocker le token et l'utilisateur
         this.setSession(response);
       }),
-      catchError((error: any) => {
-        console.error('Erreur de connexion:', error);
-        return of(error);
-      })
+      catchError((error: HttpErrorResponse) => {
+        console.error("Erreur de connexion:", error);
+        return throwError(() => error);
+      }),
     );
   }
 
@@ -151,38 +161,40 @@ export class AuthService {
    * Vérification du code 2FA
    */
   verify2FA(data: Verify2FARequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/verify-2fa`, data).pipe(
-      tap((response: LoginResponse) => {
-        this.setSession(response);
-      }),
-      catchError((error: any) => {
-        console.error('Erreur de vérification 2FA:', error);
-        return of(error);
-      })
-    );
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/verify-2fa`, data)
+      .pipe(
+        tap((response: LoginResponse) => {
+          this.setSession(response);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error("Erreur de vérification 2FA:", error);
+          return throwError(() => error);
+        }),
+      );
   }
 
   /**
    * Demande de réinitialisation de mot de passe
    */
-  forgotPassword(data: ForgotPasswordRequest): Observable<any> {
+  forgotPassword(data: ForgotPasswordRequest): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/forgot-password`, data).pipe(
-      catchError((error: any) => {
-        console.error('Erreur de demande de réinitialisation:', error);
-        return of(error);
-      })
+      catchError((error: HttpErrorResponse) => {
+        console.error("Erreur de demande de réinitialisation:", error);
+        return throwError(() => error);
+      }),
     );
   }
 
   /**
    * Réinitialisation du mot de passe
    */
-  resetPassword(data: ResetPasswordRequest): Observable<any> {
+  resetPassword(data: ResetPasswordRequest): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/reset-password`, data).pipe(
-      catchError((error: any) => {
-        console.error('Erreur de réinitialisation:', error);
-        return of(error);
-      })
+      catchError((error: HttpErrorResponse) => {
+        console.error("Erreur de réinitialisation:", error);
+        return throwError(() => error);
+      }),
     );
   }
 
@@ -192,16 +204,16 @@ export class AuthService {
   logout(): void {
     // Supprimer le token et l'utilisateur du localStorage
     if (this.isBrowser) {
-      localStorage.removeItem('warah_token');
-      localStorage.removeItem('warah_refresh_token');
-      localStorage.removeItem('warah_user');
+      localStorage.removeItem("warah_token");
+      localStorage.removeItem("warah_refresh_token");
+      localStorage.removeItem("warah_user");
     }
 
     // Réinitialiser le BehaviorSubject
     this.currentUserSubject.next(null);
-    
+
     // Rediriger vers la page de connexion
-    this.router.navigate(['/auth/login']);
+    void this.router.navigate(["/auth/login"]);
   }
 
   /**
@@ -209,9 +221,9 @@ export class AuthService {
    */
   private setSession(response: LoginResponse): void {
     if (this.isBrowser) {
-      localStorage.setItem('warah_token', response.token);
-      localStorage.setItem('warah_refresh_token', response.refreshToken);
-      localStorage.setItem('warah_user', JSON.stringify(response.utilisateur));
+      localStorage.setItem("warah_token", response.token);
+      localStorage.setItem("warah_refresh_token", response.refreshToken);
+      localStorage.setItem("warah_user", JSON.stringify(response.utilisateur));
     }
 
     this.currentUserSubject.next(response.utilisateur);
@@ -221,13 +233,13 @@ export class AuthService {
    * Retourne le token JWT actuel
    */
   getToken(): string | null {
-    return this.isBrowser ? localStorage.getItem('warah_token') : null;
+    return this.isBrowser ? localStorage.getItem("warah_token") : null;
   }
 
   /**
    * Retourne l'utilisateur actuel
    */
-  getCurrentUser(): any {
+  getCurrentUser(): AuthenticatedUser | null {
     return this.currentUserSubject.value;
   }
 
@@ -242,18 +254,21 @@ export class AuthService {
    * Rafraîchit le token JWT
    */
   refreshToken(): Observable<LoginResponse> {
-    const refreshToken = this.isBrowser ? localStorage.getItem('warah_refresh_token') : null;
+    const refreshToken = this.isBrowser
+      ? localStorage.getItem("warah_refresh_token")
+      : null;
 
-
-    return this.http.post<LoginResponse>(`${this.apiUrl}/refresh-token`, { refreshToken }).pipe(
-      tap((response: LoginResponse) => {
-        this.setSession(response);
-      }),
-      catchError((error: any) => {
-        // Si le refresh échoue, déconnecter l'utilisateur
-        this.logout();
-        return of(error);
-      })
-    );
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/refresh-token`, { refreshToken })
+      .pipe(
+        tap((response: LoginResponse) => {
+          this.setSession(response);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          // Si le refresh échoue, déconnecter l'utilisateur
+          this.logout();
+          return throwError(() => error);
+        }),
+      );
   }
 }
