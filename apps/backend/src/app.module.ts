@@ -23,6 +23,7 @@ import { ListingsModule } from './modules/listings/listings.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { GestionnaireModule } from './modules/gestionnaire/gestionnaire.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ProprietairesModule } from './modules/proprietaires/proprietaires.module';
 import { SupabaseAuthGuard } from './common/guards/supabase-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -87,6 +88,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     AdminModule,
     GestionnaireModule,
     NotificationsModule,
+    ProprietairesModule,
   ],
   providers: [
     {

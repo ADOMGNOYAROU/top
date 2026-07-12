@@ -70,13 +70,18 @@ export class PropertiesService {
   }
 
   async create(ownerId: string, dto: any) {
+    // Le frontend envoie adresse: { quartier, ville, adresseComplete } — on supporte aussi les champs à plat
+    const adresse = dto.adresse ?? {};
+    const quartier = adresse.quartier ?? dto.quartier ?? '';
+    const ville = adresse.ville ?? dto.ville ?? '';
+    const adresseComplete = adresse.adresseComplete ?? dto.adresseComplete ?? `${quartier}, ${ville}`.replace(/^,\s*|,\s*$/g, '');
     const p = await this.prisma.property.create({
       data: {
         ownerId,
-        type: TYPE_MAP_IN[dto.typeBien] ?? 'APARTMENT',
-        address: dto.adresseComplete ?? `${dto.quartier}, ${dto.ville}`,
-        neighborhood: dto.quartier ?? '',
-        city: dto.ville ?? '',
+        type: TYPE_MAP_IN[dto.typeBien] ?? TYPE_MAP_IN[dto.type] ?? 'APARTMENT',
+        address: adresseComplete,
+        neighborhood: quartier,
+        city: ville,
         surfaceArea: Number(dto.surface) || 0,
         roomsCount: dto.nbPieces ? Number(dto.nbPieces) : null,
         monthlyRent: Number(dto.loyer) || 0,
@@ -92,11 +97,15 @@ export class PropertiesService {
   async update(id: string, ownerId: string, dto: any) {
     const existing = await this.prisma.property.findFirst({ where: { id, ownerId } });
     if (!existing) throw new NotFoundException('Bien introuvable');
+    const adresse = dto.adresse ?? {};
     const data: any = {};
-    if (dto.typeBien)     data.type = TYPE_MAP_IN[dto.typeBien] ?? existing.type;
-    if (dto.quartier)     data.neighborhood = dto.quartier;
-    if (dto.ville)        data.city = dto.ville;
-    if (dto.adresseComplete) data.address = dto.adresseComplete;
+    if (dto.typeBien || dto.type) data.type = TYPE_MAP_IN[dto.typeBien ?? dto.type] ?? existing.type;
+    const quartier = adresse.quartier ?? dto.quartier;
+    const ville    = adresse.ville    ?? dto.ville;
+    const adresseComplete = adresse.adresseComplete ?? dto.adresseComplete;
+    if (quartier)     data.neighborhood = quartier;
+    if (ville)        data.city = ville;
+    if (adresseComplete) data.address = adresseComplete;
     if (dto.surface !== undefined)   data.surfaceArea = Number(dto.surface);
     if (dto.nbPieces !== undefined)  data.roomsCount = Number(dto.nbPieces);
     if (dto.loyer !== undefined)     data.monthlyRent = Number(dto.loyer);
