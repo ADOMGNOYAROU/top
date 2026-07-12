@@ -1,49 +1,36 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { Meta, Title } from "@angular/platform-browser";
-import { FormsModule } from "@angular/forms";
-import { Router, ActivatedRoute, RouterModule } from "@angular/router";
-import { AnnoncesService } from "../../services/annonces.service";
-import { Annonce } from "@core/models/annonce.model";
-import { LokSkeletonComponent } from "../../../../shared/components/lok-skeleton/lok-skeleton.component";
-import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-state/lok-empty-state.component";
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { AnnoncesService } from '../../services/annonces.service';
+import { Annonce } from '@core/models/annonce.model';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
 
 @Component({
-  selector: "app-annonces-public",
+  selector: 'app-annonces-public',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    LokSkeletonComponent,
-    LokEmptyStateComponent,
-  ],
+  imports: [CommonModule, FormsModule, RouterModule, LokSkeletonComponent, LokEmptyStateComponent],
   template: `
     <div class="pub-page">
+
       <!-- Hero -->
       <div class="hero">
         <img
           src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
-          alt="Lomé"
-          class="hero-img"
-        />
+          alt="Lomé" class="hero-img">
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <div class="hero-nav">
             <a routerLink="/" class="hero-logo">
-              <img
-                src="/assets/warah-logo.png"
-                alt="WARAH"
-                class="nav-logo-img"
-              />
+              <img src="/assets/WARAH-logo.png" alt="WARAH" class="nav-logo-img">
             </a>
             <a routerLink="/auth/login" class="hero-login-btn">Se connecter</a>
           </div>
           <div class="hero-text">
             <h1 class="hero-title">Trouvez votre logement idéal au Togo</h1>
-            <p class="hero-sub">
-              Appartements, maisons, bureaux — gérés en toute transparence
-            </p>
+            <p class="hero-sub">Appartements, maisons, bureaux — gérés en toute transparence</p>
             <div class="hero-stats">
               <div class="hero-stat">
                 <span class="hero-stat-num">{{ annonces.length }}</span>
@@ -68,33 +55,18 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       <div class="filters-bar">
         <div class="filters-inner">
           <div class="filter-item">
-            <label class="filter-label" for="annonces-public-type"
-              >Type de bien</label
-            >
-            <select
-              id="annonces-public-type"
-              [(ngModel)]="typeFilter"
-              (ngModelChange)="applyFilters()"
-              class="filter-select"
-            >
+            <label class="filter-label">Type de bien</label>
+            <select [(ngModel)]="typeFilter" (ngModelChange)="applyFilters()" class="filter-select">
               <option value="">Tous les types</option>
               <option value="maison">Maison</option>
               <option value="appartement">Appartement</option>
               <option value="bureau">Bureau</option>
-              <option value="terrain">Terrain</option>
               <option value="villa">Villa</option>
             </select>
           </div>
           <div class="filter-item">
-            <label class="filter-label" for="annonces-public-ville"
-              >Ville</label
-            >
-            <select
-              id="annonces-public-ville"
-              [(ngModel)]="villeFilter"
-              (ngModelChange)="applyFilters()"
-              class="filter-select"
-            >
+            <label class="filter-label">Ville</label>
+            <select [(ngModel)]="villeFilter" (ngModelChange)="applyFilters()" class="filter-select">
               <option value="">Toutes les villes</option>
               <option value="lome">Lomé</option>
               <option value="kpalime">Kpalimé</option>
@@ -105,15 +77,8 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
             </select>
           </div>
           <div class="filter-item">
-            <label class="filter-label" for="annonces-public-budget"
-              >Budget maximum</label
-            >
-            <select
-              id="annonces-public-budget"
-              [(ngModel)]="budgetFilter"
-              (ngModelChange)="applyFilters()"
-              class="filter-select"
-            >
+            <label class="filter-label">Budget maximum</label>
+            <select [(ngModel)]="budgetFilter" (ngModelChange)="applyFilters()" class="filter-select">
               <option value="">Tous les prix</option>
               <option value="50000">- de 50 000 FCFA</option>
               <option value="100000">- de 100 000 FCFA</option>
@@ -123,12 +88,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
           </div>
           @if (hasActiveFilters()) {
             <button (click)="clearFilters()" class="filter-reset">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -136,11 +96,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
             </button>
           }
           <div class="filter-count">
-            <span
-              >{{ filteredAnnonces.length }} résultat{{
-                filteredAnnonces.length > 1 ? "s" : ""
-              }}</span
-            >
+            <span>{{ filteredAnnonces.length }} résultat{{ filteredAnnonces.length > 1 ? 's' : '' }}</span>
           </div>
         </div>
       </div>
@@ -149,7 +105,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       <div class="listings">
         @if (loading) {
           <div class="ann-grid">
-            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            @for (i of [1,2,3,4,5,6]; track i) {
               <lok-skeleton type="card"></lok-skeleton>
             }
           </div>
@@ -164,50 +120,27 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
         } @else {
           <div class="ann-grid">
             @for (annonce of filteredAnnonces; track annonce.id) {
-              <div
-                class="ann-card"
-                (click)="viewAnnonce(annonce.id)"
-                (keydown.enter)="viewAnnonce(annonce.id)"
-                role="button"
-                tabindex="0"
-              >
+              <div class="ann-card" (click)="viewAnnonce(annonce.id)">
                 <div class="ann-img-wrap">
                   <img
-                    [src]="
-                      annonce.photos[0] ||
-                      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-                    "
+                    [src]="annonce.photos[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'"
                     [alt]="annonce.titre"
-                    class="ann-img"
-                  />
-                  <span
-                    class="ann-type-badge"
-                    [class.badge-location]="annonce.type === 'LOCATION'"
-                    [class.badge-vente]="annonce.type === 'VENTE'"
-                  >
-                    {{ annonce.type === "LOCATION" ? "Location" : "Vente" }}
+                    class="ann-img">
+                  <span class="ann-type-badge" [class.badge-location]="annonce.type === 'LOCATION'" [class.badge-vente]="annonce.type === 'VENTE'">
+                    {{ annonce.type === 'LOCATION' ? 'Location' : 'Vente' }}
                   </span>
-                  @if (annonce.statut === "ACTIVE") {
+                  @if (annonce.statut === 'ACTIVE') {
                     <span class="ann-dispo-badge">Disponible</span>
                   }
                   <div class="ann-price-overlay">
-                    {{ annonce.prix | number: "1.0-0" }} FCFA{{
-                      annonce.type === "LOCATION" ? "/mois" : ""
-                    }}
+                    {{ annonce.prix | number:'1.0-0' }} FCFA{{ annonce.type === 'LOCATION' ? '/mois' : '' }}
                   </div>
                 </div>
                 <div class="ann-body">
                   <h3 class="ann-title">{{ annonce.titre }}</h3>
                   <p class="ann-location">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-                      ></path>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                       <circle cx="12" cy="10" r="3"></circle>
                     </svg>
                     {{ annonce.adresse.quartier }}, {{ annonce.adresse.ville }}
@@ -227,8 +160,8 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
   styles: `
     .pub-page {
       min-height: 100vh;
-      background: #f4f6f9;
-      font-family: "Inter", sans-serif;
+      background: #F4F6F9;
+      font-family: 'Inter', sans-serif;
     }
 
     /* ── Hero ── */
@@ -251,12 +184,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
     .hero-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(
-        135deg,
-        rgba(10, 38, 80, 0.92) 0%,
-        rgba(15, 76, 129, 0.85) 60%,
-        rgba(8, 30, 65, 0.9) 100%
-      );
+      background: linear-gradient(135deg, rgba(10,38,80,.92) 0%, rgba(15,76,129,.85) 60%, rgba(8,30,65,.9) 100%);
     }
 
     .hero-content {
@@ -278,10 +206,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       padding: 1.25rem 0;
     }
 
-    .hero-logo {
-      display: flex;
-      align-items: center;
-    }
+    .hero-logo { display: flex; align-items: center; }
 
     .nav-logo-img {
       height: 44px;
@@ -293,8 +218,8 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       display: inline-flex;
       align-items: center;
       padding: 0.5rem 1.25rem;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
       border-radius: 999px;
       color: white;
       font-size: 0.875rem;
@@ -303,9 +228,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       transition: background 0.2s;
     }
 
-    .hero-login-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
+    .hero-login-btn:hover { background: rgba(255,255,255,.25); }
 
     .hero-text {
       flex: 1;
@@ -326,7 +249,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
 
     .hero-sub {
       font-size: 0.9375rem;
-      color: rgba(255, 255, 255, 0.82);
+      color: rgba(255,255,255,.82);
     }
 
     .hero-stats {
@@ -350,7 +273,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
 
     .hero-stat-label {
       font-size: 0.6875rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(255,255,255,.7);
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
@@ -358,17 +281,17 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
     .hero-stat-sep {
       width: 1px;
       height: 20px;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255,255,255,.2);
     }
 
     /* ── Filtres ── */
     .filters-bar {
       background: white;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #E5E7EB;
       position: sticky;
       top: 0;
       z-index: 20;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
     }
 
     .filters-inner {
@@ -420,9 +343,9 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       gap: 0.375rem;
       height: 40px;
       padding: 0 1rem;
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
       border-radius: 8px;
       font-size: 0.8125rem;
       font-weight: 600;
@@ -432,14 +355,9 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       white-space: nowrap;
     }
 
-    .filter-reset svg {
-      width: 14px;
-      height: 14px;
-    }
+    .filter-reset svg { width: 14px; height: 14px; }
 
-    .filter-reset:hover {
-      background: #fde68a;
-    }
+    .filter-reset:hover { background: #FDE68A; }
 
     .filter-count {
       align-self: flex-end;
@@ -468,16 +386,14 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       background: white;
       border-radius: 14px;
       overflow: hidden;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #E5E7EB;
       cursor: pointer;
-      transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
     }
 
     .ann-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 16px 32px rgba(0,0,0,.12);
     }
 
     .ann-img-wrap {
@@ -493,9 +409,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       transition: transform 0.35s ease;
     }
 
-    .ann-card:hover .ann-img {
-      transform: scale(1.06);
-    }
+    .ann-card:hover .ann-img { transform: scale(1.06); }
 
     .ann-type-badge {
       position: absolute;
@@ -538,11 +452,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(
-        to top,
-        rgba(10, 38, 80, 0.9) 0%,
-        transparent 100%
-      );
+      background: linear-gradient(to top, rgba(10,38,80,.9) 0%, transparent 100%);
       color: white;
       padding: 1.5rem 0.875rem 0.625rem;
       font-size: 0.9375rem;
@@ -570,11 +480,7 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       margin-bottom: 0.625rem;
     }
 
-    .ann-location svg {
-      width: 13px;
-      height: 13px;
-      flex-shrink: 0;
-    }
+    .ann-location svg { width: 13px; height: 13px; flex-shrink: 0; }
 
     .ann-bien-chip {
       display: inline-block;
@@ -602,86 +508,56 @@ import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-
       transition: background 0.2s;
     }
 
-    .ann-cta:hover {
-      background: var(--color-primary-dark);
-    }
+    .ann-cta:hover { background: var(--color-primary-dark); }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      .hero {
-        height: 220px;
-      }
-      .hero-content {
-        padding: 0 1.5rem;
-      }
-      .hero-title {
-        font-size: 1.75rem;
-      }
-      .filters-inner {
-        padding: 0.75rem 1.5rem;
-      }
-      .listings {
-        padding: 1.5rem 1.5rem 2rem;
-      }
+      .hero { height: 220px; }
+      .hero-content { padding: 0 1.5rem; }
+      .hero-title { font-size: 1.75rem; }
+      .filters-inner { padding: 0.75rem 1.5rem; }
+      .listings { padding: 1.5rem 1.5rem 2rem; }
     }
 
     @media (max-width: 640px) {
-      .hero {
-        height: auto;
-        padding-bottom: 1.5rem;
-      }
-      .hero-stats {
-        flex-wrap: wrap;
-        gap: 1rem;
-      }
-      .hero-stat-sep {
-        display: none;
-      }
-      .filters-inner {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .filter-item {
-        min-width: auto;
-      }
-      .filter-count {
-        display: none;
-      }
-      .ann-grid {
-        grid-template-columns: 1fr;
-      }
-      .listings {
-        padding: 1rem 1rem 2rem;
-      }
+      .hero { height: auto; padding-bottom: 1.5rem; }
+      .hero-stats { flex-wrap: wrap; gap: 1rem; }
+      .hero-stat-sep { display: none; }
+      .filters-inner { flex-direction: column; align-items: stretch; }
+      .filter-item { min-width: auto; }
+      .filter-count { display: none; }
+      .ann-grid { grid-template-columns: 1fr; }
+      .listings { padding: 1rem 1rem 2rem; }
     }
-  `,
+  `
 })
 export class AnnoncesPublicComponent implements OnInit {
   annonces: Annonce[] = [];
   filteredAnnonces: Annonce[] = [];
   loading = true;
 
-  typeFilter = "";
-  villeFilter = "";
-  budgetFilter = "";
+  typeFilter = '';
+  villeFilter = '';
+  budgetFilter = '';
 
-  private readonly annoncesService = inject(AnnoncesService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  private readonly titleService = inject(Title);
-  private readonly metaService = inject(Meta);
+  constructor(
+    private annoncesService: AnnoncesService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private titleService: Title,
+    private metaService: Meta
+  ) {}
 
   ngOnInit(): void {
-    this.titleService.setTitle("Annonces immobilières au Togo | WARAH");
+    this.titleService.setTitle('Annonces immobilières au Togo | WARAH');
     this.metaService.updateTag({
-      name: "description",
-      content:
-        "Trouvez votre logement idéal au Togo : appartements, maisons et studios à louer ou à vendre, gérés en toute transparence sur WARAH.",
+      name: 'description',
+      content: 'Trouvez votre logement idéal au Togo : appartements, maisons et studios à louer ou à vendre, gérés en toute transparence sur WARAH.'
     });
 
-    this.route.queryParams.subscribe((params: Record<string, string>) => {
-      this.typeFilter = params["type"] || "";
-      this.villeFilter = params["ville"] || "";
+    this.route.queryParams.subscribe(params => {
+      this.typeFilter = params['type'] || '';
+      this.villeFilter = params['ville'] || '';
       this.loadAnnonces();
     });
   }
@@ -694,24 +570,18 @@ export class AnnoncesPublicComponent implements OnInit {
         this.applyFilters();
         this.loading = false;
       },
-      error: () => {
-        this.loading = false;
-      },
+      error: () => { this.loading = false; }
     });
   }
 
   applyFilters(): void {
-    this.filteredAnnonces = this.annonces.filter((a) => {
-      if (this.typeFilter && a.typeBien?.toLowerCase() !== this.typeFilter)
-        return false;
+    this.filteredAnnonces = this.annonces.filter(a => {
+      if (this.typeFilter && a.typeBien?.toLowerCase() !== this.typeFilter) return false;
       if (this.villeFilter) {
-        const norm = (s: string) =>
-          s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-        if (norm(a.adresse?.ville ?? "") !== norm(this.villeFilter))
-          return false;
+        const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        if (norm(a.adresse?.ville ?? '') !== norm(this.villeFilter)) return false;
       }
-      if (this.budgetFilter && a.prix > parseInt(this.budgetFilter))
-        return false;
+      if (this.budgetFilter && a.prix > parseInt(this.budgetFilter)) return false;
       return true;
     });
   }
@@ -721,13 +591,13 @@ export class AnnoncesPublicComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.typeFilter = "";
-    this.villeFilter = "";
-    this.budgetFilter = "";
+    this.typeFilter = '';
+    this.villeFilter = '';
+    this.budgetFilter = '';
     this.applyFilters();
   }
 
   viewAnnonce(id: string): void {
-    void this.router.navigate(["/annonces", id]);
+    this.router.navigate(['/annonces', id]);
   }
 }

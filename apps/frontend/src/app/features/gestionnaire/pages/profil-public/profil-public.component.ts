@@ -1,16 +1,15 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
-import { RouterModule } from "@angular/router";
-import { LokAlerteComponent } from "../../../../shared/components/lok-alerte/lok-alerte.component";
-import {
-  LokUploadComponent,
-  UploadedFile,
-} from "../../../../shared/components/lok-upload/lok-upload.component";
-import { LokTelephoneTogoComponent } from "../../../../shared/components/lok-telephone-togo/lok-telephone-togo.component";
-import { CommonModule } from "@angular/common";
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
+import { LokUploadComponent, UploadedFile } from '../../../../shared/components/lok-upload/lok-upload.component';
+import { LokTelephoneTogoComponent } from '../../../../shared/components/lok-telephone-togo/lok-telephone-togo.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { CommonModule } from '@angular/common';
+import { GestionnaireService, ProfilGestionnaire } from '../../services/gestionnaire.service';
 
 @Component({
-  selector: "app-profil-public",
+  selector: 'app-profil-public',
   standalone: true,
   imports: [
     CommonModule,
@@ -19,6 +18,7 @@ import { CommonModule } from "@angular/common";
     LokAlerteComponent,
     LokUploadComponent,
     LokTelephoneTogoComponent,
+    LokSkeletonComponent
   ],
   styles: `
     /* Global SVG Icon Sizing Fix */
@@ -34,14 +34,13 @@ import { CommonModule } from "@angular/common";
       <div class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">
-              Profil Public Gestionnaire
-            </h1>
-            <p class="text-sm text-gray-600">
-              Gérez votre profil visible par les propriétaires
-            </p>
+            <h1 class="text-2xl font-bold text-gray-900">Profil Public Gestionnaire</h1>
+            <p class="text-sm text-gray-600">Gérez votre profil visible par les propriétaires</p>
           </div>
-          <button routerLink="/gestionnaire/dashboard" class="btn-secondary">
+          <button
+            routerLink="/gestionnaire/dashboard"
+            class="btn-secondary"
+          >
             Retour
           </button>
         </div>
@@ -60,69 +59,41 @@ import { CommonModule } from "@angular/common";
         }
 
         <!-- Aperçu du profil -->
-        <div
-          class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6"
-        >
+        @if (loadingProfil) {
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+            <lok-skeleton type="text"></lok-skeleton>
+          </div>
+        }
+        @if (!loadingProfil && profil) {
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
           <!-- En-tête du profil -->
-          <div
-            class="bg-gradient-to-r from-primary to-primary-dark text-white p-8"
-          >
+          <div class="bg-gradient-to-r from-primary to-primary-dark text-white p-8">
             <div class="flex items-center gap-6">
               <div class="relative">
-                <div
-                  class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center text-3xl font-bold"
-                >
+                <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center text-3xl font-bold">
                   {{ profil.prenom[0] }}{{ profil.nom[0] }}
                 </div>
                 @if (profil.verifie) {
-                  <div
-                    class="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-white"
-                  >
-                    <svg
-                      class="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      ></path>
+                  <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                   </div>
                 }
               </div>
               <div>
-                <h2 class="text-2xl font-bold">
-                  {{ profil.prenom }} {{ profil.nom }}
-                </h2>
+                <h2 class="text-2xl font-bold">{{ profil.prenom }} {{ profil.nom }}</h2>
                 <p class="text-white/80">{{ profil.specialite }}</p>
                 <div class="flex items-center gap-2 mt-2">
                   @if (profil.verifie) {
-                    <span
-                      class="bg-green-500/20 text-green-100 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
+                    <span class="bg-green-500/20 text-green-100 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
                       Vérifié
                     </span>
                   }
-                  <span
-                    class="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-medium"
-                  >
+                  <span class="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-medium">
                     {{ profil.biensGeres }} biens gérés
                   </span>
                 </div>
@@ -143,9 +114,7 @@ import { CommonModule } from "@angular/common";
               </div>
               <div>
                 <p class="text-sm text-gray-500">Zone d'intervention</p>
-                <p class="font-medium text-gray-900">
-                  {{ profil.zoneIntervention.join(", ") }}
-                </p>
+                <p class="font-medium text-gray-900">{{ (profil.zoneIntervention ?? []).join(', ') }}</p>
               </div>
               <div>
                 <p class="text-sm text-gray-500">Tarifs</p>
@@ -163,9 +132,7 @@ import { CommonModule } from "@angular/common";
               <div class="space-y-2">
                 @for (ref of profil.references; track ref) {
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <p class="font-medium text-gray-900">
-                      {{ ref.proprietaire }}
-                    </p>
+                    <p class="font-medium text-gray-900">{{ ref.proprietaire }}</p>
                     <p class="text-sm text-gray-600">{{ ref.bien }}</p>
                   </div>
                 }
@@ -173,23 +140,16 @@ import { CommonModule } from "@angular/common";
             </div>
           </div>
         </div>
+        } <!-- fin @if profil -->
 
         <!-- Formulaire d'édition -->
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">
-            Modifier le profil
-          </h2>
-
-          <form
-            [formGroup]="profilForm"
-            (ngSubmit)="onSubmit()"
-            class="space-y-6"
-          >
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Modifier le profil</h2>
+          
+          <form [formGroup]="profilForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <!-- Photo de profil -->
             <div>
-              <span class="block text-sm font-medium text-gray-700 mb-2"
-                >Photo de profil</span
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
               <lok-upload
                 accept="image/*"
                 [maxSize]="5"
@@ -203,26 +163,16 @@ import { CommonModule } from "@angular/common";
             <!-- Prénom et Nom -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                  for="profil-prenom"
-                  >Prénom</label
-                >
+                <label class="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
                 <input
-                  id="profil-prenom"
                   type="text"
                   formControlName="prenom"
                   class="input-field"
                 />
               </div>
               <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                  for="profil-nom"
-                  >Nom</label
-                >
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
                 <input
-                  id="profil-nom"
                   type="text"
                   formControlName="nom"
                   class="input-field"
@@ -232,13 +182,8 @@ import { CommonModule } from "@angular/common";
 
             <!-- Spécialité -->
             <div>
-              <label
-                class="block text-sm font-medium text-gray-700 mb-2"
-                for="profil-specialite"
-                >Spécialité</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Spécialité</label>
               <input
-                id="profil-specialite"
                 type="text"
                 formControlName="specialite"
                 class="input-field"
@@ -248,9 +193,7 @@ import { CommonModule } from "@angular/common";
 
             <!-- Téléphone -->
             <div>
-              <span class="block text-sm font-medium text-gray-700 mb-2"
-                >Téléphone</span
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
               <lok-telephone-togo
                 formControlName="telephone"
                 [showError]="true"
@@ -259,13 +202,8 @@ import { CommonModule } from "@angular/common";
 
             <!-- Zone d'intervention -->
             <div>
-              <label
-                class="block text-sm font-medium text-gray-700 mb-2"
-                for="profil-zone"
-                >Zone d'intervention</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Zone d'intervention</label>
               <select
-                id="profil-zone"
                 formControlName="zoneIntervention"
                 class="input-field"
                 multiple
@@ -279,26 +217,17 @@ import { CommonModule } from "@angular/common";
                 <option value="Tsévié">Tsévié</option>
                 <option value="Aného">Aného</option>
               </select>
-              <p class="text-xs text-gray-500 mt-1">
-                Maintenez Ctrl pour sélectionner plusieurs zones
-              </p>
+              <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl pour sélectionner plusieurs zones</p>
             </div>
 
             <!-- Tarifs -->
             <div>
-              <label
-                class="block text-sm font-medium text-gray-700 mb-2"
-                for="profil-tarifs"
-                >Tarifs pratiqués</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Tarifs pratiqués</label>
               <select
-                id="profil-tarifs"
                 formControlName="tarifs"
                 class="input-field"
               >
-                <option value="pourcentage">
-                  Pourcentage du loyer (5-10%)
-                </option>
+                <option value="pourcentage">Pourcentage du loyer (5-10%)</option>
                 <option value="forfait">Forfait mensuel</option>
                 <option value="mixte">Mixte (pourcentage + forfait)</option>
               </select>
@@ -306,13 +235,8 @@ import { CommonModule } from "@angular/common";
 
             <!-- Description -->
             <div>
-              <label
-                class="block text-sm font-medium text-gray-700 mb-2"
-                for="profil-description"
-                >Description</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
-                id="profil-description"
                 formControlName="description"
                 class="input-field"
                 rows="4"
@@ -322,13 +246,8 @@ import { CommonModule } from "@angular/common";
 
             <!-- Références -->
             <div>
-              <label
-                class="block text-sm font-medium text-gray-700 mb-2"
-                for="profil-references"
-                >Références</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Références</label>
               <textarea
-                id="profil-references"
                 formControlName="references"
                 class="input-field"
                 rows="3"
@@ -338,9 +257,7 @@ import { CommonModule } from "@angular/common";
 
             <!-- Documents de vérification -->
             <div>
-              <span class="block text-sm font-medium text-gray-700 mb-2"
-                >Documents de vérification</span
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-2">Documents de vérification</label>
               <lok-upload
                 accept=".pdf,image/*"
                 [maxSize]="10"
@@ -348,10 +265,7 @@ import { CommonModule } from "@angular/common";
                 [maxFiles]="5"
                 (filesChange)="onDocumentsChange($event)"
               ></lok-upload>
-              <p class="text-xs text-gray-500 mt-1">
-                Pièce d'identité, certificats, attestations (max 10 Mo par
-                fichier)
-              </p>
+              <p class="text-xs text-gray-500 mt-1">Pièce d'identité, certificats, attestations (max 10 Mo par fichier)</p>
             </div>
 
             <!-- Bouton submit -->
@@ -362,24 +276,9 @@ import { CommonModule } from "@angular/common";
             >
               @if (isSaving) {
                 <span class="flex items-center gap-2">
-                  <svg
-                    class="animate-spin h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                  <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Enregistrement...
                 </span>
@@ -394,114 +293,94 @@ import { CommonModule } from "@angular/common";
   `,
 })
 export class ProfilPublicComponent implements OnInit {
-  // Type inféré depuis fb.nonNullable.group() — jamais annoter en
-  // `FormGroup` nu (voir /review frontend).
-  profilForm: ReturnType<ProfilPublicComponent["buildForm"]>;
-  isSaving: boolean = false;
-  errorMessage: string = "";
-  successMessage: string = "";
+  profilForm: FormGroup;
+  isSaving = false;
+  loadingProfil = false;
+  errorMessage = '';
+  successMessage = '';
   photo: File | null = null;
   documents: File[] = [];
+  profil: ProfilGestionnaire | null = null;
 
-  profil = {
-    prenom: "Jean",
-    nom: "Kouassi",
-    specialite: "Gestion résidentielle et commerciale",
-    telephone: "+228 90 01 02 03",
-    email: "jean.kouassi@warah.tg",
-    zoneIntervention: ["Lomé", "Kpalimé", "Aného"],
-    tarifs: "Pourcentage du loyer (8%)",
-    description:
-      "Gestionnaire immobilier certifié avec 5 ans d'expérience dans la gestion de biens résidentiels et commerciaux. Je m'engage à fournir un service de qualité personnalisé à chaque propriétaire.",
-    verifie: true,
-    biensGeres: 15,
-    references: [
-      { proprietaire: "M. Adzo Kofi", bien: "Villa Sokodé" },
-      { proprietaire: "Mme Afi Agbessi", bien: "Appartement Lomé Centre" },
-      { proprietaire: "M. Yao Komlan", bien: "Bureau Kpalimé" },
-    ],
-  };
-
-  private readonly fb = inject(FormBuilder);
-
-  constructor() {
-    this.profilForm = this.buildForm();
-  }
-
-  private buildForm() {
-    return this.fb.nonNullable.group({
-      prenom: ["", Validators.required],
-      nom: ["", Validators.required],
-      specialite: ["", Validators.required],
-      telephone: ["", Validators.required],
-      zoneIntervention: this.fb.nonNullable.control<string[]>([]),
-      tarifs: ["", Validators.required],
-      description: ["", Validators.required],
-      references: ["", Validators.required],
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
+    private gestionnaireService: GestionnaireService
+  ) {
+    this.profilForm = this.fb.group({
+      prenom: ['', Validators.required],
+      nom: ['', Validators.required],
+      specialite: ['', Validators.required],
+      telephone: [''],
+      zoneIntervention: [[]],
+      tarifs: ['', Validators.required],
+      description: ['', Validators.required],
+      references: ['']
     });
   }
 
   ngOnInit(): void {
-    this.profilForm.patchValue({
-      prenom: this.profil.prenom,
-      nom: this.profil.nom,
-      specialite: this.profil.specialite,
-      telephone: this.profil.telephone,
-      zoneIntervention: this.profil.zoneIntervention,
-      tarifs: "pourcentage",
-      description: this.profil.description,
-      references: this.profil.references
-        .map((r) => `${r.proprietaire} - ${r.bien}`)
-        .join("\n"),
+    this.chargerProfil();
+  }
+
+  private chargerProfil(): void {
+    this.loadingProfil = true;
+    this.gestionnaireService.getProfil().subscribe({
+      next: (data) => {
+        this.profil = data;
+        this.loadingProfil = false;
+        this.profilForm.patchValue({
+          prenom: data.prenom,
+          nom: data.nom,
+          specialite: data.specialite,
+          telephone: data.telephone ?? '',
+          zoneIntervention: data.zoneIntervention ?? [],
+          tarifs: data.tarifs,
+          description: data.description,
+          references: (data.references ?? []).map(r => `${r.proprietaire} - ${r.bien}`).join('\n')
+        });
+      },
+      error: () => { this.loadingProfil = false; }
     });
   }
 
-  /**
-   * Gère le changement de photo
-   */
   onPhotoChange(files: UploadedFile[]): void {
-    if (files.length > 0) {
-      this.photo = files[0].file;
-    }
+    if (files.length > 0) this.photo = files[0].file;
   }
 
-  /**
-   * Gère le changement de documents
-   */
   onDocumentsChange(files: UploadedFile[]): void {
-    this.documents = files.map((f) => f.file);
+    this.documents = files.map(f => f.file);
   }
 
-  /**
-   * Soumet le formulaire
-   */
   onSubmit(): void {
-    if (this.profilForm.invalid) {
-      return;
-    }
+    if (this.profilForm.invalid) return;
 
     this.isSaving = true;
-    this.errorMessage = "";
-    this.successMessage = "";
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    // Simulation de sauvegarde
-    setTimeout(() => {
-      this.isSaving = false;
-      this.successMessage = "Profil mis à jour avec succès !";
+    const partiel: Partial<ProfilGestionnaire> = {
+      prenom: this.profilForm.value.prenom,
+      nom: this.profilForm.value.nom,
+      specialite: this.profilForm.value.specialite,
+      telephone: this.profilForm.value.telephone,
+      zoneIntervention: this.profilForm.value.zoneIntervention,
+      tarifs: this.profilForm.value.tarifs,
+      description: this.profilForm.value.description
+    };
 
-      // Mettre à jour le profil local
-      const formValue = this.profilForm.getRawValue();
-      this.profil.prenom = formValue.prenom;
-      this.profil.nom = formValue.nom;
-      this.profil.specialite = formValue.specialite;
-      this.profil.telephone = formValue.telephone;
-      this.profil.zoneIntervention = formValue.zoneIntervention;
-      this.profil.tarifs = formValue.tarifs;
-      this.profil.description = formValue.description;
-
-      setTimeout(() => {
-        this.successMessage = "";
-      }, 3000);
-    }, 1500);
+    this.gestionnaireService.sauvegarderProfil(partiel).subscribe({
+      next: (profilMisAJour) => {
+        this.profil = profilMisAJour;
+        this.isSaving = false;
+        this.successMessage = 'Profil mis à jour avec succès !';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
+      },
+      error: () => {
+        this.isSaving = false;
+        this.errorMessage = 'Erreur lors de la mise à jour du profil';
+      }
+    });
   }
 }

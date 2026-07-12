@@ -1,486 +1,274 @@
-import { Component, ChangeDetectionStrategy } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
+import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: "app-proprietaire-dashboard",
+  selector: 'app-proprietaire-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="dashboard-layout">
-      <!-- Bouton menu mobile -->
-      <button
-        class="mobile-menu-btn"
-        type="button"
-        (click)="toggleSidebar()"
-        aria-label="Ouvrir le menu"
-      >
-        <span></span><span></span><span></span>
-      </button>
+    <div class="dash-page">
 
-      <!-- Overlay mobile -->
-      @if (sidebarOpen) {
-        <div
-          class="sidebar-overlay"
-          (click)="closeSidebar()"
-          (keydown.enter)="closeSidebar()"
-          (keydown.space)="closeSidebar()"
-          role="button"
-          tabindex="0"
-        ></div>
-      }
+      <!-- En-tête -->
+      <header class="dash-header">
+        <div class="header-left">
+          <h1 class="header-greeting">Bonjour, {{ prenomUtilisateur }}</h1>
+          <p class="header-date">{{ dateCourante }}</p>
+        </div>
+        <div class="header-right">
+          <a routerLink="/proprietaires/new" class="btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Ajouter un bien
+          </a>
+          <div class="header-avatar">{{ initiales }}</div>
+        </div>
+      </header>
 
-      <!-- Sidebar -->
-      <aside class="sidebar" [class.open]="sidebarOpen">
-        <div class="sidebar-header">
-          <div class="logo">
-            <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img" />
+      <div class="page-body">
+
+        <!-- KPI -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-hero">
+            <p class="kpi-eyebrow">Revenus totaux</p>
+            <p class="kpi-hero-val">0 FCFA</p>
+            <p class="kpi-hero-sub">Aucun paiement enregistré</p>
           </div>
-          <button
-            class="sidebar-close-btn"
-            type="button"
-            (click)="closeSidebar()"
-            aria-label="Fermer le menu"
-          >
-            ×
-          </button>
+          <div class="kpi-card">
+            <p class="kpi-label">Biens</p>
+            <p class="kpi-val">0</p>
+            <p class="kpi-sub-label">logements enregistrés</p>
+          </div>
+          <div class="kpi-card">
+            <p class="kpi-label">Locataires</p>
+            <p class="kpi-val">0</p>
+            <p class="kpi-sub-label">actifs</p>
+          </div>
+          <div class="kpi-card">
+            <p class="kpi-label">Baux actifs</p>
+            <p class="kpi-val">0</p>
+            <p class="kpi-sub-label">contrats en cours</p>
+          </div>
         </div>
 
-        <nav
-          class="sidebar-nav"
-          (click)="closeSidebar()"
-          (keydown.enter)="closeSidebar()"
-          tabindex="0"
-        >
-          <a routerLink="/" class="nav-item">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">Accueil</span>
-          </a>
-          <a routerLink="/proprietaires/dashboard" class="nav-item active">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">Dashboard</span>
-          </a>
-          <a routerLink="/proprietaires" class="nav-item">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">Mes Biens</span>
-          </a>
-          <a routerLink="/annonces/list" class="nav-item">
-            <span class="nav-icon">📢</span>
-            <span class="nav-text">Mes Annonces</span>
-          </a>
-          <a routerLink="/proprietaires/new" class="nav-item">
-            <span class="nav-icon">➕</span>
-            <span class="nav-text">Ajouter Bien</span>
-          </a>
-          <a routerLink="/paiements" class="nav-item">
-            <span class="nav-icon">💰</span>
-            <span class="nav-text">Paiements</span>
-          </a>
-          <a routerLink="/locataires" class="nav-item">
-            <span class="nav-icon">👥</span>
-            <span class="nav-text">Locataires</span>
-          </a>
-          <a routerLink="/biens" class="nav-item">
-            <span class="nav-icon">📋</span>
-            <span class="nav-text">Contrats</span>
-          </a>
-        </nav>
-
-        <div class="sidebar-footer">
-          <a routerLink="/auth/login" class="logout-btn">
-            <span class="logout-icon">🚪</span>
-            <span>Déconnexion</span>
-          </a>
-        </div>
-      </aside>
-
-      <!-- Main Content -->
-      <main class="main-content">
-        <div class="dashboard-container">
-          <div class="dashboard-header">
-            <h1 class="dashboard-title">Espace Propriétaire</h1>
-            <p class="dashboard-subtitle">
-              Gérez vos biens immobiliers au Togo
-            </p>
-          </div>
-
-          <div class="dashboard-stats">
-            <div class="stat-card">
-              <div class="stat-icon">🏠</div>
-              <div class="stat-content">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Biens</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">📋</div>
-              <div class="stat-content">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Baux</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">💰</div>
-              <div class="stat-content">
-                <div class="stat-value">0 FCFA</div>
-                <div class="stat-label">Revenus</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">👥</div>
-              <div class="stat-content">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Locataires</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="dashboard-actions">
-            <button routerLink="/proprietaires/new" class="action-btn primary">
-              <span>+</span> Ajouter un bien
-            </button>
-            <button routerLink="/proprietaires" class="action-btn secondary">
-              <span>📋</span> Voir mes biens
-            </button>
+        <!-- Actions rapides -->
+        <div class="actions-strip">
+          <p class="strip-label">Actions rapides</p>
+          <div class="strip-btns">
+            <a routerLink="/proprietaires/new" class="qa-btn qa-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Ajouter un bien
+            </a>
+            <a routerLink="/dashboard/paiements" class="qa-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+              </svg>
+              Paiements
+            </a>
+            <a routerLink="/dashboard/locataires" class="qa-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <line x1="19" y1="8" x2="19" y2="14"></line>
+                <line x1="22" y1="11" x2="16" y2="11"></line>
+              </svg>
+              Nouveau locataire
+            </a>
+            <a routerLink="/dashboard/annonces/list" class="qa-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              Annonces
+            </a>
           </div>
         </div>
-      </main>
+
+        <!-- État vide -->
+        <div class="empty-section">
+          <div class="empty-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <h3>Aucun bien enregistré</h3>
+            <p>Ajoutez votre premier bien pour commencer à gérer votre parc immobilier.</p>
+            <a routerLink="/proprietaires/new" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Ajouter mon premier bien
+            </a>
+          </div>
+        </div>
+
+      </div>
     </div>
   `,
-  styles: `
-    .dashboard-layout {
-      display: flex;
-      min-height: 100vh;
+  styles: [`
+    .dash-page { min-height: 100vh; background: #F2EFE9; }
+
+    /* ── En-tête ── */
+    .dash-header {
+      position: sticky; top: 0; z-index: 10;
+      background: #FFFFFF; border-bottom: 1px solid #EDE8DF;
+      padding: 0 28px; height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 1px 8px rgba(15,76,129,0.06);
+    }
+    .header-left { display: flex; flex-direction: column; justify-content: center; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .header-greeting {
+      font-size: 17px; font-weight: 700;
+      color: var(--color-primary-dark); margin: 0; line-height: 1.2;
+    }
+    .header-date { font-size: 12px; color: #9CA3AF; margin: 2px 0 0; text-transform: capitalize; }
+    .header-avatar {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--color-primary); color: white;
+      font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* Bouton menu mobile */
-    .mobile-menu-btn {
-      display: none;
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 200;
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      border: none;
-      background: var(--color-primary);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 8px;
+      background: var(--color-primary); color: white;
+      font-size: 13.5px; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+      transition: background 0.12s;
     }
+    .btn-primary svg { width: 15px; height: 15px; }
+    .btn-primary:hover { background: var(--color-primary-dark); }
 
-    .mobile-menu-btn span {
-      display: block;
-      width: 20px;
-      height: 2px;
-      background: white;
-      border-radius: 2px;
-    }
+    /* ── Corps ── */
+    .page-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
 
-    .sidebar-overlay {
-      display: none;
-    }
-
-    .sidebar-close-btn {
-      display: none;
-    }
-
-    /* Sidebar Styles */
-    .sidebar {
-      width: 260px;
-      background: linear-gradient(
-        180deg,
-        var(--color-primary) 0%,
-        var(--color-primary-dark) 100%
-      );
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      left: 0;
-      top: 0;
-      height: 100vh;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-    }
-
-    .sidebar-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .logo-img {
-      height: 86px;
-      width: auto;
-      object-fit: contain;
-      border-radius: 8px;
-      padding: 4px 8px;
-      background: white;
-    }
-
-    .sidebar-nav {
-      flex: 1;
-      padding: 1rem 0;
-      overflow-y: auto;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.875rem 1.5rem;
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: all 0.2s;
-      border-left: 3px solid transparent;
-    }
-
-    .nav-item:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .nav-item.active {
-      background: rgba(255, 255, 255, 0.15);
-      color: white;
-      border-left-color: var(--color-accent);
-    }
-
-    .nav-icon {
-      font-size: 1.25rem;
-    }
-
-    .nav-text {
-      font-size: 0.9375rem;
-      font-weight: 500;
-    }
-
-    .sidebar-footer {
-      padding: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .logout-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.875rem 1.5rem;
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: all 0.2s;
-      border-radius: 8px;
-    }
-
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .logout-icon {
-      font-size: 1.25rem;
-    }
-
-    /* Main Content Styles */
-    .main-content {
-      flex: 1;
-      margin-left: 260px;
-    }
-
-    .dashboard-container {
-      padding: 2rem;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh;
-    }
-
-    .dashboard-header {
-      margin-bottom: 2rem;
-    }
-
-    .dashboard-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: 0.5rem;
-    }
-
-    .dashboard-subtitle {
-      font-size: 1rem;
-      color: #666;
-    }
-
-    .dashboard-stats {
+    /* ── KPI ── */
+    .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 16px;
     }
-
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+    .kpi-card {
+      background: white; border-radius: 16px; padding: 22px;
+      border: 1px solid #EDE8DF;
+      box-shadow: 0 2px 10px rgba(15,76,129,0.05);
     }
-
-    .stat-icon {
-      font-size: 2rem;
+    .kpi-hero {
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
     }
-
-    .stat-content {
-      flex: 1;
+    .kpi-eyebrow {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.13em;
+      color: var(--color-accent); margin: 0 0 14px;
     }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1a1a1a;
+    .kpi-hero-val {
+      font-size: 28px; font-weight: 800;
+      color: var(--color-accent); letter-spacing: -0.02em;
+      line-height: 1.1; margin: 0;
     }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: #666;
+    .kpi-hero-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin: 8px 0 0; }
+    .kpi-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #A89E8E; margin: 0 0 10px;
     }
-
-    .dashboard-actions {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+    .kpi-val {
+      font-size: 34px; font-weight: 800;
+      color: var(--color-primary-dark); letter-spacing: -0.03em;
+      line-height: 1; margin: 0;
     }
+    .kpi-sub-label { font-size: 12px; color: #9CA3AF; margin: 6px 0 0; }
 
-    .action-btn {
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s;
+    /* ── Actions rapides ── */
+    .actions-strip { display: flex; flex-direction: column; gap: 12px; }
+    .strip-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #A89E8E; margin: 0;
     }
-
-    .action-btn.primary {
-      background: var(--color-primary);
-      color: white;
+    .strip-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .qa-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 8px;
+      background: white; border: 1px solid #E8E1D8;
+      color: #374151; font-size: 13.5px; font-weight: 500;
+      text-decoration: none; white-space: nowrap; transition: all 0.12s;
     }
+    .qa-btn svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.8; }
+    .qa-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: rgba(15,76,129,0.04); }
+    .qa-btn.qa-primary { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+    .qa-btn.qa-primary svg { opacity: 1; }
+    .qa-btn.qa-primary:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
 
-    .action-btn.primary:hover {
-      background: var(--color-primary-light);
+    /* ── État vide ── */
+    .empty-section { display: flex; justify-content: center; }
+    .empty-card {
+      background: white; border-radius: 20px;
+      border: 1px solid #EDE8DF;
+      box-shadow: 0 2px 12px rgba(15,76,129,0.05);
+      padding: 48px 40px;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      gap: 12px; max-width: 440px; width: 100%;
     }
+    .empty-card svg { width: 56px; height: 56px; stroke: #D4C9B8; margin-bottom: 4px; }
+    .empty-card h3 { font-size: 17px; font-weight: 700; color: var(--color-primary-dark); margin: 0; }
+    .empty-card p  { font-size: 13.5px; color: #7A8899; margin: 0; line-height: 1.6; }
+    .empty-card .btn-primary { margin-top: 8px; }
 
-    .action-btn.secondary {
-      background: white;
-      color: #1a1a1a;
-      border: 1px solid #ddd;
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .kpi-hero { grid-column: 1 / 3; }
     }
-
-    .action-btn.secondary:hover {
-      background: #f5f5f5;
-    }
-
-    @media (max-width: 1024px) {
-      .sidebar {
-        width: 220px;
-      }
-
-      .main-content {
-        margin-left: 220px;
-      }
-    }
-
     @media (max-width: 768px) {
-      .mobile-menu-btn {
-        display: flex;
-      }
-
-      .sidebar-overlay {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 99;
-      }
-
-      .sidebar-close-btn {
-        display: block;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.5rem;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0.25rem 0.5rem;
-      }
-
-      .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s;
-        width: 280px;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .main-content {
-        margin-left: 0;
-        padding-top: 3.5rem;
-      }
-
-      .dashboard-container {
-        padding: 1rem;
-      }
-
-      .dashboard-title {
-        font-size: 1.5rem;
-      }
-
-      .dashboard-stats {
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-      }
-
-      .dashboard-actions {
-        flex-direction: column;
-      }
-
-      .action-btn {
-        width: 100%;
-      }
+      .dash-header { padding: 0 16px 0 64px; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-hero { grid-column: 1 / 3; }
     }
-
-    @media (max-width: 480px) {
-      .dashboard-stats {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 640px) {
+      .page-body { padding: 12px; gap: 12px; }
+      .header-right { gap: 8px; }
+      .kpi-hero-val { font-size: 22px; }
+      .kpi-val { font-size: 28px; }
+      .strip-btns { overflow-x: auto; flex-wrap: nowrap; }
+      .empty-card { padding: 32px 20px; }
     }
-  `,
+    @media (max-width: 440px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .kpi-hero { grid-column: 1; }
+      .header-avatar { display: none; }
+    }
+  `]
 })
-export class ProprietaireDashboardComponent {
-  sidebarOpen = false;
+export class ProprietaireDashboardComponent implements OnInit {
+  prenomUtilisateur = 'Propriétaire';
+  initiales         = 'P';
+  dateCourante      = '';
 
-  toggleSidebar(): void {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
-
-  closeSidebar(): void {
-    this.sidebarOpen = false;
+  ngOnInit(): void {
+    this.dateCourante = new Date().toLocaleDateString('fr-FR', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    try {
+      const raw = localStorage.getItem('WARAH_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        this.prenomUtilisateur = u.prenom || 'Propriétaire';
+        this.initiales = ((u.prenom?.[0] || '') + (u.nom?.[0] || '')).toUpperCase() || 'P';
+      }
+    } catch {}
   }
 }

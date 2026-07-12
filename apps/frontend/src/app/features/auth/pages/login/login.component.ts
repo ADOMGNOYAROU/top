@@ -1,17 +1,18 @@
-import { Component, OnInit, HostListener, inject } from "@angular/core";
-import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
-import { Router, RouterModule } from "@angular/router";
-import { CommonModule } from "@angular/common";
-import { ParticlesBackgroundComponent } from "../../../../shared/components/particles-background/particles-background.component";
+import { Component, OnInit, HostListener } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ParticlesBackgroundComponent } from '../../../../shared/components/particles-background/particles-background.component';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
-  selector: "app-login",
+  selector: 'app-login',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    ParticlesBackgroundComponent,
+    ParticlesBackgroundComponent
   ],
   template: `
     <div class="login-container">
@@ -31,7 +32,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       <div class="login-card">
         <!-- Logo et badge -->
         <div class="card-logo">
-          <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img" />
+          <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
         </div>
         <div class="security-badge">
           <span class="badge-icon">🔒</span>
@@ -48,88 +49,48 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
         <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
           <!-- Email -->
           <div class="form-group">
-            <label class="form-label" for="login-email">Email</label>
+            <label class="form-label">Email</label>
             <div class="input-wrapper" [class.focused]="emailFocused">
-              <svg
-                class="input-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                ></path>
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
-              <input
-                id="login-email"
-                type="email"
-                formControlName="email"
-                class="form-input"
+              <input 
+                type="email" 
+                formControlName="email" 
+                class="form-input" 
                 placeholder="votre@email.com"
                 (focus)="emailFocused = true"
                 (blur)="emailFocused = false"
               />
               <div class="focus-line" [class.active]="emailFocused"></div>
             </div>
-            <div class="error-message" *ngIf="email?.touched && email?.invalid">
-              Email invalide
-            </div>
+            <div class="error-message" *ngIf="email?.touched && email?.invalid">Email invalide</div>
           </div>
 
           <!-- Mot de passe -->
           <div class="form-group">
-            <label class="form-label" for="login-mot-de-passe"
-              >Mot de passe</label
-            >
+            <label class="form-label">Mot de passe</label>
             <div class="input-wrapper" [class.focused]="passwordFocused">
-              <svg
-                class="input-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
-              <input
-                id="login-mot-de-passe"
-                [type]="showPassword ? 'text' : 'password'"
-                formControlName="motDePasse"
-                class="form-input"
+              <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                formControlName="motDePasse" 
+                class="form-input" 
                 placeholder="••••••••"
                 (focus)="passwordFocused = true"
                 (blur)="passwordFocused = false"
               />
-              <button
-                type="button"
-                class="toggle-password"
-                (click)="showPassword = !showPassword"
-              >
-                <svg
-                  *ngIf="!showPassword"
-                  class="eye-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+              <button type="button" class="toggle-password" (click)="showPassword = !showPassword">
+                <svg *ngIf="!showPassword" class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
-                <svg
-                  *ngIf="showPassword"
-                  class="eye-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                  ></path>
+                <svg *ngIf="showPassword" class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                   <line x1="1" y1="1" x2="23" y2="23"></line>
                 </svg>
               </button>
@@ -137,45 +98,28 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
             </div>
             <div class="form-actions">
               <label class="remember-me">
-                <input type="checkbox" class="remember-checkbox" />
+                <input type="checkbox" class="remember-checkbox">
                 <span class="remember-text">Se souvenir de moi</span>
               </label>
-              <a routerLink="/auth/forgot-password" class="forgot-password"
-                >Mot de passe oublié ?</a
-              >
+              <a routerLink="/auth/forgot-password" class="forgot-password">Mot de passe oublié ?</a>
             </div>
           </div>
 
           <!-- Bouton connexion -->
-          <button
-            type="submit"
-            class="submit-btn"
-            [disabled]="loginForm.invalid || isLoading"
-          >
+          <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading">
             <div class="shimmer"></div>
-            <svg
-              *ngIf="isLoading"
-              class="spinner"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
+            <svg *ngIf="isLoading" class="spinner" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             <span *ngIf="isLoading">Connexion...</span>
             <span *ngIf="!isLoading">Se connecter</span>
           </button>
+
+          <!-- Message d'erreur -->
+          <div *ngIf="errorMessage" class="error-banner">
+            {{ errorMessage }}
+          </div>
         </form>
 
         <!-- Footer -->
@@ -183,153 +127,12 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
           <span class="footer-text">Pas encore inscrit ?</span>
           <a routerLink="/auth/register" class="footer-link">Créez un compte</a>
         </div>
-
-        <!-- Accès rapide dev -->
-        <div class="dev-section">
-          <div class="dev-divider">
-            <span class="dev-label">Accès rapide · Dev</span>
-          </div>
-          <div class="dev-cards">
-            <button
-              type="button"
-              class="dev-card dev-card-blue"
-              (click)="connexionRapide('proprietaire')"
-            >
-              <div class="dev-card-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-                  ></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-              </div>
-              <div class="dev-card-info">
-                <p class="dev-card-name">Propriétaire</p>
-                <p class="dev-card-route">/dashboard</p>
-              </div>
-              <svg
-                class="dev-card-arrow"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              class="dev-card dev-card-green"
-              (click)="connexionRapide('locataire')"
-            >
-              <div class="dev-card-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-              <div class="dev-card-info">
-                <p class="dev-card-name">Locataire</p>
-                <p class="dev-card-route">/locataire</p>
-              </div>
-              <svg
-                class="dev-card-arrow"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              class="dev-card dev-card-gold"
-              (click)="connexionRapide('gestionnaire')"
-            >
-              <div class="dev-card-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-                  ></path>
-                </svg>
-              </div>
-              <div class="dev-card-info">
-                <p class="dev-card-name">Gestionnaire</p>
-                <p class="dev-card-route">/gestionnaire</p>
-              </div>
-              <svg
-                class="dev-card-arrow"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              class="dev-card dev-card-red"
-              (click)="connexionRapide('admin')"
-            >
-              <div class="dev-card-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path
-                    d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"
-                  ></path>
-                </svg>
-              </div>
-              <div class="dev-card-info">
-                <p class="dev-card-name">Admin</p>
-                <p class="dev-card-route">/admin</p>
-              </div>
-              <svg
-                class="dev-card-arrow"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   `,
   styles: `
-    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
     .login-container {
       min-height: 100vh;
       display: flex;
@@ -338,12 +141,8 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       padding: 2rem;
       position: relative;
       overflow: hidden;
-      font-family: "Inter", sans-serif;
-      background: linear-gradient(
-        135deg,
-        var(--color-primary-50) 0%,
-        #ffffff 60%
-      );
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--color-primary-50) 0%, #FFFFFF 60%);
     }
 
     .floating-badge {
@@ -372,13 +171,8 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
     }
 
     @keyframes float {
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-6px);
-      }
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
 
     .badge-icon {
@@ -527,7 +321,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       border: none;
       border-radius: 12px;
       font-size: 0.9375rem;
-      font-family: "Inter", sans-serif;
+      font-family: 'Inter', sans-serif;
       color: var(--color-text);
       height: 100%;
     }
@@ -608,7 +402,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
     }
 
     .error-message {
-      color: #ef4444;
+      color: #EF4444;
       font-size: 0.8125rem;
       margin-top: 0.375rem;
       font-weight: 500;
@@ -618,11 +412,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       position: relative;
       width: 100%;
       padding: 1rem;
-      background: linear-gradient(
-        135deg,
-        var(--color-primary),
-        var(--color-primary-light)
-      );
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
       color: white;
       border: none;
       border-radius: 12px;
@@ -659,12 +449,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.2),
-        transparent
-      );
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
       transition: left 0.5s;
     }
 
@@ -679,12 +464,8 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
     }
 
     @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     .card-footer {
@@ -709,6 +490,17 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       text-decoration: underline;
     }
 
+    .error-banner {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      color: #DC2626;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
     .dev-section {
       margin-top: 1.5rem;
     }
@@ -722,7 +514,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
 
     .dev-divider::before,
     .dev-divider::after {
-      content: "";
+      content: '';
       flex: 1;
       height: 1px;
       background: var(--color-border);
@@ -750,7 +542,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       padding: 11px 12px;
       border-radius: 11px;
       border: 1.5px solid transparent;
-      background: #f8fafc;
+      background: #F8FAFC;
       cursor: pointer;
       text-align: left;
       transition: all 0.15s;
@@ -760,7 +552,7 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
     .dev-card:hover {
       background: white;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .dev-card-icon {
@@ -804,98 +596,40 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
       transition: opacity 0.15s;
     }
 
-    .dev-card:hover .dev-card-arrow {
-      opacity: 0.8;
-    }
+    .dev-card:hover .dev-card-arrow { opacity: 0.8; }
 
     /* Couleurs par rôle */
-    .dev-card-blue {
-      border-color: rgba(15, 76, 129, 0.15);
-    }
-    .dev-card-blue:hover {
-      border-color: var(--color-primary);
-    }
-    .dev-card-blue .dev-card-icon {
-      background: rgba(15, 76, 129, 0.1);
-    }
-    .dev-card-blue .dev-card-icon svg {
-      stroke: var(--color-primary);
-    }
-    .dev-card-blue .dev-card-name {
-      color: var(--color-primary);
-    }
-    .dev-card-blue .dev-card-route {
-      color: var(--color-primary);
-    }
-    .dev-card-blue .dev-card-arrow {
-      stroke: var(--color-primary);
-    }
+    .dev-card-blue { border-color: rgba(15,76,129,0.15); }
+    .dev-card-blue:hover { border-color: var(--color-primary); }
+    .dev-card-blue .dev-card-icon { background: rgba(15,76,129,0.1); }
+    .dev-card-blue .dev-card-icon svg { stroke: var(--color-primary); }
+    .dev-card-blue .dev-card-name { color: var(--color-primary); }
+    .dev-card-blue .dev-card-route { color: var(--color-primary); }
+    .dev-card-blue .dev-card-arrow { stroke: var(--color-primary); }
 
-    .dev-card-green {
-      border-color: rgba(16, 185, 129, 0.15);
-    }
-    .dev-card-green:hover {
-      border-color: #10b981;
-    }
-    .dev-card-green .dev-card-icon {
-      background: rgba(16, 185, 129, 0.1);
-    }
-    .dev-card-green .dev-card-icon svg {
-      stroke: #10b981;
-    }
-    .dev-card-green .dev-card-name {
-      color: #059669;
-    }
-    .dev-card-green .dev-card-route {
-      color: #059669;
-    }
-    .dev-card-green .dev-card-arrow {
-      stroke: #10b981;
-    }
+    .dev-card-green { border-color: rgba(16,185,129,0.15); }
+    .dev-card-green:hover { border-color: #10B981; }
+    .dev-card-green .dev-card-icon { background: rgba(16,185,129,0.1); }
+    .dev-card-green .dev-card-icon svg { stroke: #10B981; }
+    .dev-card-green .dev-card-name { color: #059669; }
+    .dev-card-green .dev-card-route { color: #059669; }
+    .dev-card-green .dev-card-arrow { stroke: #10B981; }
 
-    .dev-card-gold {
-      border-color: rgba(201, 152, 46, 0.2);
-    }
-    .dev-card-gold:hover {
-      border-color: var(--color-accent);
-    }
-    .dev-card-gold .dev-card-icon {
-      background: rgba(201, 152, 46, 0.12);
-    }
-    .dev-card-gold .dev-card-icon svg {
-      stroke: var(--color-accent);
-    }
-    .dev-card-gold .dev-card-name {
-      color: #92700e;
-    }
-    .dev-card-gold .dev-card-route {
-      color: #92700e;
-    }
-    .dev-card-gold .dev-card-arrow {
-      stroke: var(--color-accent);
-    }
+    .dev-card-gold { border-color: rgba(201,152,46,0.2); }
+    .dev-card-gold:hover { border-color: var(--color-accent); }
+    .dev-card-gold .dev-card-icon { background: rgba(201,152,46,0.12); }
+    .dev-card-gold .dev-card-icon svg { stroke: var(--color-accent); }
+    .dev-card-gold .dev-card-name { color: #92700e; }
+    .dev-card-gold .dev-card-route { color: #92700e; }
+    .dev-card-gold .dev-card-arrow { stroke: var(--color-accent); }
 
-    .dev-card-red {
-      border-color: rgba(239, 68, 68, 0.15);
-    }
-    .dev-card-red:hover {
-      border-color: #ef4444;
-    }
-    .dev-card-red .dev-card-icon {
-      background: rgba(239, 68, 68, 0.1);
-    }
-    .dev-card-red .dev-card-icon svg {
-      stroke: #ef4444;
-    }
-    .dev-card-red .dev-card-name {
-      color: #dc2626;
-    }
-    .dev-card-red .dev-card-route {
-      color: #dc2626;
-    }
-    .dev-card-red .dev-card-arrow {
-      stroke: #ef4444;
-    }
+    .dev-card-red { border-color: rgba(239,68,68,0.15); }
+    .dev-card-red:hover { border-color: #EF4444; }
+    .dev-card-red .dev-card-icon { background: rgba(239,68,68,0.1); }
+    .dev-card-red .dev-card-icon svg { stroke: #EF4444; }
+    .dev-card-red .dev-card-name { color: #DC2626; }
+    .dev-card-red .dev-card-route { color: #DC2626; }
+    .dev-card-red .dev-card-arrow { stroke: #EF4444; }
 
     @media (max-width: 768px) {
       .floating-badge {
@@ -922,121 +656,70 @@ import { ParticlesBackgroundComponent } from "../../../../shared/components/part
         font-size: 1.5rem;
       }
     }
-  `,
+  `
 })
 export class LoginComponent implements OnInit {
-  // Type inféré depuis fb.nonNullable.group() — jamais annoter en
-  // `FormGroup` nu (voir /review frontend).
-  loginForm: ReturnType<LoginComponent["buildForm"]>;
-  isLoading: boolean = false;
-  showPassword: boolean = false;
-  emailFocused: boolean = false;
-  passwordFocused: boolean = false;
+  loginForm: FormGroup;
+  isLoading = false;
+  showPassword = false;
+  emailFocused = false;
+  passwordFocused = false;
   mousePosition = { x: 0, y: 0 };
+  errorMessage = '';
 
-  private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
-
-  constructor() {
-    this.loginForm = this.buildForm();
-  }
-
-  private buildForm() {
-    return this.fb.nonNullable.group({
-      email: ["", [Validators.required, Validators.email]],
-      motDePasse: ["", Validators.required],
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
+    private authService: AuthService,
+  ) {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      motDePasse: ['', Validators.required]
     });
   }
 
   ngOnInit(): void {
-    this.mousePosition = {
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-    };
+    this.mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    // Si déjà connecté, rediriger directement
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate([this.authService.getDefaultRoute()]);
+    }
   }
 
-  @HostListener("mousemove", ["$event"])
+  @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     const x = (event.clientX / window.innerWidth - 0.5) * 20;
     const y = (event.clientY / window.innerHeight - 0.5) * 20;
     this.mousePosition = { x, y };
   }
 
-  get email() {
-    return this.loginForm.get("email");
-  }
-  get motDePasse() {
-    return this.loginForm.get("motDePasse");
-  }
+  get email() { return this.loginForm.get('email'); }
+  get motDePasse() { return this.loginForm.get('motDePasse'); }
 
-  onSubmitClick() {
-    // Animation de clic
-  }
+  onSubmitClick() {}
 
   onLogin(): void {
-    if (this.loginForm.invalid) {
-      return;
-    }
+    if (this.loginForm.invalid) return;
 
     this.isLoading = true;
+    this.errorMessage = '';
 
-    setTimeout(() => {
-      this.isLoading = false;
-      void this.router.navigate(["/dashboard"]);
-    }, 1000);
-  }
-
-  connexionRapide(
-    role: "proprietaire" | "locataire" | "gestionnaire" | "admin",
-  ): void {
-    const users: Record<
-      string,
-      { prenom: string; nom: string; email: string; role: string }
-    > = {
-      proprietaire: {
-        prenom: "Kofi",
-        nom: "Mensah",
-        email: "kofi@warah.tg",
-        role: "proprietaire",
+    this.authService.login({
+      email: this.loginForm.value.email,
+      motDePasse: this.loginForm.value.motDePasse,
+    }).subscribe({
+      next: (user) => {
+        this.isLoading = false;
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        this.router.navigate([returnUrl ?? this.authService.getDefaultRoute()]);
       },
-      locataire: {
-        prenom: "Awa",
-        nom: "Koné",
-        email: "awa@warah.tg",
-        role: "locataire",
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err?.message === 'Invalid login credentials'
+          ? 'Email ou mot de passe incorrect'
+          : (err?.message ?? 'Erreur de connexion');
       },
-      gestionnaire: {
-        prenom: "Yao",
-        nom: "Koffi",
-        email: "yao@warah.tg",
-        role: "gestionnaire",
-      },
-      admin: {
-        prenom: "Admin",
-        nom: "WARAH",
-        email: "admin@warah.tg",
-        role: "admin",
-      },
-    };
-
-    const routes: Record<string, string> = {
-      proprietaire: "/dashboard",
-      locataire: "/locataire",
-      gestionnaire: "/gestionnaire",
-      admin: "/admin",
-    };
-
-    localStorage.setItem("warah_token", `dev-token-${role}`);
-    localStorage.setItem(
-      "warah_user",
-      JSON.stringify({
-        id: role,
-        ...users[role],
-        telephone: "+22890000000",
-        ville: "Lomé",
-      }),
-    );
-
-    void this.router.navigate([routes[role]]);
+    });
   }
 }

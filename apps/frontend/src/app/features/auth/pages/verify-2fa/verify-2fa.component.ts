@@ -1,23 +1,20 @@
-import { Component, OnDestroy, OnInit, inject } from "@angular/core";
-import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
-import { Router, ActivatedRoute } from "@angular/router";
-import { HttpErrorResponse } from "@angular/common/http";
-import {
-  AuthService,
-  Verify2FARequest,
-} from "../../../../core/services/auth.service";
-import { LokAlerteComponent } from "../../../../shared/components/lok-alerte/lok-alerte.component";
-import { CommonModule } from "@angular/common";
-import { extractErrorMessage } from "@core/utils/http-error.util";
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService, Verify2FARequest } from '../../../../core/services/auth.service';
+import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: "app-verify-2fa",
+  selector: 'app-verify-2fa',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LokAlerteComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    LokAlerteComponent
+  ],
   template: `
-    <div
-      class="min-h-screen bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center p-4"
-    >
+    <div class="min-h-screen bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
         <!-- Logo et titre -->
         <div class="text-center mb-8">
@@ -38,47 +35,25 @@ import { extractErrorMessage } from "@core/utils/http-error.util";
         <!-- Instructions -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div class="flex items-start">
-            <svg
-              class="w-5 h-5 text-blue-600 mt-0.5 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div>
-              <p class="text-sm text-blue-800 font-medium">
-                Code de vérification envoyé
-              </p>
+              <p class="text-sm text-blue-800 font-medium">Code de vérification envoyé</p>
               <p class="text-sm text-blue-600 mt-1">
-                Un code à 6 chiffres a été envoyé à votre email
-                <strong>{{ email }}</strong
-                >. Ce code expire dans 15 minutes.
+                Un code à 6 chiffres a été envoyé à votre email <strong>{{ email }}</strong>.
+                Ce code expire dans 15 minutes.
               </p>
             </div>
           </div>
         </div>
 
         <!-- Formulaire de vérification -->
-        <form
-          [formGroup]="verifyForm"
-          (ngSubmit)="onSubmit()"
-          class="space-y-6"
-        >
+        <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <!-- Code de vérification -->
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 mb-2"
-              for="verify-2fa-code"
-              >Code de vérification</label
-            >
+            <label class="block text-sm font-medium text-gray-700 mb-2">Code de vérification</label>
             <input
-              id="verify-2fa-code"
               type="text"
               formControlName="code"
               class="input-field text-center text-2xl tracking-widest"
@@ -86,11 +61,9 @@ import { extractErrorMessage } from "@core/utils/http-error.util";
               maxlength="6"
               (input)="formatCode($event)"
             />
-            @if (
-              verifyForm.get("code")?.touched && verifyForm.get("code")?.invalid
-            ) {
+            @if (verifyForm.get('code')?.touched && verifyForm.get('code')?.invalid) {
               <p class="text-red-500 text-xs mt-1">
-                @if (verifyForm.get("code")?.errors?.["required"]) {
+                @if (verifyForm.get('code')?.errors?.['required']) {
                   Le code est requis
                 } @else {
                   Le code doit contenir 6 chiffres
@@ -123,24 +96,9 @@ import { extractErrorMessage } from "@core/utils/http-error.util";
             class="btn-primary w-full"
           >
             @if (isLoading) {
-              <svg
-                class="animate-spin h-5 w-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+              <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               Vérification en cours...
             } @else {
@@ -163,47 +121,39 @@ import { extractErrorMessage } from "@core/utils/http-error.util";
     </div>
   `,
 })
-export class Verify2FAComponent implements OnInit, OnDestroy {
-  // Type inféré depuis fb.nonNullable.group() — jamais annoter en
-  // `FormGroup` nu (voir /review frontend).
-  verifyForm: ReturnType<Verify2FAComponent["buildForm"]>;
+export class Verify2FAComponent implements OnInit {
+  verifyForm: FormGroup;
   isLoading: boolean = false;
-  errorMessage: string = "";
-  successMessage: string = "";
-  email: string = "";
+  errorMessage: string = '';
+  successMessage: string = '';
+  email: string = '';
   countdown: number = 60;
   canResend: boolean = false;
-  countdownInterval: ReturnType<typeof setInterval> | undefined;
+  countdownInterval: any;
 
-  private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-
-  constructor() {
-    this.verifyForm = this.buildForm();
-  }
-
-  private buildForm() {
-    return this.fb.nonNullable.group({
-      code: ["", [Validators.required, Validators.pattern(/^[0-9]{6}$/)]],
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {
+    this.verifyForm = this.fb.group({
+      code: ['', [Validators.required, Validators.pattern(/^[0-9]{6}$/)]]
     });
   }
 
   ngOnInit(): void {
     // Récupérer l'email depuis les query params ou le localStorage
-    this.email =
-      this.route.snapshot.queryParamMap.get("email") ||
-      localStorage.getItem("warah_2fa_email") ||
-      "";
+    this.email = this.route.snapshot.queryParamMap.get('email') ||
+                 localStorage.getItem('WARAH_2fa_email') || '';
 
     if (!this.email) {
-      this.errorMessage = "Email non trouvé. Veuillez vous reconnecter.";
+      this.errorMessage = 'Email non trouvé. Veuillez vous reconnecter.';
       setTimeout(() => {
-        void this.router.navigate(["/auth/login"]);
+        this.router.navigate(['/auth/login']);
       }, 3000);
     } else {
-      localStorage.setItem("warah_2fa_email", this.email);
+      localStorage.setItem('WARAH_2fa_email', this.email);
       this.startCountdown();
     }
   }
@@ -211,10 +161,9 @@ export class Verify2FAComponent implements OnInit, OnDestroy {
   /**
    * Formate le code pour n'accepter que des chiffres
    */
-  formatCode(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const value = target.value.replace(/[^0-9]/g, "");
-    target.value = value;
+  formatCode(event: any): void {
+    const value = event.target.value.replace(/[^0-9]/g, '');
+    event.target.value = value;
     this.verifyForm.patchValue({ code: value });
   }
 
@@ -224,7 +173,7 @@ export class Verify2FAComponent implements OnInit, OnDestroy {
   startCountdown(): void {
     this.canResend = false;
     this.countdown = 60;
-
+    
     this.countdownInterval = setInterval(() => {
       this.countdown--;
       if (this.countdown <= 0) {
@@ -239,25 +188,22 @@ export class Verify2FAComponent implements OnInit, OnDestroy {
    */
   resendCode(): void {
     this.isLoading = true;
-    this.errorMessage = "";
-
+    this.errorMessage = '';
+    
     // Appeler l'API pour renvoyer le code
     this.authService.forgotPassword({ email: this.email }).subscribe({
       next: () => {
         this.isLoading = false;
-        this.successMessage = "Nouveau code envoyé avec succès !";
+        this.successMessage = 'Nouveau code envoyé avec succès !';
         setTimeout(() => {
-          this.successMessage = "";
+          this.successMessage = '';
         }, 3000);
         this.startCountdown();
       },
-      error: (error: HttpErrorResponse) => {
+      error: (error: any) => {
         this.isLoading = false;
-        this.errorMessage = extractErrorMessage(
-          error,
-          "Erreur lors de l'envoi du code",
-        );
-      },
+        this.errorMessage = error.error?.message || 'Erreur lors de l\'envoi du code';
+      }
     });
   }
 
@@ -270,35 +216,31 @@ export class Verify2FAComponent implements OnInit, OnDestroy {
     }
 
     this.isLoading = true;
-    this.errorMessage = "";
-    this.successMessage = "";
+    this.errorMessage = '';
+    this.successMessage = '';
 
     const verifyData: Verify2FARequest = {
       email: this.email,
-      code: this.verifyForm.getRawValue().code,
+      code: this.verifyForm.value.code
     };
 
     this.authService.verify2FA(verifyData).subscribe({
-      next: () => {
+      next: (response: any) => {
         this.isLoading = false;
-        this.successMessage =
-          "Vérification réussie ! Redirection vers le tableau de bord...";
+        this.successMessage = 'Vérification réussie ! Redirection vers le tableau de bord...';
 
         // Nettoyer le localStorage
-        localStorage.removeItem("warah_2fa_email");
+        localStorage.removeItem('WARAH_2fa_email');
 
         // Rediriger vers le dashboard après 2 secondes
         setTimeout(() => {
-          void this.router.navigate(["/dashboard"]);
+          this.router.navigate(['/dashboard']);
         }, 2000);
       },
-      error: (error: HttpErrorResponse) => {
+      error: (error: any) => {
         this.isLoading = false;
-        this.errorMessage = extractErrorMessage(
-          error,
-          "Code de vérification invalide ou expiré",
-        );
-      },
+        this.errorMessage = error.error?.message || 'Code de vérification invalide ou expiré';
+      }
     });
   }
 
@@ -306,11 +248,11 @@ export class Verify2FAComponent implements OnInit, OnDestroy {
    * Annule la vérification et retourne à la connexion
    */
   cancel(): void {
-    localStorage.removeItem("warah_2fa_email");
+    localStorage.removeItem('WARAH_2fa_email');
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
     }
-    void this.router.navigate(["/auth/login"]);
+    this.router.navigate(['/auth/login']);
   }
 
   ngOnDestroy(): void {

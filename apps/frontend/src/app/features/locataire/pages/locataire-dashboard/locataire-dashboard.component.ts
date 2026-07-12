@@ -249,7 +249,7 @@ import { CommonModule } from "@angular/common";
           </button>
 
           <button
-            routerLink="/contrats/mes-contrats"
+            routerLink="/locataire"
             class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-primary transition-colors text-left"
           >
             <div class="flex items-center gap-4">

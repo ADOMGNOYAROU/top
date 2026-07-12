@@ -1,40 +1,17 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-import { Router, RouterModule } from "@angular/router";
-import { HttpErrorResponse } from "@angular/common/http";
-import { PaiementsService } from "../../services/paiements.service";
-import {
-  Paiement,
-  StatutPaiement,
-  ModePaiement,
-} from "@core/models/paiement.model";
-import { LokMontantFcfaComponent } from "../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component";
-import { LokBadgePaiementComponent } from "../../../../shared/components/lok-badge-paiement/lok-badge-paiement.component";
-import { LokSkeletonComponent } from "../../../../shared/components/lok-skeleton/lok-skeleton.component";
-import { LokEmptyStateComponent } from "../../../../shared/components/lok-empty-state/lok-empty-state.component";
-
-// Filtre local à cette liste — distinct de PaiementsFilters (service),
-// qui n'a pas de champ `modePaiement` et sert le filtrage serveur, jamais
-// utilisé ici (le filtrage se fait entièrement côté client).
-type PaiementsListFilters = {
-  statut?: StatutPaiement;
-  modePaiement?: ModePaiement;
-  montantMin?: number;
-  montantMax?: number;
-};
-
-type Statistiques = {
-  total: number;
-  totalMontant: number;
-  payes: number;
-  impayes: number;
-  enRetard: number;
-  tauxRecouvrement: number;
-};
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { PaiementsService, PaiementsFilters } from '../../services/paiements.service';
+import { Paiement, StatutPaiement, ModePaiement } from '@core/models/paiement.model';
+import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
+import { LokBadgePaiementComponent } from '../../../../shared/components/lok-badge-paiement/lok-badge-paiement.component';
+import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
+import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok-alerte.component';
 
 @Component({
-  selector: "app-paiements-list",
+  selector: 'app-paiements-list',
   standalone: true,
   imports: [
     CommonModule,
@@ -44,90 +21,66 @@ type Statistiques = {
     LokBadgePaiementComponent,
     LokSkeletonComponent,
     LokEmptyStateComponent,
+    LokAlerteComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
       <!-- Header -->
-      <div class="bg-white border-b border-gray-200 px-6 py-4 animate-fade-in">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <div class="logo">
-              <img src="/assets/warah-logo.png" alt="WARAH" class="logo-img" />
-            </div>
-            <div class="h-8 w-px bg-gray-200"></div>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">Paiements</h1>
-              <p class="text-sm text-gray-600">
-                Gestion des loyers et paiements
-              </p>
-            </div>
+      <div class="pmt-header">
+        <div class="pmt-header-left">
+          <div class="logo pmt-logo-desktop">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
-          <button
-            routerLink="/dashboard/paiements/nouveau"
-            class="btn-primary flex items-center gap-2"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Enregistrer un paiement
-          </button>
+          <div class="pmt-divider"></div>
+          <div>
+            <h1 class="pmt-title">Paiements</h1>
+            <p class="pmt-sub">Gestion des loyers et paiements</p>
+          </div>
         </div>
+        <!-- Bouton complet sur desktop, icône + texte court sur mobile -->
+        <button routerLink="/dashboard/paiements/nouveau" class="btn-primary pmt-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="pmt-btn-full">Enregistrer un paiement</span>
+          <span class="pmt-btn-short">Nouveau</span>
+        </button>
       </div>
 
       <!-- Contenu principal -->
       <div class="p-6">
+        @if (successMessage) {
+          <lok-alerte type="success" [message]="successMessage" class="mb-4 block"></lok-alerte>
+        }
+        @if (errorMessage) {
+          <lok-alerte type="error" [message]="errorMessage" class="mb-4 block"></lok-alerte>
+        }
         <!-- Statistiques rapides -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Total collecté</p>
-            <lok-montant-fcfa
-              [montant]="statistiques.totalMontant"
-              size="lg"
-              color="primary"
-            ></lok-montant-fcfa>
+            <lok-montant-fcfa [montant]="statistiques.totalMontant" size="lg" color="primary"></lok-montant-fcfa>
           </div>
           <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Payés</p>
-            <p class="text-2xl font-bold text-green-600">
-              {{ statistiques.payes }}
-            </p>
+            <p class="text-2xl font-bold text-green-600">{{ statistiques.payes }}</p>
           </div>
           <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">En retard</p>
-            <p class="text-2xl font-bold text-orange-600">
-              {{ statistiques.enRetard }}
-            </p>
+            <p class="text-2xl font-bold text-orange-600">{{ statistiques.enRetard }}</p>
           </div>
           <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <p class="text-sm text-gray-600">Impayés</p>
-            <p class="text-2xl font-bold text-red-600">
-              {{ statistiques.impayes }}
-            </p>
+            <p class="text-2xl font-bold text-red-600">{{ statistiques.impayes }}</p>
           </div>
         </div>
 
         <!-- Filtres -->
-        <div
-          class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6"
-        >
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Filtre Statut -->
             <div>
-              <select
-                [(ngModel)]="filters.statut"
-                (ngModelChange)="applyFilters()"
-                class="input-field"
-              >
+              <select [(ngModel)]="filters.statut" (ngModelChange)="applyFilters()" class="input-field">
                 <option [value]="undefined">Tous les statuts</option>
                 <option [value]="StatutPaiement.PAYE">Payé</option>
                 <option [value]="StatutPaiement.PARTIEL">Partiel</option>
@@ -138,11 +91,7 @@ type Statistiques = {
 
             <!-- Filtre Mode de paiement -->
             <div>
-              <select
-                [(ngModel)]="filters.modePaiement"
-                (ngModelChange)="applyFilters()"
-                class="input-field"
-              >
+              <select [(ngModel)]="filters.modePaiement" (ngModelChange)="applyFilters()" class="input-field">
                 <option [value]="undefined">Tous les modes</option>
                 <option value="T_MONEY">T-Money</option>
                 <option value="FLOOZ">Flooz</option>
@@ -178,49 +127,24 @@ type Statistiques = {
             <div class="flex items-center gap-2 mt-4">
               <span class="text-sm text-gray-600">Filtres actifs :</span>
               @if (filters.statut) {
-                <span
-                  class="bg-primary-light text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                >
+                <span class="bg-primary-light text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1">
                   {{ filters.statut }}
-                  <button
-                    (click)="clearFilter('statut')"
-                    class="hover:text-primary-dark"
-                  >
-                    ×
-                  </button>
+                  <button (click)="clearFilter('statut')" class="hover:text-primary-dark">×</button>
                 </span>
               }
               @if (filters.modePaiement) {
-                <span
-                  class="bg-primary-light text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                >
+                <span class="bg-primary-light text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1">
                   {{ filters.modePaiement }}
-                  <button
-                    (click)="clearFilter('modePaiement')"
-                    class="hover:text-primary-dark"
-                  >
-                    ×
-                  </button>
+                  <button (click)="clearFilter('modePaiement')" class="hover:text-primary-dark">×</button>
                 </span>
               }
               @if (filters.montantMin || filters.montantMax) {
-                <span
-                  class="bg-primary-light text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                >
-                  {{ filters.montantMin || 0 }} -
-                  {{ filters.montantMax || "∞" }} FCFA
-                  <button
-                    (click)="clearMontantFilters()"
-                    class="hover:text-primary-dark"
-                  >
-                    ×
-                  </button>
+                <span class="bg-primary-light text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                  {{ filters.montantMin || 0 }} - {{ filters.montantMax || '∞' }} FCFA
+                  <button (click)="clearMontantFilters()" class="hover:text-primary-dark">×</button>
                 </span>
               }
-              <button
-                (click)="clearAllFilters()"
-                class="text-sm text-red-600 hover:underline"
-              >
+              <button (click)="clearAllFilters()" class="text-sm text-red-600 hover:underline">
                 Effacer tout
               </button>
             </div>
@@ -243,198 +167,160 @@ type Statistiques = {
             (ctaAction)="navigateToNew()"
           ></lok-empty-state>
         } @else {
-          <div
-            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-          >
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Date
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Locataire
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Bien
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Montant
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Mode
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Statut
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                  @for (paiement of filteredPaiements; track paiement.id) {
-                    <tr class="hover:bg-gray-50">
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                      >
-                        {{ paiement.datePaiement | date: "dd/MM/yyyy" }}
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                      >
-                        Locataire #{{ paiement.locataireId }}
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                      >
-                        Bien #{{ paiement.bienId }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <lok-montant-fcfa
-                          [montant]="paiement.montant"
-                          size="sm"
-                        ></lok-montant-fcfa>
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                      >
-                        {{ paiement.modePaiement }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <lok-badge-paiement
-                          [statut]="paiement.statut"
-                        ></lok-badge-paiement>
-                      </td>
-                      <td
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                      >
-                        <div class="flex items-center gap-2">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locataire</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bien</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                @for (paiement of filteredPaiements; track paiement.id) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ paiement.datePaiement | date:'dd/MM/yyyy' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      Locataire #{{ paiement.locataireId }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      Bien #{{ paiement.bienId }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <lok-montant-fcfa [montant]="paiement.montant" size="sm"></lok-montant-fcfa>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ paiement.modePaiement }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <lok-badge-paiement [statut]="paiement.statut"></lok-badge-paiement>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div class="flex items-center gap-2">
+                        <button
+                          (click)="viewPaiement(paiement.id)"
+                          class="text-gray-600 hover:text-primary transition-colors"
+                          title="Voir détails"
+                        >
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                        </button>
+                        @if (paiement.statut === StatutPaiement.IMPAYE || paiement.statut === StatutPaiement.EN_RETARD) {
                           <button
-                            (click)="viewPaiement(paiement.id)"
+                            (click)="envoyerRappel(paiement.id)"
                             class="text-gray-600 hover:text-primary transition-colors"
-                            title="Voir détails"
+                            title="Envoyer rappel"
                           >
-                            <svg
-                              class="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
                           </button>
-                          @if (
-                            paiement.statut === StatutPaiement.IMPAYE ||
-                            paiement.statut === StatutPaiement.EN_RETARD
-                          ) {
-                            <button
-                              (click)="envoyerRappel(paiement.id)"
-                              class="text-gray-600 hover:text-primary transition-colors"
-                              title="Envoyer rappel"
-                            >
-                              <svg
-                                class="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </button>
-                          }
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
             </div>
           </div>
         }
       </div>
     </div>
   `,
-  styles: [
-    `
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
+  styles: [`
+    .logo-img {
+      height: 88px;
+      width: auto;
+      object-fit: contain;
+      background: transparent !important;
+      mix-blend-mode: multiply;
+    }
 
-      .logo-img {
-        height: 88px;
-        width: auto;
-        object-fit: contain;
-        background: transparent !important;
-        mix-blend-mode: multiply;
-      }
+    /* ── Header responsive ── */
+    .pmt-header {
+      background: white;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pmt-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+    .pmt-divider {
+      width: 1px;
+      height: 32px;
+      background: #E5E7EB;
+      flex-shrink: 0;
+    }
+    .pmt-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .pmt-sub {
+      font-size: 13px;
+      color: #6B7280;
+      margin-top: 1px;
+    }
+    .pmt-btn { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .pmt-btn-short { display: none; }
 
-      .logo-text {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--color-primary);
-        letter-spacing: 0.5px;
-      }
-    `,
-  ],
+    @media (max-width: 640px) {
+      .pmt-header { padding: 12px 16px 12px 64px; }
+      .pmt-logo-desktop { display: none; }
+      .pmt-divider { display: none; }
+      .pmt-title { font-size: 18px; }
+      .pmt-sub { display: none; }
+      .pmt-btn-full { display: none; }
+      .pmt-btn-short { display: inline; }
+      .pmt-btn { padding: 8px 14px; font-size: 13px; }
+    }
+  `]
 })
 export class PaiementsListComponent implements OnInit {
   paiements: Paiement[] = [];
   filteredPaiements: Paiement[] = [];
-  loading: boolean = true;
+  loading = true;
+  successMessage = '';
+  errorMessage = '';
 
   StatutPaiement = StatutPaiement; // Pour l'accès dans le template
-  statistiques: Statistiques = {
-    total: 0,
+  statistiques: any = {
     totalMontant: 0,
     payes: 0,
     impayes: 0,
-    enRetard: 0,
-    tauxRecouvrement: 0,
+    enRetard: 0
   };
 
-  filters: PaiementsListFilters = {
+  filters: any = {
     statut: undefined,
     modePaiement: undefined,
     montantMin: undefined,
-    montantMax: undefined,
+    montantMax: undefined
   };
 
-  private readonly paiementsService = inject(PaiementsService);
-  private readonly router = inject(Router);
+  constructor(
+    private paiementsService: PaiementsService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadPaiements();
@@ -446,16 +332,16 @@ export class PaiementsListComponent implements OnInit {
   loadPaiements(): void {
     this.loading = true;
     this.paiementsService.getPaiements().subscribe({
-      next: (data: Paiement[]) => {
+      next: (data: any) => {
         this.paiements = data;
         this.filteredPaiements = data;
         this.loadStatistiques();
         this.loading = false;
       },
-      error: (error: HttpErrorResponse) => {
-        console.error("Erreur lors du chargement des paiements:", error);
+      error: (error: any) => {
+        console.error('Erreur lors du chargement des paiements:', error);
         this.loading = false;
-      },
+      }
     });
   }
 
@@ -464,9 +350,9 @@ export class PaiementsListComponent implements OnInit {
    */
   loadStatistiques(): void {
     this.paiementsService.getStatistiques().subscribe({
-      next: (data: Statistiques) => {
+      next: (data: any) => {
         this.statistiques = data;
-      },
+      }
     });
   }
 
@@ -474,33 +360,24 @@ export class PaiementsListComponent implements OnInit {
    * Applique les filtres
    */
   applyFilters(): void {
-    this.filteredPaiements = this.paiements.filter((paiement) => {
+    this.filteredPaiements = this.paiements.filter(paiement => {
       // Filtre par statut
       if (this.filters.statut && paiement.statut !== this.filters.statut) {
         return false;
       }
 
       // Filtre par mode de paiement
-      if (
-        this.filters.modePaiement &&
-        paiement.modePaiement !== this.filters.modePaiement
-      ) {
+      if (this.filters.modePaiement && paiement.modePaiement !== this.filters.modePaiement) {
         return false;
       }
 
       // Filtre par montant min
-      if (
-        this.filters.montantMin &&
-        paiement.montant < this.filters.montantMin
-      ) {
+      if (this.filters.montantMin && paiement.montant < this.filters.montantMin) {
         return false;
       }
 
       // Filtre par montant max
-      if (
-        this.filters.montantMax &&
-        paiement.montant > this.filters.montantMax
-      ) {
+      if (this.filters.montantMax && paiement.montant > this.filters.montantMax) {
         return false;
       }
 
@@ -512,18 +389,16 @@ export class PaiementsListComponent implements OnInit {
    * Vérifie si des filtres sont actifs
    */
   hasActiveFilters(): boolean {
-    return (
-      !!this.filters.statut ||
-      !!this.filters.modePaiement ||
-      !!this.filters.montantMin ||
-      !!this.filters.montantMax
-    );
+    return !!this.filters.statut || 
+           !!this.filters.modePaiement || 
+           !!this.filters.montantMin || 
+           !!this.filters.montantMax;
   }
 
   /**
    * Efface un filtre spécifique
    */
-  clearFilter(filter: keyof PaiementsListFilters): void {
+  clearFilter(filter: string): void {
     this.filters[filter] = undefined;
     this.applyFilters();
   }
@@ -545,7 +420,7 @@ export class PaiementsListComponent implements OnInit {
       statut: undefined,
       modePaiement: undefined,
       montantMin: undefined,
-      montantMax: undefined,
+      montantMax: undefined
     };
     this.filteredPaiements = [...this.paiements];
   }
@@ -554,7 +429,7 @@ export class PaiementsListComponent implements OnInit {
    * Voir les détails d'un paiement
    */
   viewPaiement(id: string): void {
-    void this.router.navigate(["/dashboard/paiements", id]);
+    this.router.navigate(['/dashboard/paiements', id]);
   }
 
   /**
@@ -563,12 +438,13 @@ export class PaiementsListComponent implements OnInit {
   envoyerRappel(id: string): void {
     this.paiementsService.envoyerRappel(id).subscribe({
       next: () => {
-        alert("Rappel envoyé avec succès");
+        this.successMessage = 'Rappel envoyé avec succès';
+        setTimeout(() => { this.successMessage = ''; }, 3000);
       },
-      error: (error: HttpErrorResponse) => {
-        console.error("Erreur lors de l'envoi du rappel:", error);
-        alert("Erreur lors de l'envoi du rappel");
-      },
+      error: () => {
+        this.errorMessage = 'Erreur lors de l\'envoi du rappel';
+        setTimeout(() => { this.errorMessage = ''; }, 4000);
+      }
     });
   }
 
@@ -576,9 +452,6 @@ export class PaiementsListComponent implements OnInit {
    * Navigue vers la page de création
    */
   navigateToNew(): void {
-    // Corrigé : manquait le préfixe /dashboard (bouton d'en-tête déjà
-    // correct via routerLink, seul ce chemin programmatique était faux —
-    // 404 silencieux depuis le CTA de l'état vide, voir /review frontend).
-    void this.router.navigate(["/dashboard/paiements/nouveau"]);
+    this.router.navigate(['/paiements/nouveau']);
   }
 }
