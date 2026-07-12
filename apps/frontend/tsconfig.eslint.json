@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/eslint",
-    "types": ["node"]
+    "types": ["node", "jasmine"]
   },
   "include": ["src/**/*.ts"]
 }
