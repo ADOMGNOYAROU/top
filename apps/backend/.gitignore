@@ -1,0 +1,30 @@
+# Compiled output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Coverage
+coverage/
+
+# SonarQube scanner cache/report
+.scannerwork/
+
+# Prisma generated client (re-généré au build)
+node_modules/.prisma/
+
+# Logs
+*.log
+logs/
+
+# Test
+test-results/
+
+# IntelliJ
+.idea/
