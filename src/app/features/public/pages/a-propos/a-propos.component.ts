@@ -262,25 +262,25 @@ import { PublicFooterComponent } from '../../../../shared/components/public-foot
     .page { font-family: 'Inter', system-ui, sans-serif; color: #1a2940; overflow-x: hidden; }
 
     /* ── NAVBAR ── */
-    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: background .3s, box-shadow .3s; }
-    .nav-solid { background: linear-gradient(135deg,rgba(10,38,80,1) 0%,rgba(15,76,129,1) 60%,rgba(8,30,65,1) 100%); box-shadow: 0 2px 20px rgba(0,0,0,.25); }
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: white; box-shadow: 0 2px 16px rgba(0,0,0,0.08); transition: box-shadow .3s; }
+    .nav-solid { box-shadow: 0 4px 28px rgba(0,0,0,0.13); }
     .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 80px; display: flex; align-items: center; gap: 32px; }
-    .nav-logo { display: flex; align-items: center; text-decoration: none; background: white; border-radius: 12px; padding: 7px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; }
     .logo-img { height: 54px; }
     .nav-links { display: flex; gap: 28px; list-style: none; padding: 0; margin: 0; flex: 1; }
-    .nl { color: rgba(255,255,255,.85); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color .2s; padding-bottom: 2px; position: relative; }
+    .nl { color: #0A2650; text-decoration: none; font-size: .9rem; font-weight: 500; transition: color .2s; padding-bottom: 2px; position: relative; }
     .nl::after { content: attr(data-text); display: block; height: 0; overflow: hidden; font-weight: 700; visibility: hidden; pointer-events: none; }
-    .nl:hover { color: white; }
-    .nl-active { color: white; font-weight: 700; border-bottom: 2px solid #C9982E; }
+    .nl:hover { color: #C9982E; }
+    .nl-active { color: #0F4C81; font-weight: 700; border-bottom: 2px solid #C9982E; }
     .nav-cta { display: flex; gap: 10px; align-items: center; }
-    .btn-ghost { color: white; border: 1.5px solid rgba(255,255,255,.5); padding: 7px 18px; border-radius: 6px; text-decoration: none; font-size: .85rem; font-weight: 500; transition: background .2s; }
-    .btn-ghost:hover { background: rgba(255,255,255,.1); }
-    .btn-nav-primary { background: #C9982E; color: white; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: .85rem; font-weight: 600; transition: background .2s; }
-    .btn-nav-primary:hover { background: #b8881f; }
+    .btn-ghost { color: #0A2650; padding: 7px 18px; border-radius: 6px; text-decoration: none; font-size: .85rem; font-weight: 500; transition: background .2s; }
+    .btn-ghost:hover { background: rgba(10,38,80,0.07); }
+    .btn-nav-primary { background: #0F4C81; color: white; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: .85rem; font-weight: 600; transition: background .2s; }
+    .btn-nav-primary:hover { background: #0A2650; }
     .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
-    .hamburger span { display: block; width: 22px; height: 2px; background: white; border-radius: 2px; }
-    .m-menu { position: absolute; top: 68px; left: 0; right: 0; background: #0A2650; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
-    .mm-link { color: rgba(255,255,255,.85); text-decoration: none; font-size: 1rem; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .hamburger span { display: block; width: 22px; height: 2px; background: #0A2650; border-radius: 2px; }
+    .m-menu { position: absolute; top: 80px; left: 0; right: 0; background: white; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #E5E7EB; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .mm-link { color: #374151; text-decoration: none; font-size: 1rem; padding: 10px 0; border-bottom: 1px solid #F3F4F6; display: block; }
     .mm-cta { margin-top: 10px; background: #C9982E; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
 
     /* ── HERO ── */
