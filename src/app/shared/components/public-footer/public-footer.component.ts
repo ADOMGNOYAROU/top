@@ -143,17 +143,25 @@ import { RouterLink } from '@angular/router';
   styles: [`
     /* ── FOOTER 2026 ── */
     .pf {
-      background: #F8F9FC;
-      color: #374151;
+      background: #080D18;
+      color: rgba(255,255,255,0.6);
       font-family: 'Inter', system-ui, sans-serif;
       font-size: .9rem;
-      border-top: 3px solid #C9982E;
+      border-top: 1px solid rgba(201,152,46,0.25);
       position: relative;
+    }
+    .pf::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, #C9982E 30%, #C9982E 70%, transparent 100%);
+      opacity: 0.6;
     }
 
     /* ── BANDE SUPÉRIEURE ── */
     .pf-top {
-      border-bottom: 1px solid #E5E7EB;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
       padding: 40px 0;
     }
     .pf-top-inner {
@@ -178,7 +186,7 @@ import { RouterLink } from '@angular/router';
     .pf-top-title {
       font-size: 1.15rem;
       font-weight: 700;
-      color: #0A2650;
+      color: white;
       max-width: 500px;
     }
     .pf-top-actions {
@@ -200,8 +208,8 @@ import { RouterLink } from '@angular/router';
     }
     .pf-btn-primary:hover { background: #b8881f; transform: translateY(-1px); }
     .pf-btn-ghost {
-      border: 1.5px solid #D1D5DB;
-      color: #374151;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.8);
       padding: 10px 22px;
       border-radius: 8px;
       text-decoration: none;
@@ -210,7 +218,7 @@ import { RouterLink } from '@angular/router';
       transition: border-color .2s, color .2s;
       white-space: nowrap;
     }
-    .pf-btn-ghost:hover { border-color: #0F4C81; color: #0F4C81; }
+    .pf-btn-ghost:hover { border-color: rgba(255,255,255,0.5); color: white; }
 
     /* ── CORPS ── */
     .pf-body {
@@ -226,11 +234,11 @@ import { RouterLink } from '@angular/router';
     }
 
     /* Brand */
-    .pf-logo-wrap { display: inline-flex; align-items: center; margin-bottom: 18px; }
+    .pf-logo-wrap { display: inline-flex; align-items: center; background: white; border-radius: 12px; padding: 8px 16px; margin-bottom: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
     .pf-logo { height: 54px; width: auto; display: block; }
     .pf-brand-desc {
       font-size: .85rem;
-      color: #6B7280;
+      color: rgba(255,255,255,0.5);
       line-height: 1.65;
       margin-bottom: 20px;
       max-width: 280px;
@@ -243,18 +251,18 @@ import { RouterLink } from '@angular/router';
     .pf-soc {
       width: 36px;
       height: 36px;
-      background: #FFFFFF;
-      border: 1px solid #E5E7EB;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #6B7280;
+      color: rgba(255,255,255,0.5);
       text-decoration: none;
       transition: background .2s, color .2s, border-color .2s;
     }
     .pf-soc:hover {
-      background: rgba(201,152,46,0.1);
+      background: rgba(201,152,46,0.15);
       color: #C9982E;
       border-color: rgba(201,152,46,0.4);
     }
@@ -265,9 +273,9 @@ import { RouterLink } from '@angular/router';
       align-items: center;
       gap: 7px;
       font-size: .78rem;
-      color: #6B7280;
-      background: #FFFFFF;
-      border: 1px solid #E5E7EB;
+      color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       padding: 5px 12px;
     }
@@ -290,7 +298,7 @@ import { RouterLink } from '@angular/router';
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .1em;
-      color: #0A2650;
+      color: rgba(255,255,255,0.9);
       margin-bottom: 18px;
     }
     .pf-nav {
@@ -299,13 +307,13 @@ import { RouterLink } from '@angular/router';
       gap: 10px;
     }
     .pf-link {
-      color: #6B7280;
+      color: rgba(255,255,255,0.5);
       text-decoration: none;
       font-size: .85rem;
       transition: color .18s, padding-left .18s;
       display: inline-block;
     }
-    .pf-link:hover { color: #0F4C81; padding-left: 4px; }
+    .pf-link:hover { color: white; padding-left: 4px; }
 
     /* Contact */
     .pf-contact {
@@ -319,9 +327,9 @@ import { RouterLink } from '@angular/router';
       align-items: center;
       gap: 9px;
       font-size: .84rem;
-      color: #6B7280;
+      color: rgba(255,255,255,0.5);
     }
-    .pf-ci-icon { width: 15px; height: 15px; stroke: #9CA3AF; flex-shrink: 0; }
+    .pf-ci-icon { width: 15px; height: 15px; stroke: rgba(255,255,255,0.35); flex-shrink: 0; }
 
     .pf-pay-label {
       display: block;
@@ -329,7 +337,7 @@ import { RouterLink } from '@angular/router';
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: .08em;
-      color: #9CA3AF;
+      color: rgba(255,255,255,0.35);
       margin-bottom: 10px;
     }
     .pf-pay-logos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -351,20 +359,20 @@ import { RouterLink } from '@angular/router';
     }
     .pf-pay-bank {
       gap: 6px;
-      background: #FFFFFF;
-      border: 1px solid #E5E7EB;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
       border-radius: 6px;
       padding: 0 10px;
       height: 32px;
-      color: #374151;
+      color: rgba(255,255,255,0.65);
       font-size: .78rem;
       font-weight: 600;
     }
-    .pf-bank-icon { width: 15px; height: 15px; flex-shrink: 0; color: #6B7280; }
+    .pf-bank-icon { width: 15px; height: 15px; flex-shrink: 0; color: rgba(255,255,255,0.7); }
 
     /* ── BARRE DU BAS ── */
     .pf-bottom {
-      border-top: 1px solid #E5E7EB;
+      border-top: 1px solid rgba(255,255,255,0.06);
       padding: 20px 0;
     }
     .pf-bottom-inner {
@@ -377,12 +385,12 @@ import { RouterLink } from '@angular/router';
       gap: 16px;
       flex-wrap: wrap;
     }
-    .pf-copy { font-size: .8rem; color: #9CA3AF; }
+    .pf-copy { font-size: .8rem; color: rgba(255,255,255,0.3); }
     .pf-legal { display: flex; align-items: center; gap: 8px; }
-    .pf-legal-link { font-size: .8rem; color: #9CA3AF; text-decoration: none; transition: color .2s; }
-    .pf-legal-link:hover { color: #0F4C81; }
-    .pf-sep { color: #D1D5DB; font-size: .8rem; }
-    .pf-made { font-size: .8rem; color: #9CA3AF; }
+    .pf-legal-link { font-size: .8rem; color: rgba(255,255,255,0.35); text-decoration: none; transition: color .2s; }
+    .pf-legal-link:hover { color: rgba(255,255,255,0.7); }
+    .pf-sep { color: rgba(255,255,255,0.2); font-size: .8rem; }
+    .pf-made { font-size: .8rem; color: rgba(255,255,255,0.3); }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 1024px) {
