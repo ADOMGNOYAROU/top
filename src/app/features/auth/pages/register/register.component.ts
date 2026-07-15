@@ -83,7 +83,7 @@ type Step = 'role' | 'info' | 'cni' | 'success';
             <div class="step-content">
               <button class="back-btn" (click)="goBack()">← Retour</button>
               <h2>Vos informations</h2>
-              <p class="subtitle">{{ selectedRole() === 'OWNER' ? 'Compte propriétaire' : 'Compte gestionnaire' }}</p>
+              <p class="subtitle">{{ selectedRole() === 'OWNER' ? 'Compte propriétaire' : 'Compte gestionnaire immobilier' }}</p>
               <form [formGroup]="infoForm" (ngSubmit)="goToCni()" class="form-fields">
                 <div class="field-row">
                   <div class="field">

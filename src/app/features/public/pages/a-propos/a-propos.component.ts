@@ -1,49 +1,10 @@
 import {
-  Component, OnInit, OnDestroy, AfterViewInit,
-  inject, signal, PLATFORM_ID, ViewChild, ElementRef
+  Component, OnInit, OnDestroy,
+  inject, signal, PLATFORM_ID
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PublicFooterComponent } from '../../../../shared/components/public-footer/public-footer.component';
-
-/* ── GeoJSON de l'Afrique (contour continental, coordonnées réelles) ── */
-const AFRICA_GEO = {
-  type: 'FeatureCollection',
-  features: [{
-    type: 'Feature',
-    properties: { name: 'Africa' },
-    geometry: {
-      type: 'Polygon',
-      coordinates: [[
-        [-5.9, 35.9],  [-2.0, 35.1],  [8.5, 37.0],   [9.8, 37.4],
-        [11.5, 33.1],  [13.2, 32.9],  [20.1, 32.1],  [25.0, 31.5],
-        [31.2, 31.2],  [32.5, 30.0],  [37.2, 19.6],  [39.5, 15.6],
-        [43.1, 11.5],  [49.0, 11.5],  [51.4, 11.8],  [45.3, 2.1],
-        [40.5, -4.0],  [39.3, -6.8],  [35.5, -17.0], [32.9, -26.5],
-        [26.0, -33.8], [18.4, -34.2], [17.0, -29.0], [14.5, -22.9],
-        [12.1, -17.0], [13.2, -8.8],  [12.0, -6.0],  [9.3, 0.4],
-        [9.5, 4.0],    [7.0, 4.3],    [5.5, 4.5],    [3.4, 6.5],
-        [2.6, 6.3],    [1.2, 6.1],    [-0.2, 5.6],   [-3.9, 5.3],
-        [-5.5, 4.7],   [-7.7, 4.4],   [-10.8, 6.5],  [-13.2, 8.5],
-        [-16.7, 11.1], [-17.5, 14.7], [-17.0, 20.8], [-13.2, 27.8],
-        [-9.0, 30.0],  [-5.9, 35.9]
-      ]]
-    }
-  }]
-};
-
-/* ── Villes (hors Lomé qui est en effectScatter) ── */
-const CITIES = [
-  { name: 'Casablanca',    value: [-7.6,  33.6],  pos: 'top'    },
-  { name: 'Le Caire',      value: [31.2,  30.1],  pos: 'right'  },
-  { name: 'Dakar',         value: [-17.4, 14.7],  pos: 'left'   },
-  { name: 'Abidjan',       value: [-4.0,  5.3],   pos: 'bottom' },
-  { name: 'Lagos',         value: [3.4,   6.5],   pos: 'right'  },
-  { name: 'Kinshasa',      value: [15.3,  -4.3],  pos: 'right'  },
-  { name: 'Nairobi',       value: [36.8,  -1.3],  pos: 'right'  },
-  { name: 'Addis Abeba',   value: [38.7,  9.0],   pos: 'right'  },
-  { name: 'Johannesburg',  value: [28.0,  -26.2], pos: 'bottom' },
-];
 
 @Component({
   selector: 'app-a-propos',
@@ -60,6 +21,7 @@ const CITIES = [
         <li><a routerLink="/" class="nl" data-text="Accueil">Accueil</a></li>
         <li><a routerLink="/annonces" class="nl" data-text="Annonces">Annonces</a></li>
         <li><a routerLink="/a-propos" class="nl nl-active" data-text="À propos">À propos</a></li>
+        <li><a href="/#tarifs" class="nl" data-text="Tarifs">Tarifs</a></li>
       </ul>
       <div class="nav-cta">
         <a routerLink="/auth/login" class="btn-ghost">Connexion</a>
@@ -74,6 +36,7 @@ const CITIES = [
         <a routerLink="/" class="mm-link">Accueil</a>
         <a routerLink="/annonces" class="mm-link">Annonces</a>
         <a routerLink="/a-propos" class="mm-link">À propos</a>
+        <a href="/#tarifs" class="mm-link">Tarifs</a>
         <a routerLink="/auth/login" class="mm-link">Connexion</a>
         <a routerLink="/auth/register" class="mm-cta">S'inscrire gratuitement</a>
       </div>
@@ -82,11 +45,14 @@ const CITIES = [
 
   <!-- ── HERO ── -->
   <section class="hero">
+    <img src="/assets/handsome-young-african-man-holding-mobile-phone-gesturing-while-standing-against-grey-wall.jpg.jpeg"
+         alt="WARAH — gestion immobilière digitale"
+         class="hero-img">
     <div class="hero-bg"></div>
     <div class="hero-inner">
       <span class="hero-eyebrow">Qui sommes-nous</span>
       <h1 class="hero-title">La gestion immobilière<br>réinventée pour l'Afrique</h1>
-      <p class="hero-sub">WARAH simplifie la relation entre propriétaires, gestionnaires et locataires grâce à une plateforme digitale pensée pour le contexte togolais et africain.</p>
+      <p class="hero-sub">WARAH simplifie la relation entre propriétaires, gestionnaires immobiliers et locataires grâce à une plateforme digitale pensée pour le contexte togolais et africain.</p>
       <div class="hero-stats">
         <div class="h-stat"><span class="h-stat-n">2 024</span><span class="h-stat-l">Année de création</span></div>
         <div class="h-stat-sep"></div>
@@ -134,13 +100,22 @@ const CITIES = [
         <div class="hist-text">
           <span class="sec-chip">› notre histoire</span>
           <h2 class="hist-title">WARAH EST NÉ<br>D'UN CONSTAT SIMPLE</h2>
-          <p class="hist-p">La gestion immobilière au Togo repose encore trop souvent sur des carnets, des appels téléphoniques et des quittances manuscrites. Les propriétaires perdent du temps, les locataires manquent de visibilité et les impayés restent difficiles à suivre.</p>
-          <p class="hist-p">Nous avons conçu WARAH pour digitaliser ce quotidien : collecte de loyers via mobile money, génération automatique de quittances, alertes impayés et tableau de bord centralisé — le tout pensé pour le contexte africain.</p>
+          <p class="hist-p">Le marché locatif immobilier au Togo souffre d'un déficit structurel d'outils numériques adaptés. Aujourd'hui, pour un propriétaire qui réside au Togo, en France, au Canada, aux USA ou en Chine, la gestion quotidienne de ses biens repose encore très largement sur des carnets, des appels téléphoniques et des quittances manuscrites. Les propriétaires et les gestionnaires immobiliers perdent du temps, les locataires manquent de visibilité et les impayés restent difficiles à suivre.</p>
+          <p class="hist-p">Pour le propriétaire de la diaspora, l'absence d'outil de suivi à distance crée une anxiété permanente sur un patrimoine qu'il ne peut pas surveiller physiquement. Pour le propriétaire résidant au Togo, la multiplication des biens rend rapidement la gestion manuelle ingérable.</p>
+          <p class="hist-p">C'est pourquoi nous avons conçu WARAH pour digitaliser ce quotidien. Sa promesse&nbsp;: transformer une activité locative artisanale et anxiogène en une gestion professionnelle, transparente et sereine, en couvrant l'intégralité du cycle de vie d'un bien immobilier&nbsp;— trouver un locataire, formaliser le bail, collecter les loyers via mobile money, générer automatiquement les quittances, alerter les cas d'impayés et disposer d'un tableau de bord centralisé&nbsp;— le tout pensé pour le contexte africain.</p>
           <a routerLink="/auth/register" class="hist-btn">Rejoindre WARAH</a>
         </div>
         <div class="hist-stats">
+          <!-- Carte monde — diaspora internationale -->
+          <div class="hs-world-wrap">
+            <img src="/assets/c6b2b9b4149494be6317341b2e668d13.jpg.jpeg" alt="Présence mondiale WARAH" class="hs-world-img">
+            <div class="hs-world-legend">
+              <span class="hs-world-dot hs-wd-active"></span>Lomé — siège
+              <span class="hs-world-dot hs-wd-diaspora" style="margin-left:10px"></span>Diaspora connectée
+            </div>
+          </div>
           <div class="hs-card"><span class="hs-n">100%</span><span class="hs-l">Paiements mobile money</span><p class="hs-p">T-Money & Flooz intégrés nativement</p></div>
-          <div class="hs-card hs-card-dark"><span class="hs-n">3 rôles</span><span class="hs-l">Une plateforme unifiée</span><p class="hs-p">Propriétaire, gestionnaire et locataire</p></div>
+          <div class="hs-card hs-card-dark"><span class="hs-n">3 rôles</span><span class="hs-l">Une plateforme unifiée</span><p class="hs-p">Propriétaire, gestionnaire immobilier et locataire</p></div>
           <div class="hs-card"><span class="hs-n">0 papier</span><span class="hs-l">Tout digitalisé</span><p class="hs-p">Quittances, baux et rapports en PDF auto</p></div>
           <div class="hs-card hs-card-gold"><span class="hs-n">Togo → Afrique</span><span class="hs-l">Vision continentale</span><p class="hs-p">Lancé à Lomé, vocation africaine</p></div>
         </div>
@@ -164,7 +139,69 @@ const CITIES = [
         </div>
       </div>
       <div class="carte-map">
-        <div #mapChart class="echarts-container"></div>
+        <div class="africa-map-wrap">
+          <img src="/assets/280752-P61K2Q-532.jpg" alt="Carte de l'Afrique — présence WARAH" class="africa-img">
+          <!-- Overlay SVG : routes animées entre les villes -->
+          <svg class="africa-routes" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="rGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="0.8" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <!-- Lignes guide (statiques tiretées) -->
+            <g opacity="0.25" fill="none" stroke-width="0.5" stroke-linecap="round">
+              <path stroke="#C9982E" stroke-dasharray="2 4" d="M14,37 C19,43 24,49 28,53"/>
+              <path stroke="#C9982E" stroke-dasharray="2 4" d="M28,53 C30,54 32,54 34,54"/>
+              <path stroke="#C9982E" stroke-dasharray="2 4" d="M34,54 C36,54 38,53 39,52"/>
+              <path stroke="#ff9a3c" stroke-dasharray="2 4" d="M34,54 C40,59 46,64 51,67"/>
+              <path stroke="#64b5f6" stroke-dasharray="2 4" d="M51,67 C57,63 62,61 65,60"/>
+              <path stroke="#64b5f6" stroke-dasharray="2 4" d="M65,60 C62,72 59,79 56,85"/>
+              <path stroke="#81c784" stroke-dasharray="2 4" d="M65,60 C66,52 67,46 68,44"/>
+              <path stroke="#81c784" stroke-dasharray="2 4" d="M68,44 C68,32 67,22 66,14"/>
+              <path stroke="#81c784" stroke-dasharray="2 4" d="M26,13 C40,12 55,12 66,14"/>
+            </g>
+            <!-- Paquets animés (couloir Ouest : Dakar → Lagos) -->
+            <g filter="url(#rGlow)" fill="none" stroke="#C9982E" stroke-width="1.4" stroke-linecap="round">
+              <path class="pkt pkt-1" stroke-dasharray="4 200" d="M14,37 C19,43 24,49 28,53"/>
+              <path class="pkt pkt-2" stroke-dasharray="4 200" d="M28,53 C30,54 32,54 34,54"/>
+              <path class="pkt pkt-3" stroke-dasharray="4 200" d="M34,54 C36,54 38,53 39,52"/>
+            </g>
+            <!-- Paquets animés (Lomé → Kinshasa) -->
+            <g filter="url(#rGlow)" fill="none" stroke="#ffb74d" stroke-width="1.4" stroke-linecap="round">
+              <path class="pkt pkt-4" stroke-dasharray="4 200" d="M34,54 C40,59 46,64 51,67"/>
+            </g>
+            <!-- Paquets animés (Kinshasa → Nairobi → Addis → Caire) -->
+            <g filter="url(#rGlow)" fill="none" stroke="#64b5f6" stroke-width="1.4" stroke-linecap="round">
+              <path class="pkt pkt-5" stroke-dasharray="4 200" d="M51,67 C57,63 62,61 65,60"/>
+              <path class="pkt pkt-6" stroke-dasharray="4 200" d="M65,60 C62,72 59,79 56,85"/>
+            </g>
+            <!-- Paquets animés (corridor Nord + axe Est) -->
+            <g filter="url(#rGlow)" fill="none" stroke="#81c784" stroke-width="1.4" stroke-linecap="round">
+              <path class="pkt pkt-7" stroke-dasharray="4 200" d="M65,60 C66,52 67,46 68,44"/>
+              <path class="pkt pkt-8" stroke-dasharray="4 200" d="M68,44 C68,32 67,22 66,14"/>
+              <path class="pkt pkt-9" stroke-dasharray="4 200" d="M26,13 C40,12 55,12 66,14"/>
+            </g>
+          </svg>
+          <!-- Points des villes -->
+          <div class="c-dot" style="left:14%;top:37%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-l">Dakar</span></div>
+          <div class="c-dot" style="left:28%;top:53%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-b">Abidjan</span></div>
+          <div class="c-dot" style="left:32%;top:54%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-t">Accra</span></div>
+          <!-- Lomé — siège WARAH, point doré avec ripple -->
+          <div class="c-dot c-lome" style="left:34%;top:54%">
+            <div class="c-ripple"></div>
+            <div class="c-ripple c-ripple-2"></div>
+            <div class="c-core c-gold"></div>
+            <span class="c-lbl c-lbl-t c-lbl-gold">Lomé ★</span>
+          </div>
+          <div class="c-dot" style="left:39%;top:52%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-r">Lagos</span></div>
+          <div class="c-dot" style="left:51%;top:67%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-r">Kinshasa</span></div>
+          <div class="c-dot" style="left:65%;top:60%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-r">Nairobi</span></div>
+          <div class="c-dot" style="left:68%;top:44%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-r">Addis Abeba</span></div>
+          <div class="c-dot" style="left:26%;top:13%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-r">Casablanca</span></div>
+          <div class="c-dot" style="left:66%;top:14%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-r">Le Caire</span></div>
+          <div class="c-dot" style="left:56%;top:85%"><div class="c-core c-wh"></div><span class="c-lbl c-lbl-t">Johannesburg</span></div>
+        </div>
       </div>
     </div>
   </section>
@@ -195,7 +232,7 @@ const CITIES = [
         <div class="val-card">
           <div class="val-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
           <h3 class="val-t">Communauté</h3>
-          <p class="val-p">Un écosystème qui connecte propriétaires, gestionnaires et locataires dans une relation plus équilibrée.</p>
+          <p class="val-p">Un écosystème qui connecte propriétaires, gestionnaires immobiliers et locataires dans une relation plus équilibrée.</p>
         </div>
       </div>
     </div>
@@ -206,7 +243,7 @@ const CITIES = [
     <div class="sec-wrap">
       <div class="cta-inner">
         <h2 class="cta-title">Prêt à simplifier votre gestion immobilière ?</h2>
-        <p class="cta-sub">Rejoignez les propriétaires et gestionnaires qui font confiance à WARAH.</p>
+        <p class="cta-sub">Rejoignez les propriétaires et gestionnaires immobiliers qui font confiance à WARAH.</p>
         <div class="cta-btns">
           <a routerLink="/auth/register" class="cta-btn-primary">Commencer gratuitement</a>
           <a routerLink="/annonces" class="cta-btn-ghost">Voir les annonces</a>
@@ -248,8 +285,8 @@ const CITIES = [
 
     /* ── HERO ── */
     .hero { min-height: 520px; position: relative; display: flex; align-items: center; overflow: hidden; }
-    .hero-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #081E41 0%, #0A2650 40%, #0F4C81 100%); }
-    .hero-bg::after { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="1.5" fill="rgba(255,255,255,0.06)"/></svg>') repeat; }
+    .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+    .hero-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(8,30,65,0.88) 0%, rgba(10,38,80,0.80) 50%, rgba(15,76,129,0.72) 100%); }
     .hero-inner { position: relative; max-width: 800px; margin: 0 auto; padding: 120px 24px 80px; text-align: center; }
     .hero-eyebrow { display: inline-block; background: rgba(201,152,46,.15); border: 1px solid rgba(201,152,46,.4); color: #C9982E; font-size: .8rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; }
     .hero-title { color: white; font-size: clamp(2rem,5vw,3.2rem); font-weight: 800; line-height: 1.15; margin-bottom: 20px; text-wrap: balance; }
@@ -294,6 +331,12 @@ const CITIES = [
     .hist-btn { display: inline-block; margin-top: 8px; background: #0F4C81; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: .9rem; transition: background .2s; width: fit-content; }
     .hist-btn:hover { background: #0A2650; }
     .hist-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .hs-world-wrap { grid-column: 1 / -1; background: #f0f4f9; border-radius: 14px; overflow: hidden; }
+    .hs-world-img { width: 100%; height: 140px; object-fit: cover; object-position: center; display: block; filter: opacity(0.7); }
+    .hs-world-legend { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 11px; font-weight: 600; color: #6B7280; }
+    .hs-world-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .hs-wd-active { background: #C9982E; }
+    .hs-wd-diaspora { background: #0F4C81; }
     .hs-card { background: #f0f4f9; border-radius: 14px; padding: 22px 20px; }
     .hs-card-dark { background: #0A2650; }
     .hs-card-gold { background: linear-gradient(135deg,#FFF8EC,#FFFBF2); border: 1.5px solid rgba(201,152,46,.3); }
@@ -318,7 +361,45 @@ const CITIES = [
     .cv-active { background: #C9982E; box-shadow: 0 0 8px rgba(201,152,46,.6); }
     .cv-soon { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); }
     .carte-map { display: flex; align-items: center; justify-content: center; }
-    .echarts-container { width: 100%; height: 520px; }
+
+    /* Wrapper image carte */
+    .africa-map-wrap { position: relative; width: 100%; max-width: 520px; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,152,46,0.25); }
+    .africa-img { width: 100%; height: auto; display: block; filter: brightness(0.88) saturate(1.15); margin-bottom: -42px; }
+
+    /* SVG overlay routes */
+    .africa-routes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    /* Paquets animés sur les routes */
+    @keyframes pktFlow { from { stroke-dashoffset: 204; } to { stroke-dashoffset: 0; } }
+    .pkt { animation: pktFlow 3.5s linear infinite; }
+    .pkt-1 { animation-duration: 3.2s; animation-delay: 0s; }
+    .pkt-2 { animation-duration: 2.8s; animation-delay: -1.2s; }
+    .pkt-3 { animation-duration: 3.0s; animation-delay: -0.5s; }
+    .pkt-4 { animation-duration: 4.0s; animation-delay: -1.8s; }
+    .pkt-5 { animation-duration: 3.8s; animation-delay: -0.8s; }
+    .pkt-6 { animation-duration: 4.2s; animation-delay: -2.1s; }
+    .pkt-7 { animation-duration: 3.4s; animation-delay: -1.5s; }
+    .pkt-8 { animation-duration: 5.0s; animation-delay: -2.5s; }
+    .pkt-9 { animation-duration: 4.5s; animation-delay: -0.3s; }
+
+    /* Points de villes */
+    .c-dot { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; }
+    .c-core { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.9); flex-shrink: 0; position: relative; z-index: 2; }
+    .c-wh { background: white; box-shadow: 0 0 6px rgba(255,255,255,0.6); }
+    .c-gold { background: #C9982E; width: 14px; height: 14px; border: 2px solid white; box-shadow: 0 0 12px rgba(201,152,46,0.9); }
+
+    /* Lomé ripple */
+    @keyframes ripple { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(3.5); opacity: 0; } }
+    .c-ripple { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: rgba(201,152,46,0.45); animation: ripple 2.2s ease-out infinite; z-index: 1; }
+    .c-ripple-2 { animation-delay: -1.1s; }
+
+    /* Labels villes */
+    .c-lbl { position: absolute; font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-family: 'Inter', sans-serif; z-index: 3; pointer-events: none; }
+    .c-lbl-t { bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%); }
+    .c-lbl-b { top: calc(100% + 5px); left: 50%; transform: translateX(-50%); }
+    .c-lbl-r { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+    .c-lbl-l { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+    .c-lbl-gold { color: #F0C860; font-size: 10px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 10px rgba(201,152,46,0.7); }
 
     /* ── VALEURS ── */
     .valeurs-section { padding: 96px 0; background: #f8f9fc; }
@@ -349,20 +430,17 @@ const CITIES = [
       .profils-grid, .hist-grid, .carte-inner { grid-template-columns: 1fr; }
       .val-grid { grid-template-columns: 1fr 1fr; }
       .h-stat-sep { display: none; }
-      .echarts-container { height: 380px; }
+      .africa-map-wrap { max-width: 420px; margin: 0 auto; }
+      .c-lbl { font-size: 7.5px; }
     }
     @media (max-width: 600px) {
       .val-grid, .hist-stats { grid-template-columns: 1fr; }
     }
   `]
 })
-export class AProposComponent implements OnInit, OnDestroy, AfterViewInit {
+export class AProposComponent implements OnInit, OnDestroy {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private scrollFn?: () => void;
-  private resizeFn?: () => void;
-  private chart?: any;
-
-  @ViewChild('mapChart') mapChartRef?: ElementRef;
 
   navScrolled = signal(false);
   menuOpen   = signal(false);
@@ -374,134 +452,9 @@ export class AProposComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngAfterViewInit(): void {
-    if (this.isBrowser && this.mapChartRef) {
-      this.initEcharts();
-    }
-  }
-
   ngOnDestroy(): void {
-    if (this.isBrowser) {
-      if (this.scrollFn) window.removeEventListener('scroll', this.scrollFn);
-      if (this.resizeFn) window.removeEventListener('resize', this.resizeFn);
+    if (this.isBrowser && this.scrollFn) {
+      window.removeEventListener('scroll', this.scrollFn);
     }
-    this.chart?.dispose();
-  }
-
-  private async initEcharts(): Promise<void> {
-    const echarts = await import('echarts');
-
-    echarts.registerMap('africa', AFRICA_GEO as any);
-
-    this.chart = echarts.init(this.mapChartRef!.nativeElement, null, { renderer: 'svg' });
-    this.chart.setOption(this.buildOption());
-
-    this.resizeFn = () => this.chart?.resize();
-    window.addEventListener('resize', this.resizeFn);
-  }
-
-  private buildOption(): object {
-    const makeLines = (color: string, period: number, data: number[][][]) => ({
-      type: 'lines',
-      coordinateSystem: 'geo',
-      zlevel: 2,
-      effect: {
-        show: true,
-        period,
-        trailLength: 0.6,
-        symbol: 'arrow',
-        symbolSize: 8,
-        color,
-      },
-      lineStyle: { color, width: 2, opacity: 0.45, curveness: 0.3 },
-      data: data.map(coords => ({ coords })),
-    });
-
-    return {
-      backgroundColor: 'transparent',
-      geo: {
-        map: 'africa',
-        roam: false,
-        silent: true,
-        itemStyle: {
-          areaColor: 'rgba(15,76,129,0.4)',
-          borderColor: 'rgba(255,255,255,0.25)',
-          borderWidth: 1.5,
-        },
-        emphasis: { disabled: true },
-        label: { show: false },
-      },
-      series: [
-        /* Routes orange : couloir Ouest + Lomé-Kinshasa */
-        makeLines('#C9982E', 4, [
-          [[-17.4, 14.7], [-4.0,  5.3]],
-          [[-4.0,   5.3], [ 1.2,  6.1]],
-          [[ 1.2,   6.1], [ 3.4,  6.5]],
-          [[ 1.2,   6.1], [15.3, -4.3]],
-        ]),
-        /* Routes bleues : Afrique centrale/australe */
-        makeLines('#4fc3f7', 5, [
-          [[15.3, -4.3], [36.8, -1.3]],
-          [[28.0,-26.2], [36.8, -1.3]],
-        ]),
-        /* Routes vertes : Afrique du Nord + corridor est */
-        makeLines('#81c995', 4.5, [
-          [[-7.6, 33.6], [31.2, 30.1]],
-          [[36.8,  -1.3], [38.7,  9.0]],
-          [[38.7,   9.0], [31.2, 30.1]],
-        ]),
-        /* Villes régulières */
-        {
-          type: 'scatter',
-          coordinateSystem: 'geo',
-          zlevel: 3,
-          symbolSize: 9,
-          itemStyle: { color: 'white', borderColor: '#C9982E', borderWidth: 2 },
-          label: {
-            show: true,
-            formatter: '{b}',
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: 11,
-            fontFamily: 'Inter, sans-serif',
-            position: 'top',
-          },
-          data: CITIES.map(c => ({
-            name: c.name,
-            value: c.value,
-            label: { position: c.pos },
-          })),
-        },
-        /* Lomé ★ — siège WARAH, ripple ECharts natif */
-        {
-          type: 'effectScatter',
-          coordinateSystem: 'geo',
-          zlevel: 4,
-          rippleEffect: {
-            period: 2,
-            scale: 5,
-            brushType: 'fill',
-            color: 'rgba(201,152,46,0.35)',
-          },
-          symbolSize: 16,
-          itemStyle: {
-            color: '#C9982E',
-            shadowBlur: 20,
-            shadowColor: 'rgba(201,152,46,0.8)',
-          },
-          label: {
-            show: true,
-            formatter: 'Lomé ★',
-            color: '#C9982E',
-            fontSize: 14,
-            fontWeight: 'bold',
-            fontFamily: 'Inter, sans-serif',
-            position: 'top',
-            textShadowBlur: 10,
-            textShadowColor: 'rgba(201,152,46,0.9)',
-          },
-          data: [{ name: 'Lomé', value: [1.2, 6.1] }],
-        },
-      ],
-    };
   }
 }

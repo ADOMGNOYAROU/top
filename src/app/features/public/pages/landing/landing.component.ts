@@ -4,11 +4,7 @@ import {
   signal, WritableSignal,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
-import { catchError, of } from 'rxjs';
-import { environment } from '@env/environment';
-import { Bien, PROPERTY_TYPE_LABELS } from '@core/models/bien.model';
 import { PublicFooterComponent } from '../../../../shared/components/public-footer/public-footer.component';
 
 interface HeroSlide { badge: string; title: string; subtitle: string; cta: string; link: string; }
@@ -30,6 +26,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
         <li><a routerLink="/" class="nl" data-text="Accueil">Accueil</a></li>
         <li><a routerLink="/annonces" class="nl" data-text="Annonces">Annonces</a></li>
         <li><a routerLink="/a-propos" class="nl" data-text="À propos">À propos</a></li>
+        <li><a href="#tarifs" class="nl" data-text="Tarifs" (click)="scrollTo('tarifs', $event)">Tarifs</a></li>
       </ul>
       <div class="nav-cta">
         <a routerLink="/auth/login" class="btn-ghost">Connexion</a>
@@ -44,6 +41,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
         <a routerLink="/" class="mm-link">Accueil</a>
         <a routerLink="/annonces" class="mm-link">Annonces</a>
         <a routerLink="/a-propos" class="mm-link">À propos</a>
+        <a href="#tarifs" class="mm-link" (click)="scrollTo('tarifs', $event); menuOpen.set(false)">Tarifs</a>
         <div class="mm-sep"></div>
         <a routerLink="/auth/login" class="mm-link">Connexion</a>
         <a routerLink="/auth/register" class="mm-cta">S'inscrire gratuitement</a>
@@ -53,10 +51,25 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
 
   <!-- ── HERO ── -->
   <section class="hero">
-    <div class="hero-bg-deco">
-      <div class="deco-circle deco-c1"></div>
-      <div class="deco-circle deco-c2"></div>
-      <div class="deco-line"></div>
+    <!-- Formes organiques de fond (style split-hero) -->
+    <div class="hero-shapes" aria-hidden="true">
+      <svg class="hero-wave-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="heroMainGrad" x1="20%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0A2650"/>
+            <stop offset="55%" stop-color="#0F4C81"/>
+            <stop offset="100%" stop-color="#081E41"/>
+          </linearGradient>
+        </defs>
+        <!-- légère teinte bleue (transition douce) -->
+        <path d="M870,0 C815,118 795,285 812,462 C830,636 800,776 782,900 L1440,900 L1440,0 Z" fill="#dbeafe" opacity="0.55"/>
+        <!-- blob bleu principal -->
+        <path d="M840,0 C782,118 762,285 778,462 C794,636 765,776 748,900 L1440,900 L1440,0 Z" fill="url(#heroMainGrad)"/>
+      </svg>
+      <!-- accent or bas-gauche -->
+      <svg class="hero-gold-blob" viewBox="0 0 560 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,95 C90,52 210,32 320,68 C400,92 470,118 560,106 L560,150 L0,150 Z" fill="#C9982E" opacity="0.88"/>
+      </svg>
     </div>
     <div class="slides">
       @for (s of slides; track s.badge; let i = $index) {
@@ -65,258 +78,92 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
             <span class="s-badge">{{ s.badge }}</span>
             <h1 class="s-title">{{ s.title }}</h1>
             <p class="s-sub">{{ s.subtitle }}</p>
-            <a [routerLink]="s.link" class="s-cta">
-              {{ s.cta }}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="s-arrow">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </a>
+            <div class="s-btns">
+              <a [routerLink]="s.link" class="s-cta">
+                {{ s.cta }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="s-arrow">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+              <a routerLink="/annonces" class="s-cta-ghost">
+                Voir les annonces
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="s-arrow"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
           </div>
           <div class="slide-visual">
             @switch (i) {
               @case (0) {
-                <svg class="s-svg" viewBox="0 0 430 306" xmlns="http://www.w3.org/2000/svg">
-                  <defs><filter id="s0sh" x="-8%" y="-8%" width="116%" height="128%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="rgba(0,0,0,0.28)"/></filter></defs>
-                  <rect x="6" y="6" width="418" height="294" rx="11" fill="white" filter="url(#s0sh)"/>
-                  <rect x="6" y="6" width="418" height="30" rx="11" fill="#EAECF0"/>
-                  <rect x="6" y="24" width="418" height="12" fill="#EAECF0"/>
-                  <circle cx="22" cy="21" r="4.5" fill="#FF5F57"/><circle cx="36" cy="21" r="4.5" fill="#FFBD2E"/><circle cx="50" cy="21" r="4.5" fill="#27C93F"/>
-                  <rect x="66" y="13" width="272" height="16" rx="8" fill="white" opacity="0.75"/>
-                  <text x="202" y="24" text-anchor="middle" fill="#9CA3AF" font-size="8" font-family="Arial,sans-serif">warah.tg/dashboard/biens</text>
-                  <rect x="6" y="36" width="66" height="264" fill="#0A2650"/>
-                  <rect x="6" y="289" width="66" height="11" fill="#0A2650"/>
-                  <rect x="13" y="46" width="52" height="17" rx="3" fill="rgba(255,255,255,0.12)"/>
-                  <text x="39" y="57.5" text-anchor="middle" fill="white" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">WARAH</text>
-                  <rect x="11" y="74" width="56" height="19" rx="4" fill="rgba(201,152,46,0.22)"/>
-                  <text x="39" y="87" text-anchor="middle" fill="#C9982E" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">Biens</text>
-                  <text x="39" y="108" text-anchor="middle" fill="rgba(255,255,255,0.42)" font-size="7" font-family="Arial,sans-serif">Locataires</text>
-                  <text x="39" y="126" text-anchor="middle" fill="rgba(255,255,255,0.42)" font-size="7" font-family="Arial,sans-serif">Paiements</text>
-                  <text x="39" y="144" text-anchor="middle" fill="rgba(255,255,255,0.42)" font-size="7" font-family="Arial,sans-serif">Baux</text>
-                  <text x="84" y="56" fill="#0A2650" font-size="12" font-weight="bold" font-family="Arial,sans-serif">Mes biens</text>
-                  <text x="84" y="69" fill="#9CA3AF" font-size="7" font-family="Arial,sans-serif">12 biens · Lomé, Togo</text>
-                  <rect x="348" y="44" width="68" height="19" rx="5" fill="#0F4C81"/>
-                  <text x="382" y="57" text-anchor="middle" fill="white" font-size="7.5" font-family="Arial,sans-serif">+ Nouveau bien</text>
-                  <rect x="80" y="78" width="88" height="44" rx="6" fill="#F8F9FC" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <text x="92" y="93" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">Total biens</text>
-                  <text x="92" y="112" fill="#0F4C81" font-size="16" font-weight="bold" font-family="Arial,sans-serif">12</text>
-                  <rect x="176" y="78" width="88" height="44" rx="6" fill="#F8F9FC" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <text x="188" y="93" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">Occupés</text>
-                  <text x="188" y="112" fill="#16A34A" font-size="16" font-weight="bold" font-family="Arial,sans-serif">9</text>
-                  <rect x="272" y="78" width="148" height="44" rx="6" fill="#F8F9FC" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <text x="284" y="93" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">Revenus mensuels</text>
-                  <text x="284" y="112" fill="#C9982E" font-size="13" font-weight="bold" font-family="Arial,sans-serif">1 250 000 F</text>
-                  <rect x="80" y="132" width="338" height="18" rx="4" fill="#F3F4F6"/>
-                  <text x="90" y="144" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">TYPE</text>
-                  <text x="145" y="144" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">BIEN &amp; LOCALISATION</text>
-                  <text x="300" y="144" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">LOYER</text>
-                  <text x="358" y="144" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">STATUT</text>
-                  <rect x="80" y="150" width="338" height="27" fill="white"/>
-                  <rect x="88" y="156" width="38" height="13" rx="4" fill="#EDE9FE"/>
-                  <text x="107" y="166" text-anchor="middle" fill="#7C3AED" font-size="7" font-family="Arial,sans-serif">Villa</text>
-                  <text x="134" y="162" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Villa des Cocotiers</text>
-                  <text x="134" y="172" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Adewui · Lomé</text>
-                  <text x="298" y="166" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">350 000 FCFA</text>
-                  <rect x="355" y="155" width="44" height="13" rx="6" fill="#DCFCE7"/>
-                  <text x="377" y="165" text-anchor="middle" fill="#15803D" font-size="7" font-family="Arial,sans-serif">Occupé</text>
-                  <line x1="80" y1="177" x2="418" y2="177" stroke="#F3F4F6" stroke-width="1"/>
-                  <rect x="80" y="177" width="338" height="27" fill="white"/>
-                  <rect x="88" y="183" width="46" height="13" rx="4" fill="#DBEAFE"/>
-                  <text x="111" y="193" text-anchor="middle" fill="#1D4ED8" font-size="7" font-family="Arial,sans-serif">Appart.</text>
-                  <text x="142" y="189" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Appartement Bè</text>
-                  <text x="142" y="199" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Bè · Lomé</text>
-                  <text x="298" y="193" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">150 000 FCFA</text>
-                  <rect x="355" y="182" width="44" height="13" rx="6" fill="#DCFCE7"/>
-                  <text x="377" y="192" text-anchor="middle" fill="#15803D" font-size="7" font-family="Arial,sans-serif">Occupé</text>
-                  <line x1="80" y1="204" x2="418" y2="204" stroke="#F3F4F6" stroke-width="1"/>
-                  <rect x="80" y="204" width="338" height="27" fill="white"/>
-                  <rect x="88" y="210" width="38" height="13" rx="4" fill="#FEF9C3"/>
-                  <text x="107" y="220" text-anchor="middle" fill="#854D0E" font-size="7" font-family="Arial,sans-serif">Studio</text>
-                  <text x="134" y="216" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Studio Adewui</text>
-                  <text x="134" y="226" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Adewui · Lomé</text>
-                  <text x="298" y="220" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">85 000 FCFA</text>
-                  <rect x="353" y="209" width="48" height="13" rx="6" fill="#FEF3C7"/>
-                  <text x="377" y="219" text-anchor="middle" fill="#B45309" font-size="7" font-family="Arial,sans-serif">Vacant</text>
-                  <line x1="80" y1="231" x2="418" y2="231" stroke="#F3F4F6" stroke-width="1"/>
-                  <rect x="80" y="231" width="338" height="27" fill="white"/>
-                  <rect x="88" y="237" width="38" height="13" rx="4" fill="#EDE9FE"/>
-                  <text x="107" y="247" text-anchor="middle" fill="#7C3AED" font-size="7" font-family="Arial,sans-serif">Villa</text>
-                  <text x="134" y="243" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Villa Agoè Nord</text>
-                  <text x="134" y="253" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Agoè · Lomé</text>
-                  <text x="298" y="247" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">265 000 FCFA</text>
-                  <rect x="355" y="236" width="44" height="13" rx="6" fill="#DCFCE7"/>
-                  <text x="377" y="246" text-anchor="middle" fill="#15803D" font-size="7" font-family="Arial,sans-serif">Occupé</text>
-                </svg>
+                <!-- Gestion immobilière — gestionnaire avec laptop et icône maison -->
+                <div class="hero-photo-wrap">
+                  <img src="/assets/man-showing-house-icon-couch.jpg.jpeg" alt="Gestionnaire immobilier avec laptop" class="hero-photo" loading="eager" style="object-position: center top;">
+                  <div class="hbf hbf-1">
+                    <div class="hbf-icon" style="background:#e8f0fa">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">12</span><span class="hbf-l">biens gérés</span></div>
+                  </div>
+                  <div class="hbf hbf-2">
+                    <div class="hbf-icon" style="background:#fef3dc">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#C9982E" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">1 250 000 F</span><span class="hbf-l">revenus / mois</span></div>
+                  </div>
+                </div>
               }
               @case (1) {
-                <svg class="s-svg" viewBox="0 0 430 306" xmlns="http://www.w3.org/2000/svg">
-                  <defs><filter id="s1sh" x="-8%" y="-8%" width="116%" height="128%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="rgba(0,0,0,0.28)"/></filter></defs>
-                  <rect x="6" y="6" width="418" height="294" rx="11" fill="white" filter="url(#s1sh)"/>
-                  <rect x="6" y="6" width="418" height="30" rx="11" fill="#EAECF0"/>
-                  <rect x="6" y="24" width="418" height="12" fill="#EAECF0"/>
-                  <circle cx="22" cy="21" r="4.5" fill="#FF5F57"/><circle cx="36" cy="21" r="4.5" fill="#FFBD2E"/><circle cx="50" cy="21" r="4.5" fill="#27C93F"/>
-                  <rect x="66" y="13" width="272" height="16" rx="8" fill="white" opacity="0.75"/>
-                  <text x="202" y="24" text-anchor="middle" fill="#9CA3AF" font-size="8" font-family="Arial,sans-serif">warah.tg/dashboard/paiements</text>
-                  <text x="18" y="56" fill="#0A2650" font-size="12" font-weight="bold" font-family="Arial,sans-serif">Paiements — Juillet 2026</text>
-                  <rect x="358" y="43" width="58" height="17" rx="4" fill="#0F4C81"/>
-                  <text x="387" y="54.5" text-anchor="middle" fill="white" font-size="7" font-family="Arial,sans-serif">Juillet ▾</text>
-                  <rect x="14" y="68" width="118" height="48" rx="7" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="0.8"/>
-                  <text x="26" y="83" fill="#15803D" font-size="7" font-family="Arial,sans-serif">Total collecté</text>
-                  <text x="26" y="104" fill="#15803D" font-size="13" font-weight="bold" font-family="Arial,sans-serif">2 450 000 F</text>
-                  <rect x="142" y="68" width="118" height="48" rx="7" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.8"/>
-                  <text x="154" y="83" fill="#B45309" font-size="7" font-family="Arial,sans-serif">En attente</text>
-                  <text x="154" y="104" fill="#B45309" font-size="13" font-weight="bold" font-family="Arial,sans-serif">450 000 F</text>
-                  <rect x="270" y="68" width="144" height="48" rx="7" fill="#FFF1F2" stroke="#FECDD3" stroke-width="0.8"/>
-                  <text x="282" y="83" fill="#B91C1C" font-size="7" font-family="Arial,sans-serif">Impayés</text>
-                  <text x="282" y="104" fill="#B91C1C" font-size="13" font-weight="bold" font-family="Arial,sans-serif">150 000 F</text>
-                  <rect x="14" y="126" width="400" height="18" rx="4" fill="#F3F4F6"/>
-                  <text x="44" y="138" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">LOCATAIRE</text>
-                  <text x="168" y="138" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">BIEN</text>
-                  <text x="258" y="138" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">MONTANT</text>
-                  <text x="328" y="138" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">DATE</text>
-                  <text x="386" y="138" fill="#6B7280" font-size="7" font-family="Arial,sans-serif">STATUT</text>
-                  <rect x="14" y="144" width="400" height="27" fill="white"/>
-                  <circle cx="28" cy="158" r="8" fill="#DBEAFE"/>
-                  <text x="28" y="162" text-anchor="middle" fill="#1D4ED8" font-size="8" font-weight="bold" font-family="Arial,sans-serif">K</text>
-                  <text x="42" y="157" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Kofi Agbenu</text>
-                  <text x="168" y="158" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">Studio Adewui</text>
-                  <text x="258" y="158" fill="#111827" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">85 000 F</text>
-                  <text x="328" y="158" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">01/07/2026</text>
-                  <rect x="378" y="148" width="32" height="13" rx="6" fill="#DCFCE7"/>
-                  <text x="394" y="158" text-anchor="middle" fill="#15803D" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">PAYÉ</text>
-                  <line x1="14" y1="171" x2="414" y2="171" stroke="#F3F4F6" stroke-width="1"/>
-                  <rect x="14" y="171" width="400" height="27" fill="white"/>
-                  <circle cx="28" cy="185" r="8" fill="#FCE7F3"/>
-                  <text x="28" y="189" text-anchor="middle" fill="#9D174D" font-size="8" font-weight="bold" font-family="Arial,sans-serif">A</text>
-                  <text x="42" y="184" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Aminata Diallo</text>
-                  <text x="168" y="185" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">Villa Cocotiers</text>
-                  <text x="258" y="185" fill="#111827" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">350 000 F</text>
-                  <text x="328" y="185" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">01/07/2026</text>
-                  <rect x="378" y="175" width="32" height="13" rx="6" fill="#DCFCE7"/>
-                  <text x="394" y="185" text-anchor="middle" fill="#15803D" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">PAYÉ</text>
-                  <line x1="14" y1="198" x2="414" y2="198" stroke="#F3F4F6" stroke-width="1"/>
-                  <rect x="14" y="198" width="400" height="27" fill="#FFFBEB"/>
-                  <circle cx="28" cy="212" r="8" fill="#FEF3C7"/>
-                  <text x="28" y="216" text-anchor="middle" fill="#92400E" font-size="8" font-weight="bold" font-family="Arial,sans-serif">I</text>
-                  <text x="42" y="211" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Ibrahim Mensah</text>
-                  <text x="168" y="212" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">Appt. Bè</text>
-                  <text x="258" y="212" fill="#111827" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">150 000 F</text>
-                  <text x="328" y="212" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">05/07/2026</text>
-                  <rect x="367" y="202" width="48" height="13" rx="6" fill="#FEF3C7"/>
-                  <text x="391" y="212" text-anchor="middle" fill="#B45309" font-size="6" font-weight="bold" font-family="Arial,sans-serif">EN ATTENTE</text>
-                  <line x1="14" y1="225" x2="414" y2="225" stroke="#F3F4F6" stroke-width="1"/>
-                  <rect x="14" y="225" width="400" height="27" fill="#FFF1F2"/>
-                  <circle cx="28" cy="239" r="8" fill="#FECDD3"/>
-                  <text x="28" y="243" text-anchor="middle" fill="#9F1239" font-size="8" font-weight="bold" font-family="Arial,sans-serif">F</text>
-                  <text x="42" y="238" fill="#111827" font-size="7.5" font-family="Arial,sans-serif">Fatou Kéita</text>
-                  <text x="168" y="239" fill="#374151" font-size="7.5" font-family="Arial,sans-serif">Studio Agoè</text>
-                  <text x="258" y="239" fill="#111827" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">75 000 F</text>
-                  <text x="328" y="239" fill="#B91C1C" font-size="7.5" font-family="Arial,sans-serif">01/07/2026</text>
-                  <rect x="369" y="229" width="44" height="13" rx="6" fill="#FECDD3"/>
-                  <text x="391" y="239" text-anchor="middle" fill="#B91C1C" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">IMPAYÉ</text>
-                  <rect x="14" y="265" width="400" height="26" fill="white"/>
-                  <rect x="334" y="269" width="78" height="16" rx="5" fill="#C9982E"/>
-                  <text x="373" y="280" text-anchor="middle" fill="white" font-size="7.5" font-weight="bold" font-family="Arial,sans-serif">Envoyer rappels</text>
-                </svg>
+                <!-- Paiements loyers — mobile money -->
+                <div class="hero-photo-wrap">
+                  <img src="/assets/handsome-young-african-man-holding-mobile-phone-gesturing-while-standing-against-grey-wall.jpg.jpeg" alt="Paiement mobile money" class="hero-photo" loading="lazy" style="object-position: center top;">
+                  <div class="hbf hbf-1">
+                    <div class="hbf-icon" style="background:#dcfce7">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">98 %</span><span class="hbf-l">paiements à temps</span></div>
+                  </div>
+                  <div class="hbf hbf-2">
+                    <div class="hbf-icon" style="background:#fce7f3">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">0 impayé</span><span class="hbf-l">ce mois-ci</span></div>
+                  </div>
+                </div>
               }
               @case (2) {
-                <svg class="s-svg" viewBox="0 0 380 310" xmlns="http://www.w3.org/2000/svg">
-                  <defs><filter id="s2sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="rgba(0,0,0,0.22)"/></filter></defs>
-                  <rect x="24" y="10" width="332" height="290" rx="6" fill="white" filter="url(#s2sh)"/>
-                  <rect x="24" y="10" width="332" height="6" rx="3" fill="#C9982E"/>
-                  <rect x="36" y="28" width="50" height="24" rx="4" fill="#0F4C81"/>
-                  <text x="61" y="44" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Arial,sans-serif">WARAH</text>
-                  <text x="96" y="37" fill="#0A2650" font-size="9" font-weight="bold" font-family="Arial,sans-serif">Gestion immobilière locative</text>
-                  <text x="96" y="49" fill="#9CA3AF" font-size="7" font-family="Arial,sans-serif">Lomé, Togo · contact&#64;warah.tg</text>
-                  <line x1="36" y1="60" x2="344" y2="60" stroke="#C9982E" stroke-width="1.5"/>
-                  <text x="190" y="82" text-anchor="middle" fill="#0A2650" font-size="14" font-weight="bold" font-family="Arial,sans-serif">QUITTANCE DE LOYER</text>
-                  <text x="190" y="97" text-anchor="middle" fill="#6B7280" font-size="8" font-family="Arial,sans-serif">Période du 1er au 31 Juillet 2026</text>
-                  <line x1="36" y1="107" x2="344" y2="107" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <text x="36" y="122" fill="#9CA3AF" font-size="7" font-weight="bold" font-family="Arial,sans-serif">BAILLEUR</text>
-                  <text x="36" y="135" fill="#111827" font-size="8" font-weight="bold" font-family="Arial,sans-serif">M. Jean KOFFI</text>
-                  <text x="36" y="147" fill="#6B7280" font-size="7.5" font-family="Arial,sans-serif">15 Rue des Palmiers · Lomé</text>
-                  <text x="190" y="122" fill="#9CA3AF" font-size="7" font-weight="bold" font-family="Arial,sans-serif">LOCATAIRE</text>
-                  <text x="190" y="135" fill="#111827" font-size="8" font-weight="bold" font-family="Arial,sans-serif">Mme Aminata DIALLO</text>
-                  <text x="190" y="147" fill="#6B7280" font-size="7.5" font-family="Arial,sans-serif">Villa des Cocotiers · Adewui</text>
-                  <line x1="36" y1="162" x2="344" y2="162" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <rect x="36" y="172" width="308" height="54" rx="8" fill="#0F4C81"/>
-                  <text x="190" y="192" text-anchor="middle" fill="rgba(255,255,255,0.72)" font-size="8" font-family="Arial,sans-serif">Montant total reçu</text>
-                  <text x="190" y="215" text-anchor="middle" fill="white" font-size="20" font-weight="bold" font-family="Arial,sans-serif">350 000 FCFA</text>
-                  <text x="36" y="244" fill="#6B7280" font-size="7.5" font-family="Arial,sans-serif">Loyer : 320 000 FCFA</text>
-                  <text x="190" y="244" fill="#6B7280" font-size="7.5" font-family="Arial,sans-serif">Charges : 30 000 FCFA</text>
-                  <text x="36" y="258" fill="#6B7280" font-size="7.5" font-family="Arial,sans-serif">Mode : Virement · 02/07/2026</text>
-                  <line x1="36" y1="270" x2="344" y2="270" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <text x="50" y="288" fill="#9CA3AF" font-size="7" font-family="Arial,sans-serif">Signature du bailleur :</text>
-                  <line x1="50" y1="293" x2="140" y2="293" stroke="#D1D5DB" stroke-width="0.8"/>
-                  <circle cx="316" cy="286" r="24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-dasharray="4 2"/>
-                  <circle cx="316" cy="286" r="18" fill="rgba(15,76,129,0.06)"/>
-                  <text x="316" y="282" text-anchor="middle" fill="#0F4C81" font-size="7" font-weight="bold" font-family="Arial,sans-serif">WARAH</text>
-                  <text x="316" y="294" text-anchor="middle" fill="#C9982E" font-size="7" font-weight="bold" font-family="Arial,sans-serif">VALIDÉ</text>
-                </svg>
+                <!-- Quittances — professionnel immobilier avec maison et clés -->
+                <div class="hero-photo-wrap">
+                  <img src="/assets/black-businessman-happy-expression.jpg.jpeg" alt="Professionnel immobilier avec clés" class="hero-photo" loading="lazy" style="object-position: center center;">
+                  <div class="hbf hbf-1">
+                    <div class="hbf-icon" style="background:#e8f0fa">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">PDF en 2 min</span><span class="hbf-l">quittance générée</span></div>
+                  </div>
+                  <div class="hbf hbf-2">
+                    <div class="hbf-icon" style="background:#f3e8ff">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">Signé &amp; horodaté</span><span class="hbf-l">valeur juridique</span></div>
+                  </div>
+                </div>
               }
               @case (3) {
-                <svg class="s-svg" viewBox="0 0 430 306" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <filter id="s3sh" x="-8%" y="-8%" width="116%" height="128%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="rgba(0,0,0,0.28)"/></filter>
-                    <linearGradient id="g3a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0A2650"/><stop offset="100%" stop-color="#0F4C81"/></linearGradient>
-                    <linearGradient id="g3b" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#064E3B"/><stop offset="100%" stop-color="#065F46"/></linearGradient>
-                    <linearGradient id="g3c" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#312E81"/><stop offset="100%" stop-color="#4338CA"/></linearGradient>
-                    <linearGradient id="g3d" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C2D12"/><stop offset="100%" stop-color="#C2410C"/></linearGradient>
-                  </defs>
-                  <rect x="6" y="6" width="418" height="294" rx="11" fill="#F8F9FC" filter="url(#s3sh)"/>
-                  <rect x="6" y="6" width="418" height="30" rx="11" fill="#EAECF0"/>
-                  <rect x="6" y="24" width="418" height="12" fill="#EAECF0"/>
-                  <circle cx="22" cy="21" r="4.5" fill="#FF5F57"/><circle cx="36" cy="21" r="4.5" fill="#FFBD2E"/><circle cx="50" cy="21" r="4.5" fill="#27C93F"/>
-                  <rect x="66" y="13" width="272" height="16" rx="8" fill="white" opacity="0.75"/>
-                  <text x="202" y="24" text-anchor="middle" fill="#9CA3AF" font-size="8" font-family="Arial,sans-serif">warah.tg/annonces</text>
-                  <rect x="14" y="40" width="286" height="22" rx="6" fill="white" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <text x="30" y="54" fill="#9CA3AF" font-size="8" font-family="Arial,sans-serif">Rechercher un bien à Lomé...</text>
-                  <rect x="308" y="40" width="40" height="22" rx="5" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="0.8"/>
-                  <text x="328" y="54" text-anchor="middle" fill="#1D4ED8" font-size="7" font-family="Arial,sans-serif">Villa ×</text>
-                  <rect x="354" y="40" width="58" height="22" rx="5" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="0.8"/>
-                  <text x="383" y="54" text-anchor="middle" fill="#15803D" font-size="7" font-family="Arial,sans-serif">Adewui ×</text>
-                  <rect x="14" y="70" width="196" height="106" rx="8" fill="white" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <rect x="14" y="70" width="196" height="52" rx="8" fill="url(#g3a)"/>
-                  <rect x="14" y="108" width="196" height="14" fill="url(#g3a)"/>
-                  <path d="M98 82 L86 93 L86 105 L94 105 L94 97 L102 97 L102 105 L110 105 L110 93 Z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
-                  <path d="M82 94 L98 80 L114 94" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.5"/>
-                  <rect x="20" y="75" width="36" height="12" rx="4" fill="white" opacity="0.92"/>
-                  <text x="38" y="84" text-anchor="middle" fill="#0F4C81" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">Villa</text>
-                  <text x="22" y="136" fill="#111827" font-size="8" font-weight="bold" font-family="Arial,sans-serif">Villa des Cocotiers</text>
-                  <text x="22" y="147" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Adewui, Lomé</text>
-                  <rect x="22" y="152" width="30" height="11" rx="3" fill="#F3F4F6"/><text x="37" y="160.5" text-anchor="middle" fill="#6B7280" font-size="6.5" font-family="Arial,sans-serif">5 pièces</text>
-                  <text x="22" y="171" fill="#0F4C81" font-size="9" font-weight="bold" font-family="Arial,sans-serif">350 000 F<tspan fill="#9CA3AF" font-size="6.5" font-weight="normal">/mois</tspan></text>
-                  <rect x="218" y="70" width="196" height="106" rx="8" fill="white" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <rect x="218" y="70" width="196" height="52" rx="8" fill="url(#g3b)"/>
-                  <rect x="218" y="108" width="196" height="14" fill="url(#g3b)"/>
-                  <path d="M316 83 L304 94 L304 106 L312 106 L312 98 L320 98 L320 106 L328 106 L328 94 Z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
-                  <path d="M300 95 L316 81 L332 95" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.5"/>
-                  <rect x="224" y="75" width="48" height="12" rx="4" fill="white" opacity="0.92"/>
-                  <text x="248" y="84" text-anchor="middle" fill="#065F46" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">Appartement</text>
-                  <text x="226" y="136" fill="#111827" font-size="8" font-weight="bold" font-family="Arial,sans-serif">Appartement Bè</text>
-                  <text x="226" y="147" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Bè, Lomé</text>
-                  <rect x="226" y="152" width="30" height="11" rx="3" fill="#F3F4F6"/><text x="241" y="160.5" text-anchor="middle" fill="#6B7280" font-size="6.5" font-family="Arial,sans-serif">3 pièces</text>
-                  <text x="226" y="171" fill="#0F4C81" font-size="9" font-weight="bold" font-family="Arial,sans-serif">150 000 F<tspan fill="#9CA3AF" font-size="6.5" font-weight="normal">/mois</tspan></text>
-                  <rect x="14" y="184" width="196" height="106" rx="8" fill="white" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <rect x="14" y="184" width="196" height="52" rx="8" fill="url(#g3c)"/>
-                  <rect x="14" y="222" width="196" height="14" fill="url(#g3c)"/>
-                  <path d="M98 196 L86 207 L86 218 L94 218 L94 210 L102 210 L102 218 L110 218 L110 207 Z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
-                  <path d="M82 208 L98 194 L114 208" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.5"/>
-                  <rect x="20" y="189" width="34" height="12" rx="4" fill="white" opacity="0.92"/>
-                  <text x="37" y="198" text-anchor="middle" fill="#4338CA" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">Studio</text>
-                  <text x="22" y="249" fill="#111827" font-size="8" font-weight="bold" font-family="Arial,sans-serif">Studio Adewui</text>
-                  <text x="22" y="260" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Adewui, Lomé</text>
-                  <text x="22" y="284" fill="#0F4C81" font-size="9" font-weight="bold" font-family="Arial,sans-serif">85 000 F<tspan fill="#9CA3AF" font-size="6.5" font-weight="normal">/mois</tspan></text>
-                  <rect x="218" y="184" width="196" height="106" rx="8" fill="white" stroke="#E5E7EB" stroke-width="0.8"/>
-                  <rect x="218" y="184" width="196" height="52" rx="8" fill="url(#g3d)"/>
-                  <rect x="218" y="222" width="196" height="14" fill="url(#g3d)"/>
-                  <path d="M316 196 L304 207 L304 218 L312 218 L312 210 L320 210 L320 218 L328 218 L328 207 Z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
-                  <path d="M300 208 L316 194 L332 208" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.5"/>
-                  <rect x="224" y="189" width="34" height="12" rx="4" fill="white" opacity="0.92"/>
-                  <text x="241" y="198" text-anchor="middle" fill="#C2410C" font-size="6.5" font-weight="bold" font-family="Arial,sans-serif">Studio</text>
-                  <text x="226" y="249" fill="#111827" font-size="8" font-weight="bold" font-family="Arial,sans-serif">Studio Tokoin</text>
-                  <text x="226" y="260" fill="#9CA3AF" font-size="6.5" font-family="Arial,sans-serif">Tokoin, Lomé</text>
-                  <text x="226" y="284" fill="#0F4C81" font-size="9" font-weight="bold" font-family="Arial,sans-serif">75 000 F<tspan fill="#9CA3AF" font-size="6.5" font-weight="normal">/mois</tspan></text>
-                </svg>
+                <!-- Annonces — propriétaire montrant sa maison -->
+                <div class="hero-photo-wrap">
+                  <img src="/assets/happy-man-with-house.jpg.jpeg" alt="Propriétaire heureux avec maison" class="hero-photo" loading="lazy" style="object-position: center center;">
+                  <div class="hbf hbf-1">
+                    <div class="hbf-icon" style="background:#fef3dc">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#C9982E" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">48 h</span><span class="hbf-l">délai moyen</span></div>
+                  </div>
+                  <div class="hbf hbf-2">
+                    <div class="hbf-icon" style="background:#e8f0fa">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    </div>
+                    <div class="hbf-txt"><span class="hbf-n">+300 candidats</span><span class="hbf-l">locataires actifs</span></div>
+                  </div>
+                </div>
               }
             }
           </div>
@@ -397,7 +244,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
       <div class="sec-head">
         <span class="sec-eye">Nos avantages</span>
         <h2 class="sec-title">Pourquoi choisir WARAH ?</h2>
-        <p class="sec-sub">Une solution pensée pour les propriétaires et gestionnaires togolais</p>
+        <p class="sec-sub">Une solution pensée pour les propriétaires, locataires et gestionnaires immobiliers</p>
       </div>
       <div class="why-layout">
 
@@ -621,62 +468,43 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
 
   <!-- ── TÉMOIGNAGES ── -->
   <section class="temo-section" id="temoignages">
-    <div class="sec-wrap">
-      <div class="temo-layout">
 
-        <!-- Gauche : image + titre -->
-        <div class="temo-left">
-          <img
-            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-            alt="Utilisatrice WARAH"
-            class="temo-img">
-          <div class="temo-left-ov"></div>
-          <div class="temo-left-content">
-            <div class="temo-left-icon">
-              <svg viewBox="0 0 32 32" fill="none" stroke="#C9982E" stroke-width="2" stroke-linecap="round">
-                <path d="M16 3l2.4 7.4H26l-6.2 4.5 2.4 7.4L16 18l-6.2 4.3 2.4-7.4L6 10.4h7.6z"/>
-              </svg>
+    <!-- En-tête centré avec lignes décoratives -->
+    <div class="ts-head">
+      <div class="ts-line"></div>
+      <span class="ts-title">ILS PARLENT DE WARAH</span>
+      <div class="ts-line"></div>
+    </div>
+
+    <!-- Piste du carousel -->
+    <div class="ts-stage">
+      @for (t of temoignages; track t.nom; let i = $index) {
+        <div class="ts-card" [ngClass]="temoPos(i)" (click)="temoSlide.set(i)">
+          <div class="ts-quote">&#10077;</div>
+          <p class="ts-text">{{ t.texte }}</p>
+          <div class="ts-sep"></div>
+          <div class="ts-author">
+            <img [src]="t.photo" [alt]="t.nom" class="ts-avatar" loading="lazy">
+            <div class="ts-author-info">
+              <span class="ts-name">{{ t.nom }}</span>
+              <span class="ts-role">{{ t.role }}</span>
             </div>
-            <h2 class="temo-left-title">Ils parlent<br>de WARAH</h2>
-            <p class="temo-left-sub">Propriétaires, gestionnaires, locataires — ils ont transformé leur quotidien.</p>
           </div>
         </div>
-
-        <!-- Droite : accordéon -->
-        <div class="temo-right">
-          @for (t of temoignages; track t.nom; let i = $index) {
-            <div
-              class="temo-item"
-              [class.temo-open]="selectedTemo() === i"
-              (click)="selectedTemo.set(selectedTemo() === i ? -1 : i)">
-              <div class="temo-item-head">
-                <div class="temo-item-left">
-                  <div class="temo-av" [style.background]="t.couleur">{{ t.initiale }}</div>
-                  <div class="temo-item-meta">
-                    <span class="temo-nom">{{ t.nom }}</span>
-                    <span class="temo-role">{{ t.role }} · {{ t.ville }}</span>
-                  </div>
-                </div>
-                <div class="temo-item-right">
-                  <div class="temo-stars-row">
-                    @for (s of [1,2,3,4,5]; track s) {
-                      <svg viewBox="0 0 12 12" fill="#C9982E" class="ts"><path d="M6 1l1.2 3.7H11L8.1 6.6l1.1 3.5L6 8.3l-3.2 1.8 1.1-3.5L1 4.7h3.8z"/></svg>
-                    }
-                  </div>
-                  <span class="temo-toggle-btn">{{ selectedTemo() === i ? '−' : '+' }}</span>
-                </div>
-              </div>
-              @if (selectedTemo() === i) {
-                <div class="temo-item-body">
-                  <p class="temo-texte">« {{ t.texte }} »</p>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-      </div>
+      }
     </div>
+
+    <!-- Navigation -->
+    <div class="ts-nav">
+      <button class="ts-arrow" (click)="prevTemo()" aria-label="Précédent">&#8249;</button>
+      <div class="ts-dots">
+        @for (t of temoignages; track t.nom; let i = $index) {
+          <button class="ts-dot" [class.ts-dot-on]="temoSlide() === i" (click)="temoSlide.set(i)" [attr.aria-label]="'Témoignage ' + (i+1)"></button>
+        }
+      </div>
+      <button class="ts-arrow" (click)="nextTemo()" aria-label="Suivant">&#8250;</button>
+    </div>
+
   </section>
 
   <!-- ── FAQ ── -->
@@ -735,12 +563,12 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
   </section>
 
   <!-- ── ABONNEMENTS ── -->
-  <section class="price-section">
+  <section class="price-section" id="tarifs">
     <div class="sec-wrap">
       <div class="sec-head">
         <span class="sec-eye">Tarifs transparents</span>
         <h2 class="sec-title">Choisissez votre formule</h2>
-        <p class="sec-sub">Des offres adaptées à chaque propriétaire — du débutant au gestionnaire professionnel.</p>
+        <p class="sec-sub">Des offres adaptées à chaque propriétaire — du débutant au gestionnaire immobilier professionnel.</p>
       </div>
 
       <div class="price-grid">
@@ -796,7 +624,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
           <ul class="price-feats">
             <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Propriétés illimitées</li>
             <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Tout ce qu'inclut Pro</li>
-            <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Espace gestionnaire pro</li>
+            <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Espace gestionnaire immobilier pro</li>
             <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Portefeuille de mandats</li>
             <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Rapports mensuels auto</li>
             <li class="feat-ok"><svg viewBox="0 0 16 16" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>Profil vérifié &amp; support prioritaire</li>
@@ -813,8 +641,8 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/><circle cx="19" cy="6" r="3" fill="#C9982E" stroke="none"/></svg>
           </div>
           <div>
-            <span class="price-addon-label">Option · Référencement gestionnaire</span>
-            <p class="price-addon-desc">Mise en avant dans l'annuaire WARAH pour les gestionnaires souhaitant maximiser leur visibilité auprès des propriétaires.</p>
+            <span class="price-addon-label">Option · Référencement gestionnaire immobilier</span>
+            <p class="price-addon-desc">Mise en avant dans l'annuaire WARAH pour les gestionnaires immobiliers souhaitant maximiser leur visibilité auprès des propriétaires.</p>
           </div>
         </div>
         <div class="price-addon-right">
@@ -862,25 +690,48 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .mm-sep { height: 12px; }
     .mm-cta { margin-top: 8px; background: #C9982E; color: #fff; text-align: center; padding: 13px; border-radius: 8px; font-weight: 700; }
 
-    /* ── HERO ── */
-    .hero { position: relative; height: 100vh; min-height: 600px; background: linear-gradient(135deg, #081E41 0%, #0F4C81 60%, #0A2650 100%); overflow: hidden; display: flex; flex-direction: column; }
-    .hero-bg-deco { position: absolute; inset: 0; pointer-events: none; }
-    .deco-circle { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,0.06); }
-    .deco-c1 { width: 600px; height: 600px; top: -200px; right: -150px; }
-    .deco-c2 { width: 400px; height: 400px; bottom: -100px; left: -100px; }
-    .deco-line { position: absolute; background: linear-gradient(90deg, transparent, rgba(201,152,46,0.12), transparent); height: 1px; width: 100%; top: 45%; }
-    .slides { position: relative; flex: 1; }
-    .slide { position: absolute; inset: 0; display: flex; align-items: center; max-width: 1200px; padding: 100px 24px 80px; gap: 48px; opacity: 0; pointer-events: none; transition: opacity .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1); left: 50%; transform: translateX(calc(-50% + 40px)); }
+    /* ── HERO — fond sombre avec photos pro ── */
+    .hero { position: relative; min-height: 100vh; background: linear-gradient(135deg, #081E41 0%, #0F4C81 55%, #0A2650 100%); overflow: hidden; display: flex; flex-direction: column; }
+
+    /* Décor de fond */
+    .hero-shapes { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+    .hero-wave-svg { display: none; }
+    .hero-gold-blob { position: absolute; bottom: 0; left: 0; width: 520px; height: 130px; opacity: 0.75; }
+
+    /* Slides */
+    .slides { position: relative; flex: 1; z-index: 1; }
+    .slide { position: absolute; inset: 0; display: flex; align-items: center; max-width: 1200px; padding: 80px 40px 60px; gap: 48px; opacity: 0; pointer-events: none; transition: opacity .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1); left: 50%; transform: translateX(calc(-50% + 40px)); }
     .slide.slide-on { opacity: 1; pointer-events: auto; transform: translateX(-50%); }
-    .slide-text { flex: 1; max-width: 540px; }
-    .s-badge { display: inline-block; background: rgba(201,152,46,0.2); color: #C9982E; border: 1px solid rgba(201,152,46,0.4); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 20px; }
-    .s-title { font-size: clamp(28px, 4vw, 52px); font-weight: 800; line-height: 1.15; color: #fff; margin-bottom: 18px; text-wrap: balance; }
-    .s-sub { font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.78); margin-bottom: 36px; max-width: 440px; }
-    .s-cta { display: inline-flex; align-items: center; gap: 10px; background: #C9982E; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 28px; border-radius: 10px; transition: background .2s, transform .2s; box-shadow: 0 4px 20px rgba(201,152,46,0.4); }
+    .slide-text { flex: 1; max-width: 460px; }
+    .s-badge { display: inline-block; background: rgba(201,152,46,0.2); color: #C9982E; border: 1px solid rgba(201,152,46,0.4); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
+    .s-title { font-size: clamp(22px, 2.6vw, 36px); font-weight: 800; line-height: 1.18; color: #fff; margin-bottom: 14px; }
+    .s-sub { font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.75); margin-bottom: 26px; max-width: 420px; }
+    .s-btns { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .s-cta { display: inline-flex; align-items: center; gap: 10px; background: #C9982E; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 28px; border-radius: 10px; transition: background .2s, transform .2s; box-shadow: 0 4px 22px rgba(201,152,46,0.42); }
     .s-cta:hover { background: #b8881f; transform: translateY(-1px); }
+    .s-cta-ghost { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.88); font-weight: 600; font-size: 15px; border: 1.5px solid rgba(255,255,255,0.28); padding: 13px 22px; border-radius: 10px; transition: background .2s, border-color .2s; }
+    .s-cta-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.5); }
     .s-arrow { width: 18px; height: 18px; }
-    .slide-visual { flex: 0 0 340px; display: flex; align-items: center; justify-content: center; }
-    .s-svg { width: 100%; max-width: 340px; height: auto; filter: drop-shadow(0 20px 60px rgba(0,0,0,0.3)); }
+    .slide-visual { flex: 0 0 400px; display: flex; align-items: center; justify-content: center; padding: 40px 0; }
+
+    /* ── Photos héro professionnelles ── */
+    .hero-photo-wrap { position: relative; width: 380px; flex-shrink: 0; }
+    .hero-photo { width: 100%; height: 360px; object-fit: cover; border-radius: 32px 110px 32px 64px; display: block; box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 0 3px rgba(201,152,46,0.35); }
+    .hero-photo-wrap::before { content: ''; position: absolute; inset: 0; background: linear-gradient(145deg, rgba(8,30,65,0.28) 0%, transparent 55%); border-radius: 32px 110px 32px 64px; pointer-events: none; z-index: 1; }
+
+    /* Badges flottants */
+    .hbf { position: absolute; background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); border-radius: 14px; padding: 11px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); z-index: 2; min-width: 150px; }
+    .hbf-1 { bottom: 56px; left: -32px; animation: hbfUp 4s ease-in-out infinite; }
+    .hbf-2 { top: 20px; right: -28px; animation: hbfDown 4s ease-in-out infinite; }
+    @keyframes hbfUp { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
+    @keyframes hbfDown { 0%,100%{ transform:translateY(-5px) } 50%{ transform:translateY(2px) } }
+    .hbf-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hbf-icon svg { width: 18px; height: 18px; }
+    .hbf-txt { display: flex; flex-direction: column; gap: 1px; }
+    .hbf-n { font-size: 15px; font-weight: 800; color: #0A2650; line-height: 1.1; }
+    .hbf-l { font-size: 10px; font-weight: 600; color: #6B7280; letter-spacing: .03em; }
+
+    /* Contrôles (fond sombre) */
     .hero-controls { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; z-index: 10; }
     .h-arrow { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
     .h-arrow:hover { background: rgba(255,255,255,0.22); }
@@ -937,7 +788,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
       flex: 1;
       min-width: 0;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       opacity: 0;
       transform: translateY(48px) scale(0.93);
       transition:
@@ -952,6 +803,8 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .hw-card {
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
       background: linear-gradient(145deg, #0A2650 0%, #0F4C81 100%);
       border-radius: 20px;
       padding: 32px 22px 28px;
@@ -969,7 +822,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
       pointer-events: none;
     }
     .hw-card:hover {
-      transform: translateY(-10px) scale(1.03);
+      transform: translateY(-8px);
       box-shadow: 0 28px 64px rgba(15,76,129,0.38), 0 0 0 2px rgba(255,255,255,0.18);
     }
 
@@ -1012,6 +865,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
       position: relative; z-index: 1;
     }
     .hw-card-desc {
+      flex: 1;
       font-size: 13px; color: rgba(255,255,255,0.65);
       line-height: 1.7; margin-bottom: 16px;
       position: relative; z-index: 1;
@@ -1029,6 +883,7 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .hw-arrow {
       flex-shrink: 0; padding: 0 4px;
       display: flex; align-items: center;
+      align-self: center;
     }
     .hw-arrow svg { width: 56px; height: 24px; display: block; }
 
@@ -1197,39 +1052,31 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .impact-detail { display: block; font-size: 12px; color: rgba(255,255,255,0.48); line-height: 1.5; }
     .impact-sep { width: 1px; height: 90px; background: rgba(255,255,255,0.15); flex-shrink: 0; }
 
-    /* ── TÉMOIGNAGES ── */
-    .temo-section { background: white; padding: 96px 0; }
-    .temo-layout { display: grid; grid-template-columns: 360px 1fr; gap: 48px; align-items: start; }
-
-    /* Gauche */
-    .temo-left { position: relative; border-radius: 20px; overflow: hidden; min-height: 420px; }
-    .temo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-    .temo-left-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,30,65,0.92) 0%, rgba(10,38,80,0.60) 50%, rgba(15,76,129,0.25) 100%); }
-    .temo-left-content { position: relative; z-index: 2; padding: 32px 28px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 420px; }
-    .temo-left-icon { width: 48px; height: 48px; background: rgba(201,152,46,0.15); border: 1.5px solid rgba(201,152,46,0.4); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-    .temo-left-icon svg { width: 24px; height: 24px; }
-    .temo-left-title { font-size: 34px; font-weight: 800; color: white; line-height: 1.2; margin-bottom: 12px; font-style: italic; }
-    .temo-left-sub { font-size: 13.5px; color: rgba(255,255,255,0.72); line-height: 1.65; }
-
-    /* Droite : accordéon */
-    .temo-right { display: flex; flex-direction: column; gap: 0; border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden; }
-    .temo-item { border-bottom: 1px solid #E5E7EB; cursor: pointer; transition: background .15s; }
-    .temo-item:last-child { border-bottom: none; }
-    .temo-item:hover { background: #FAFBFF; }
-    .temo-item.temo-open { background: #F4F7FB; }
-    .temo-item-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; gap: 12px; }
-    .temo-item-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-    .temo-av { width: 38px; height: 38px; border-radius: 9px; color: white; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .temo-item-meta { display: flex; flex-direction: column; min-width: 0; }
-    .temo-nom { font-size: 14px; font-weight: 700; color: #0A2650; }
-    .temo-role { font-size: 11.5px; color: #9CA3AF; margin-top: 1px; }
-    .temo-item-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-    .temo-stars-row { display: flex; gap: 2px; }
-    .ts { width: 13px; height: 13px; }
-    .temo-toggle-btn { width: 28px; height: 28px; border-radius: 50%; background: white; border: 1.5px solid #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 300; color: #0F4C81; line-height: 1; transition: background .15s, border-color .15s; flex-shrink: 0; }
-    .temo-open .temo-toggle-btn { background: #0F4C81; border-color: #0F4C81; color: white; }
-    .temo-item-body { padding: 0 22px 20px; }
-    .temo-texte { font-size: 14px; color: #374151; line-height: 1.75; font-style: italic; border-left: 3px solid #C9982E; padding-left: 14px; }
+    /* ── TÉMOIGNAGES carousel ── */
+    .temo-section { background: #F8F9FC; padding: 88px 0 72px; overflow: hidden; }
+    .ts-head { display: flex; align-items: center; gap: 20px; max-width: 520px; margin: 0 auto 56px; padding: 0 24px; }
+    .ts-line { flex: 1; height: 1px; background: #D1D5DB; }
+    .ts-title { font-size: 11.5px; font-weight: 800; letter-spacing: .14em; color: #6B7280; text-transform: uppercase; white-space: nowrap; }
+    .ts-stage { position: relative; height: 300px; }
+    .ts-card { position: absolute; width: 360px; background: white; border-radius: 20px; padding: 28px 26px 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); border: 1px solid #E5E7EB; transition: all .45s cubic-bezier(.4,0,.2,1); cursor: pointer; left: 50%; }
+    .ts-card.ts-active { transform: translateX(-50%) scale(1); opacity: 1; z-index: 3; box-shadow: 0 16px 56px rgba(15,76,129,0.13); border-color: rgba(15,76,129,0.1); }
+    .ts-card.ts-prev { transform: translateX(calc(-50% - 380px)) scale(0.88); opacity: 0.5; z-index: 1; }
+    .ts-card.ts-next { transform: translateX(calc(-50% + 380px)) scale(0.88); opacity: 0.5; z-index: 1; }
+    .ts-card.ts-hidden { transform: translateX(-50%) scale(0.75); opacity: 0; z-index: 0; pointer-events: none; }
+    .ts-quote { font-size: 56px; line-height: 1; color: #0F4C81; opacity: 0.15; margin-bottom: 10px; font-family: Georgia, serif; }
+    .ts-text { font-size: 13.5px; color: #374151; line-height: 1.75; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .ts-sep { height: 1px; background: #E5E7EB; margin-bottom: 16px; }
+    .ts-author { display: flex; align-items: center; gap: 12px; }
+    .ts-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid #E5E7EB; }
+    .ts-author-info { display: flex; flex-direction: column; gap: 2px; }
+    .ts-name { font-size: 14px; font-weight: 700; color: #0A2650; }
+    .ts-role { font-size: 12px; color: #0F4C81; font-weight: 500; }
+    .ts-nav { display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 32px; }
+    .ts-arrow { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #D1D5DB; background: white; color: #374151; font-size: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .ts-arrow:hover { border-color: #0F4C81; color: #0F4C81; background: #EEF4FC; }
+    .ts-dots { display: flex; gap: 7px; }
+    .ts-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #D1D5DB; cursor: pointer; transition: all .25s; padding: 0; }
+    .ts-dot.ts-dot-on { background: #0F4C81; width: 22px; border-radius: 4px; }
 
     /* ── FAQ ── */
     .faq-section { background: linear-gradient(135deg, #081E41 0%, #0A2650 50%, #0F4C81 100%); padding: 96px 0; }
@@ -1334,6 +1181,13 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .price-note { text-align: center; font-size: 12.5px; color: #9CA3AF; margin-top: 32px; }
 
     /* ── RESPONSIVE ── */
+    @media (max-width: 1280px) {
+      .slide-visual { flex: 0 0 340px; }
+      .hero-photo-wrap { width: 320px; }
+      .hero-photo { height: 300px; }
+      .hbf-1 { left: -16px; }
+      .hbf-2 { right: -12px; }
+    }
     @media (max-width: 1024px) {
       .why-layout { grid-template-columns: 1fr; }
       .why-preview { position: static; }
@@ -1346,12 +1200,17 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     @media (max-width: 768px) {
       .nav-links, .nav-cta { display: none; }
       .hamburger { display: flex; }
+      .hero-shapes { display: none; }
       .slide { flex-direction: column; padding: 90px 24px 120px; text-align: center; gap: 28px; left: 0; transform: translateX(40px); }
       .slide.slide-on { transform: translateX(0); }
       .s-title { font-size: 26px; }
-      .s-sub, .s-cta { margin: 0 auto; }
-      .slide-visual { flex: 0 0 auto; }
-      .s-svg { max-width: 260px; }
+      .s-sub, .s-btns { margin: 0 auto; }
+      .s-btns { justify-content: center; }
+      .slide-visual { flex: 0 0 auto; padding: 0; }
+      .hero-photo-wrap { width: 100%; max-width: 300px; }
+      .hero-photo { height: 240px; border-radius: 20px 60px 20px 40px; }
+      .hero-photo-wrap::before { border-radius: 20px 60px 20px 40px; }
+      .hbf { display: none; }
       .hero-controls { bottom: 30px; }
       .hw-grid { flex-direction: column; gap: 16px; }
       .hw-col { flex-direction: column; width: 100%; }
@@ -1394,18 +1253,15 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   whyVisible     = signal(false);
   activeFeature  = signal(0);
   selectedTemo   = signal(0);
+  temoSlide      = signal(0);
   selectedFaq    = signal(0);
 
-  // ── Slider ──
+  // ── Slider & carousel ──
+  private temoTimer: ReturnType<typeof setInterval> | null = null;
   currentSlide = signal(0);
   navScrolled  = signal(false);
   menuOpen     = signal(false);
 
-  // ── Annonces ──
-  biens        = signal<Bien[]>([]);
-  loadingBiens = signal(true);
-  readonly skeletons = [1, 2, 3, 4, 5, 6];
-  readonly TYPE_LABELS = PROPERTY_TYPE_LABELS;
 
   // ── Impact — compteurs animés ──
   statAnnonces      = signal(0);
@@ -1422,7 +1278,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   readonly fonctionnement = [
-    { num: '01', titre: 'Créez votre compte',       desc: 'Inscription gratuite en 2 minutes. Renseignez vos informations et téléchargez votre CNI pour validation.' },
+    { num: '01', titre: 'Créez votre compte',       desc: 'Inscription gratuite en 2 minutes. Renseignez vos informations et téléchargez votre CNI ou passeport pour validation.' },
     { num: '02', titre: 'Ajoutez vos biens',        desc: 'Enregistrez vos propriétés avec photos, description et conditions de location. Biens disponibles immédiatement.' },
     { num: '03', titre: 'Invitez vos locataires',   desc: 'Envoyez une invitation par email ou SMS. Le locataire crée son compte et est associé à votre bail.' },
     { num: '04', titre: 'Gérez tout en temps réel', desc: 'Suivez les paiements, générez des quittances et recevez des alertes dès qu\'un loyer est en retard.' },
@@ -1448,26 +1304,31 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       nom: 'Kofi Assiamah', role: 'Propriétaire', ville: 'Lomé',
       initiale: 'K', couleur: '#0F4C81',
+      photo: 'https://randomuser.me/api/portraits/men/36.jpg',
       texte: 'WARAH a transformé ma façon de gérer mes 5 biens. Les quittances automatiques et le suivi des paiements m\'ont fait économiser des heures chaque mois. Je recommande à tous les propriétaires.',
     },
     {
       nom: 'Adjoa Mensah', role: 'Gestionnaire immobilier', ville: 'Lomé',
       initiale: 'A', couleur: '#0A5940',
+      photo: 'https://randomuser.me/api/portraits/women/44.jpg',
       texte: 'Je gère le portefeuille de plusieurs propriétaires. WARAH me donne une vue complète sur tous les baux, paiements et locataires en un seul endroit. Un gain de temps considérable.',
     },
     {
       nom: 'Ibrahim Touré', role: 'Propriétaire', ville: 'Kara',
       initiale: 'I', couleur: '#6D3AB0',
+      photo: 'https://randomuser.me/api/portraits/men/52.jpg',
       texte: 'Même depuis Kara, je suis tout ce qui se passe à Lomé. Les alertes d\'impayés arrivent immédiatement sur mon téléphone. C\'est vraiment indispensable pour tout propriétaire sérieux.',
     },
     {
       nom: 'Afia Dossou', role: 'Locataire', ville: 'Lomé',
       initiale: 'A', couleur: '#B45309',
+      photo: 'https://randomuser.me/api/portraits/women/68.jpg',
       texte: 'Grâce à WARAH j\'ai trouvé mon appartement en moins d\'une semaine. Le propriétaire était vérifié, le contrat de bail signé en ligne. Tout était transparent et rapide.',
     },
     {
       nom: 'Jean-Baptiste Kuma', role: 'Propriétaire', ville: 'Sokodé',
       initiale: 'J', couleur: '#0A2650',
+      photo: 'https://randomuser.me/api/portraits/men/81.jpg',
       texte: 'Je possède 8 biens à Sokodé et Lomé. Avant WARAH, je perdais des journées entières à relancer les loyers. Maintenant tout est automatisé — je récupère du temps pour ma famille.',
     },
   ];
@@ -1479,7 +1340,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
     {
       q: 'Est-ce gratuit de s\'inscrire ?',
-      r: 'L\'inscription est entièrement gratuite. Vous pouvez commencer à gérer vos biens sans frais. Des formules premium sont disponibles pour les propriétaires avec un grand nombre de biens ou les gestionnaires professionnels.',
+      r: 'L\'inscription est entièrement gratuite. Vous pouvez commencer à gérer vos biens sans frais. Des formules premium sont disponibles pour les propriétaires avec un grand nombre de biens ou les gestionnaires immobiliers.',
     },
     {
       q: 'Comment ajouter un bien immobilier ?',
@@ -1495,7 +1356,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
     {
       q: 'Puis-je gérer plusieurs biens depuis un seul compte ?',
-      r: 'Absolument. WARAH est conçu pour les propriétaires multi-biens et les gestionnaires de portefeuilles. Vous pouvez ajouter autant de biens que nécessaire, dans différentes villes du Togo, et tout visualiser depuis un seul tableau de bord.',
+      r: 'Absolument. WARAH est conçu pour les propriétaires multi-biens et les gestionnaires immobiliers de portefeuilles. Vous pouvez ajouter autant de biens que nécessaire, dans différentes villes du Togo, et tout visualiser depuis un seul tableau de bord.',
     },
     {
       q: 'Que se passe-t-il en cas d\'impayé de loyer ?',
@@ -1503,14 +1364,12 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   ];
 
-  constructor(private readonly http: HttpClient) {}
-
   ngOnInit(): void {
     if (this.isBrowser) {
       this.startSlider();
+      this.startTemoCarousel();
       window.addEventListener('scroll', this.onScroll);
     }
-    this.loadBiens();
   }
 
   ngAfterViewInit(): void {
@@ -1562,6 +1421,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.howtoObserver?.disconnect();
     this.whyObserver?.disconnect();
     if (this.featureTimer) clearInterval(this.featureTimer);
+    if (this.temoTimer) clearInterval(this.temoTimer);
   }
 
   private readonly onScroll = (): void => { this.navScrolled.set(window.scrollY > 60); };
@@ -1569,7 +1429,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   private startSlider(): void {
     this.slideTimer = setInterval(() => {
       this.currentSlide.update(i => (i + 1) % this.slides.length);
-    }, 5000);
+    }, 6000);
   }
 
   goToSlide(i: number): void {
@@ -1602,20 +1462,37 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.featureTimer) { clearInterval(this.featureTimer); this.startFeatureRotation(); }
   }
 
+  private startTemoCarousel(): void {
+    this.temoTimer = setInterval(() => {
+      this.temoSlide.update(i => (i + 1) % this.temoignages.length);
+    }, 4000);
+  }
+
+  temoPos(i: number): string {
+    const cur = this.temoSlide();
+    const total = this.temoignages.length;
+    const diff = ((i - cur) % total + total) % total;
+    if (diff === 0) return 'ts-active';
+    if (diff === 1) return 'ts-next';
+    if (diff === total - 1) return 'ts-prev';
+    return 'ts-hidden';
+  }
+
+  prevTemo(): void {
+    if (this.temoTimer) { clearInterval(this.temoTimer); this.temoTimer = null; }
+    this.temoSlide.update(i => (i - 1 + this.temoignages.length) % this.temoignages.length);
+    this.startTemoCarousel();
+  }
+
+  nextTemo(): void {
+    if (this.temoTimer) { clearInterval(this.temoTimer); this.temoTimer = null; }
+    this.temoSlide.update(i => (i + 1) % this.temoignages.length);
+    this.startTemoCarousel();
+  }
+
   scrollTo(id: string, e: Event): void {
     e.preventDefault();
     if (this.isBrowser) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }
 
-  loadBiens(): void {
-    this.http.get<{ data: Bien[] }>(`${environment.apiUrl}/properties`, {
-      params: { status: 'VACANT', limit: '6' }
-    }).pipe(catchError(() => of({ data: [] as Bien[] }))).subscribe(res => {
-      this.biens.set(res?.data ?? []);
-      this.loadingBiens.set(false);
-    });
-  }
-
-  typeLabel(t: string): string { return this.TYPE_LABELS[t as keyof typeof PROPERTY_TYPE_LABELS] ?? t; }
-  firstPhoto(b: Bien): string { return b.photos?.[0]?.url ?? ''; }
 }

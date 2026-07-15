@@ -255,7 +255,7 @@ export class AbonnementsComponent implements OnInit {
       fonctionnalites: [
         'Biens gérés illimités',
         'Toutes les fonctionnalités Pro',
-        'Espace gestionnaire professionnel',
+        'Espace gestionnaire immobilier professionnel',
         'Portefeuille de mandats',
         'Rapports mensuels automatiques aux mandants',
         'Profil vérifié dans l\'annuaire WARAH',
@@ -274,7 +274,7 @@ export class AbonnementsComponent implements OnInit {
     { nom: 'Historique exportable PDF/Excel', starter: false, pro: true, premium: true },
     { nom: 'Annonces biens vacants', starter: false, pro: true, premium: true },
     { nom: 'Gestion fréquences de paiement', starter: false, pro: true, premium: true },
-    { nom: 'Espace gestionnaire professionnel', starter: false, pro: false, premium: true },
+    { nom: 'Espace gestionnaire immobilier professionnel', starter: false, pro: false, premium: true },
     { nom: 'Portefeuille de mandats', starter: false, pro: false, premium: true },
     { nom: 'Rapports mensuels aux mandants', starter: false, pro: false, premium: true },
     { nom: 'Profil vérifié annuaire WARAH', starter: false, pro: false, premium: true },

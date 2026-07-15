@@ -15,7 +15,7 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
     <div class="admin-page">
       <div class="admin-header">
         <h1 class="admin-title">Gestion des litiges</h1>
-        <p class="admin-subtitle">Différends signalés entre propriétaires, gestionnaires et locataires</p>
+        <p class="admin-subtitle">Différends signalés entre propriétaires, gestionnaires immobiliers et locataires</p>
       </div>
 
       @if (loading) {

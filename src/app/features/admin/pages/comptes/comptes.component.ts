@@ -15,7 +15,7 @@ import { LokConfirmModalComponent } from '../../../../shared/components/lok-conf
     <div class="admin-page">
       <div class="admin-header">
         <h1 class="admin-title">Gestion des comptes</h1>
-        <p class="admin-subtitle">Propriétaires, locataires et gestionnaires inscrits sur WARAH</p>
+        <p class="admin-subtitle">Propriétaires, locataires et gestionnaires immobiliers inscrits sur WARAH</p>
       </div>
 
       @if (loading) {

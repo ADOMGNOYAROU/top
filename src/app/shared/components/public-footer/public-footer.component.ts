@@ -64,7 +64,7 @@ import { RouterLink } from '@angular/router';
         <nav class="pf-nav">
           <a routerLink="/annonces" class="pf-link">Annonces immobilières</a>
           <a routerLink="/auth/register" class="pf-link">Inscription propriétaire</a>
-          <a routerLink="/auth/register" class="pf-link">Espace gestionnaire</a>
+          <a routerLink="/auth/register" class="pf-link">Espace gestionnaire immobilier</a>
           <a routerLink="/auth/register" class="pf-link">Espace locataire</a>
           <a routerLink="/" fragment="tarifs" class="pf-link">Plans &amp; tarifs</a>
         </nav>
@@ -111,10 +111,17 @@ import { RouterLink } from '@angular/router';
           </div>
         </div>
         <div class="pf-payments">
-          <span class="pf-pay-label">Paiement via</span>
-          <div class="pf-pay-badges">
-            <span class="pf-pay-badge pf-pay-tmoney">T-Money</span>
-            <span class="pf-pay-badge pf-pay-flooz">Flooz</span>
+          <span class="pf-pay-label">Paiements acceptés</span>
+          <div class="pf-pay-logos">
+            <div class="pf-pay-chip" title="Mixx by Yas">
+              <img src="/assets/mixx-by-yas.png" alt="Mixx by Yas" class="pf-pay-img">
+            </div>
+            <div class="pf-pay-chip" title="MOOV Money Flooz">
+              <img src="/assets/Flooz.jpg" alt="MOOV Money Flooz" class="pf-pay-img">
+            </div>
+            <div class="pf-pay-chip" title="Carte bancaire">
+              <img src="/assets/carte-bancaire.jpg" alt="Carte bancaire" class="pf-pay-img pf-pay-img-card">
+            </div>
           </div>
         </div>
       </div>
@@ -126,14 +133,6 @@ import { RouterLink } from '@angular/router';
   <div class="pf-bottom">
     <div class="pf-bottom-inner">
       <p class="pf-copy">© 2026 WARAH — Tous droits réservés</p>
-      <div class="pf-legal">
-        <a href="#" class="pf-legal-link">Mentions légales</a>
-        <span class="pf-sep">·</span>
-        <a href="#" class="pf-legal-link">Confidentialité</a>
-        <span class="pf-sep">·</span>
-        <a href="#" class="pf-legal-link">CGU</a>
-      </div>
-      <p class="pf-made">Fabriqué avec ♥ à Lomé, Togo 🇹🇬</p>
     </div>
   </div>
 
@@ -336,26 +335,37 @@ import { RouterLink } from '@angular/router';
       text-transform: uppercase;
       letter-spacing: .08em;
       color: rgba(255,255,255,0.35);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
-    .pf-pay-badges { display: flex; gap: 8px; }
-    .pf-pay-badge {
-      font-size: .75rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 5px;
-      letter-spacing: .03em;
+    .pf-pay-logos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .pf-pay-chip { display: flex; align-items: center; opacity: 0.88; transition: opacity .2s; }
+    .pf-pay-chip:hover { opacity: 1; }
+    .pf-pay-img {
+      height: 32px;
+      width: auto;
+      max-width: 80px;
+      display: block;
+      border-radius: 6px;
+      object-fit: contain;
+      background: white;
     }
-    .pf-pay-tmoney {
-      background: rgba(0,114,187,0.2);
-      border: 1px solid rgba(0,114,187,0.4);
-      color: #60b4e8;
+    .pf-pay-img-card {
+      object-fit: cover;
+      object-position: center;
+      width: 52px;
     }
-    .pf-pay-flooz {
-      background: rgba(255,102,0,0.15);
-      border: 1px solid rgba(255,102,0,0.35);
-      color: #ff7a33;
+    .pf-pay-bank {
+      gap: 6px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 6px;
+      padding: 0 10px;
+      height: 32px;
+      color: rgba(255,255,255,0.65);
+      font-size: .78rem;
+      font-weight: 600;
     }
+    .pf-bank-icon { width: 15px; height: 15px; flex-shrink: 0; color: rgba(255,255,255,0.7); }
 
     /* ── BARRE DU BAS ── */
     .pf-bottom {
@@ -368,7 +378,7 @@ import { RouterLink } from '@angular/router';
       padding: 0 32px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       gap: 16px;
       flex-wrap: wrap;
     }
