@@ -1057,11 +1057,14 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .ts-head { display: flex; align-items: center; gap: 20px; max-width: 520px; margin: 0 auto 56px; padding: 0 24px; }
     .ts-line { flex: 1; height: 1px; background: #D1D5DB; }
     .ts-title { font-size: 11.5px; font-weight: 800; letter-spacing: .14em; color: #6B7280; text-transform: uppercase; white-space: nowrap; }
-    .ts-stage { position: relative; height: 300px; }
+    .ts-stage { position: relative; height: 300px; overflow: hidden; }
+    .ts-stage::before, .ts-stage::after { content: ''; position: absolute; top: 0; bottom: 0; width: 220px; z-index: 4; pointer-events: none; }
+    .ts-stage::before { left: 0; background: linear-gradient(to right, #F8F9FC 0%, rgba(248,249,252,0) 100%); }
+    .ts-stage::after  { right: 0; background: linear-gradient(to left,  #F8F9FC 0%, rgba(248,249,252,0) 100%); }
     .ts-card { position: absolute; width: 360px; background: white; border-radius: 20px; padding: 28px 26px 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); border: 1px solid #E5E7EB; transition: all .45s cubic-bezier(.4,0,.2,1); cursor: pointer; left: 50%; }
     .ts-card.ts-active { transform: translateX(-50%) scale(1); opacity: 1; z-index: 3; box-shadow: 0 16px 56px rgba(15,76,129,0.13); border-color: rgba(15,76,129,0.1); }
-    .ts-card.ts-prev { transform: translateX(calc(-50% - 380px)) scale(0.88); opacity: 0.5; z-index: 1; }
-    .ts-card.ts-next { transform: translateX(calc(-50% + 380px)) scale(0.88); opacity: 0.5; z-index: 1; }
+    .ts-card.ts-prev { transform: translateX(calc(-50% - 340px)) scale(0.88); opacity: 1; z-index: 1; }
+    .ts-card.ts-next { transform: translateX(calc(-50% + 340px)) scale(0.88); opacity: 1; z-index: 1; }
     .ts-card.ts-hidden { transform: translateX(-50%) scale(0.75); opacity: 0; z-index: 0; pointer-events: none; }
     .ts-quote { font-size: 56px; line-height: 1; color: #0F4C81; opacity: 0.15; margin-bottom: 10px; font-family: Georgia, serif; }
     .ts-text { font-size: 13.5px; color: #374151; line-height: 1.75; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
@@ -1310,25 +1313,25 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       nom: 'Adjoa Mensah', role: 'Gestionnaire immobilier', ville: 'Lomé',
       initiale: 'A', couleur: '#0A5940',
-      photo: 'https://randomuser.me/api/portraits/women/44.jpg',
+      photo: 'https://randomuser.me/api/portraits/women/56.jpg',
       texte: 'Je gère le portefeuille de plusieurs propriétaires. WARAH me donne une vue complète sur tous les baux, paiements et locataires en un seul endroit. Un gain de temps considérable.',
     },
     {
       nom: 'Ibrahim Touré', role: 'Propriétaire', ville: 'Kara',
       initiale: 'I', couleur: '#6D3AB0',
-      photo: 'https://randomuser.me/api/portraits/men/52.jpg',
+      photo: 'https://randomuser.me/api/portraits/men/9.jpg',
       texte: 'Même depuis Kara, je suis tout ce qui se passe à Lomé. Les alertes d\'impayés arrivent immédiatement sur mon téléphone. C\'est vraiment indispensable pour tout propriétaire sérieux.',
     },
     {
       nom: 'Afia Dossou', role: 'Locataire', ville: 'Lomé',
       initiale: 'A', couleur: '#B45309',
-      photo: 'https://randomuser.me/api/portraits/women/68.jpg',
+      photo: 'https://randomuser.me/api/portraits/women/31.jpg',
       texte: 'Grâce à WARAH j\'ai trouvé mon appartement en moins d\'une semaine. Le propriétaire était vérifié, le contrat de bail signé en ligne. Tout était transparent et rapide.',
     },
     {
       nom: 'Jean-Baptiste Kuma', role: 'Propriétaire', ville: 'Sokodé',
       initiale: 'J', couleur: '#0A2650',
-      photo: 'https://randomuser.me/api/portraits/men/81.jpg',
+      photo: 'https://randomuser.me/api/portraits/men/83.jpg',
       texte: 'Je possède 8 biens à Sokodé et Lomé. Avant WARAH, je perdais des journées entières à relancer les loyers. Maintenant tout est automatisé — je récupère du temps pour ma famille.',
     },
   ];
