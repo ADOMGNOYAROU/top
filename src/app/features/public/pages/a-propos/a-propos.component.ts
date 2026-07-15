@@ -264,9 +264,9 @@ import { PublicFooterComponent } from '../../../../shared/components/public-foot
     /* ── NAVBAR ── */
     .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: background .3s, box-shadow .3s; }
     .nav-solid { background: linear-gradient(135deg,rgba(10,38,80,1) 0%,rgba(15,76,129,1) 60%,rgba(8,30,65,1) 100%); box-shadow: 0 2px 20px rgba(0,0,0,.25); }
-    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 70px; display: flex; align-items: center; gap: 32px; }
-    .nav-logo { display: flex; align-items: center; text-decoration: none; }
-    .logo-img { height: 38px; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 80px; display: flex; align-items: center; gap: 32px; }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; background: white; border-radius: 12px; padding: 7px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    .logo-img { height: 54px; }
     .nav-links { display: flex; gap: 28px; list-style: none; padding: 0; margin: 0; flex: 1; }
     .nl { color: rgba(255,255,255,.85); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color .2s; padding-bottom: 2px; position: relative; }
     .nl::after { content: attr(data-text); display: block; height: 0; overflow: hidden; font-weight: 700; visibility: hidden; pointer-events: none; }

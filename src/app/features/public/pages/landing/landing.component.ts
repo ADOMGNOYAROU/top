@@ -671,9 +671,9 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     /* ── NAVBAR ── */
     .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; transition: background .35s, box-shadow .35s; }
     .nav.nav-solid { background: #0A2650; box-shadow: 0 2px 24px rgba(0,0,0,0.35); }
-    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 70px; display: flex; align-items: center; gap: 32px; }
-    .nav-logo { flex-shrink: 0; }
-    .logo-img { height: 38px; width: auto; display: block; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 80px; display: flex; align-items: center; gap: 32px; }
+    .nav-logo { flex-shrink: 0; background: white; border-radius: 12px; padding: 7px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); display: flex; align-items: center; }
+    .logo-img { height: 54px; width: auto; display: block; }
     .nav-links { display: flex; gap: 28px; flex: 1; }
     .nl { color: rgba(255,255,255,0.88); font-size: 14.5px; font-weight: 500; transition: color .2s; position: relative; }
     .nl::after { content: attr(data-text); display: block; height: 0; overflow: hidden; font-weight: 700; visibility: hidden; pointer-events: none; }

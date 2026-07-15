@@ -425,9 +425,9 @@ const COORDS: Record<string, [number, number]> = {
     /* ── NAVBAR ── */
     .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; transition: background .35s, box-shadow .35s; }
     .nav.nav-solid { background: #0A2650; box-shadow: 0 2px 24px rgba(0,0,0,0.35); }
-    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 70px; display: flex; align-items: center; gap: 32px; }
-    .nav-logo { flex-shrink: 0; text-decoration: none; }
-    .logo-img { height: 38px; width: auto; display: block; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 80px; display: flex; align-items: center; gap: 32px; }
+    .nav-logo { flex-shrink: 0; text-decoration: none; background: white; border-radius: 12px; padding: 7px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); display: flex; align-items: center; }
+    .logo-img { height: 54px; width: auto; display: block; }
     .nav-links { display: flex; gap: 28px; flex: 1; list-style: none; padding: 0; margin: 0; }
     .nl { color: rgba(255,255,255,0.75); font-size: 14.5px; font-weight: 500; transition: color .2s; text-decoration: none; }
     .nl:hover { color: white; }

@@ -2,659 +2,476 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ParticlesBackgroundComponent } from '../../../../shared/components/particles-background/particles-background.component';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    ParticlesBackgroundComponent
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
-    <div class="login-container">
-      <app-particles-background></app-particles-background>
+    <div class="lp">
 
-      <!-- Badges flottants -->
-      <div class="floating-badge badge-top-left">
-        <span class="badge-icon">🏠</span>
-        <span class="badge-text">1 200+ annonces au Togo</span>
-      </div>
-      <div class="floating-badge badge-bottom-right">
-        <span class="badge-icon">⭐</span>
-        <span class="badge-text">4.9/5 · Propriétaires satisfaits</span>
-      </div>
+      <!-- ── Panneau gauche ── -->
+      <div class="lp-left">
+        <div class="lp-left-inner">
 
-      <!-- Carte centrale glassmorphism -->
-      <div class="login-card">
-        <!-- Logo et badge -->
-        <div class="card-logo">
-          <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
-        </div>
-        <div class="security-badge">
-          <span class="badge-icon">🔒</span>
-          <span class="badge-text">Connexion sécurisée</span>
-        </div>
-
-        <!-- Header -->
-        <div class="card-header">
-          <h1 class="header-title">Bon retour 👋</h1>
-          <p class="header-subtitle">Heureux de vous revoir sur WARAH</p>
-        </div>
-
-        <!-- Formulaire -->
-        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
-          <!-- Email -->
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <div class="input-wrapper" [class.focused]="emailFocused">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              <input 
-                type="email" 
-                formControlName="email" 
-                class="form-input" 
-                placeholder="votre@email.com"
-                (focus)="emailFocused = true"
-                (blur)="emailFocused = false"
-              />
-              <div class="focus-line" [class.active]="emailFocused"></div>
+          <!-- Logo -->
+          <a routerLink="/" class="lp-logo">
+            <div class="lp-logo-bg">
+              <img src="/assets/WARAH-logo.png" alt="WARAH" class="lp-logo-img">
             </div>
-            <div class="error-message" *ngIf="email?.touched && email?.invalid">Email invalide</div>
+          </a>
+
+          <!-- Accroche -->
+          <div class="lp-pitch">
+            <h2 class="lp-pitch-title">Gérez vos biens<br>en toute sérénité</h2>
+            <p class="lp-pitch-sub">La plateforme de gestion immobilière pensée pour les propriétaires, locataires et gestionnaires immobiliers du Togo.</p>
           </div>
 
-          <!-- Mot de passe -->
-          <div class="form-group">
-            <label class="form-label">Mot de passe</label>
-            <div class="input-wrapper" [class.focused]="passwordFocused">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              <input 
-                [type]="showPassword ? 'text' : 'password'" 
-                formControlName="motDePasse" 
-                class="form-input" 
-                placeholder="••••••••"
-                (focus)="passwordFocused = true"
-                (blur)="passwordFocused = false"
-              />
-              <button type="button" class="toggle-password" (click)="showPassword = !showPassword">
-                <svg *ngIf="!showPassword" class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                <svg *ngIf="showPassword" class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
-              </button>
-              <div class="focus-line" [class.active]="passwordFocused"></div>
+          <!-- Features -->
+          <ul class="lp-feats">
+            <li class="lp-feat">
+              <span class="lp-feat-ic">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 2L3 7v11h5v-5h4v5h5V7z"/></svg>
+              </span>
+              <div>
+                <span class="lp-feat-title">Gestion multi-biens</span>
+                <span class="lp-feat-desc">Villas, appartements, studios — tout en un</span>
+              </div>
+            </li>
+            <li class="lp-feat">
+              <span class="lp-feat-ic">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 8h16"/><path d="M6 12h2M10 12h4"/></svg>
+              </span>
+              <div>
+                <span class="lp-feat-title">Paiements T-Money & Flooz</span>
+                <span class="lp-feat-desc">Loyers encaissés automatiquement</span>
+              </div>
+            </li>
+            <li class="lp-feat">
+              <span class="lp-feat-ic">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </span>
+              <div>
+                <span class="lp-feat-title">Alertes impayés en temps réel</span>
+                <span class="lp-feat-desc">Notifications SMS & in-app instantanées</span>
+              </div>
+            </li>
+            <li class="lp-feat">
+              <span class="lp-feat-ic">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16l8-3 8 3V4a2 2 0 0 0-2-2z"/></svg>
+              </span>
+              <div>
+                <span class="lp-feat-title">Contrats de bail PDF</span>
+                <span class="lp-feat-desc">Génération et archivage automatiques</span>
+              </div>
+            </li>
+          </ul>
+
+          <!-- Stats -->
+          <div class="lp-stats">
+            <div class="lp-stat">
+              <span class="lp-stat-n">1 200+</span>
+              <span class="lp-stat-l">Annonces actives</span>
             </div>
-            <div class="form-actions">
-              <label class="remember-me">
-                <input type="checkbox" class="remember-checkbox">
-                <span class="remember-text">Se souvenir de moi</span>
-              </label>
-              <a routerLink="/auth/forgot-password" class="forgot-password">Mot de passe oublié ?</a>
+            <div class="lp-stat-sep"></div>
+            <div class="lp-stat">
+              <span class="lp-stat-n">500+</span>
+              <span class="lp-stat-l">Propriétaires</span>
+            </div>
+            <div class="lp-stat-sep"></div>
+            <div class="lp-stat">
+              <span class="lp-stat-n">4.9★</span>
+              <span class="lp-stat-l">Satisfaction</span>
             </div>
           </div>
 
-          <!-- Bouton connexion -->
-          <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading">
-            <div class="shimmer"></div>
-            <svg *ngIf="isLoading" class="spinner" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </div>
+      </div>
+
+      <!-- ── Panneau droit ── -->
+      <div class="lp-right">
+        <div class="lp-form-wrap">
+
+          <!-- Header -->
+          <div class="lf-head">
+            <h1 class="lf-title">Bon retour 👋</h1>
+            <p class="lf-sub">Connectez-vous à votre espace WARAH</p>
+          </div>
+
+          <!-- Formulaire -->
+          <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="lf-form">
+
+            <!-- Email -->
+            <div class="lf-group">
+              <label class="lf-label">Adresse email</label>
+              <div class="lf-input-wrap" [class.lf-focused]="emailFocused" [class.lf-error]="email?.touched && email?.invalid">
+                <svg class="lf-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <path d="M3 5h14c.6 0 1 .4 1 1v8c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1V6c0-.6.4-1 1-1z"/><path d="M18 6l-8 6-8-6"/>
+                </svg>
+                <input type="email" formControlName="email" class="lf-input"
+                  placeholder="votre@email.com"
+                  (focus)="emailFocused=true" (blur)="emailFocused=false">
+              </div>
+              <span class="lf-err-msg" *ngIf="email?.touched && email?.invalid">Adresse email invalide</span>
+            </div>
+
+            <!-- Mot de passe -->
+            <div class="lf-group">
+              <div class="lf-label-row">
+                <label class="lf-label">Mot de passe</label>
+                <a routerLink="/auth/forgot-password" class="lf-forgot">Mot de passe oublié ?</a>
+              </div>
+              <div class="lf-input-wrap" [class.lf-focused]="passwordFocused">
+                <svg class="lf-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <rect x="3" y="9" width="14" height="9" rx="1.5"/><path d="M7 9V6a3 3 0 0 1 6 0v3"/>
+                </svg>
+                <input [type]="showPassword ? 'text' : 'password'" formControlName="motDePasse" class="lf-input"
+                  placeholder="••••••••"
+                  (focus)="passwordFocused=true" (blur)="passwordFocused=false">
+                <button type="button" class="lf-eye" (click)="showPassword=!showPassword" aria-label="Afficher le mot de passe">
+                  <svg *ngIf="!showPassword" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M1 10s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7z"/><circle cx="10" cy="10" r="2.5"/>
+                  </svg>
+                  <svg *ngIf="showPassword" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M14.5 14.5A8.4 8.4 0 0 1 10 17c-5.5 0-9-7-9-7a15.6 15.6 0 0 1 4.5-5.5M8.1 3.3A8.2 8.2 0 0 1 10 3c5.5 0 9 7 9 7a15.6 15.6 0 0 1-2.1 3M1 1l18 18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Se souvenir -->
+            <label class="lf-remember">
+              <input type="checkbox" class="lf-check">
+              <span class="lf-check-box"></span>
+              <span class="lf-remember-txt">Se souvenir de moi</span>
+            </label>
+
+            <!-- Bouton -->
+            <button type="submit" class="lf-btn" [disabled]="loginForm.invalid || isLoading">
+              <svg *ngIf="isLoading" class="lf-spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="4"/>
+                <path fill="white" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+              </svg>
+              <span>{{ isLoading ? 'Connexion…' : 'Se connecter' }}</span>
+              <svg *ngIf="!isLoading" viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" class="lf-arrow">
+                <path d="M4 10h12M10 4l6 6-6 6"/>
+              </svg>
+            </button>
+
+            <!-- Erreur -->
+            <div *ngIf="errorMessage" class="lf-error-banner">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="10" cy="10" r="8"/><path d="M10 6v4M10 14h.01"/>
+              </svg>
+              {{ errorMessage }}
+            </div>
+
+          </form>
+
+          <!-- Footer -->
+          <p class="lf-footer">
+            Pas encore inscrit ?
+            <a routerLink="/auth/register" class="lf-register-link">Créez un compte gratuitement</a>
+          </p>
+
+          <!-- Retour accueil -->
+          <a routerLink="/" class="lf-back">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M15 10H5M10 4l-6 6 6 6"/>
             </svg>
-            <span *ngIf="isLoading">Connexion...</span>
-            <span *ngIf="!isLoading">Se connecter</span>
-          </button>
+            Retour à l'accueil
+          </a>
 
-          <!-- Message d'erreur -->
-          <div *ngIf="errorMessage" class="error-banner">
-            {{ errorMessage }}
-          </div>
-        </form>
-
-        <!-- Footer -->
-        <div class="card-footer">
-          <span class="footer-text">Pas encore inscrit ?</span>
-          <a routerLink="/auth/register" class="footer-link">Créez un compte</a>
         </div>
       </div>
+
     </div>
   `,
   styles: `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    .login-container {
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .lp {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      position: relative;
-      overflow: hidden;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, var(--color-primary-50) 0%, #FFFFFF 60%);
-    }
-
-    .floating-badge {
-      position: absolute;
-      background: white;
-      border: 1px solid var(--color-border);
-      border-radius: 50px;
-      padding: 0.75rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-      z-index: 2;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    .badge-top-left {
-      top: 2rem;
-      left: 2rem;
-    }
-
-    .badge-bottom-right {
-      bottom: 2rem;
-      right: 2rem;
-      animation-delay: 0.5s;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-
-    .badge-icon {
-      font-size: 1rem;
-    }
-
-    .badge-text {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--color-text);
-    }
-
-    .login-card {
-      position: relative;
-      background: white;
-      border: 1px solid var(--color-border);
-      border-radius: 24px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-      max-width: 480px;
-      width: 100%;
-      padding: 3rem;
-      z-index: 3;
-      animation: cardEnter 600ms ease-out;
-    }
-
-    @keyframes cardEnter {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .card-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .logo-img {
-      height: 140px;
-      width: auto;
-      object-fit: contain;
-      background: transparent !important;
-      mix-blend-mode: multiply;
-    }
-
-    .logo-text {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--color-primary);
-    }
-
-    .security-badge {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      background: var(--color-primary-50);
-      border: 1px solid var(--color-primary-100);
-      border-radius: 50px;
-      padding: 0.5rem 1rem;
-      margin-bottom: 2rem;
-      align-self: center;
-    }
-
-    .security-badge .badge-icon {
-      font-size: 0.875rem;
-    }
-
-    .security-badge .badge-text {
-      font-size: 0.8125rem;
-      font-weight: 500;
-      color: var(--color-primary-dark);
-    }
-
-    .card-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .header-title {
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: 0.5rem;
-    }
-
-    .header-subtitle {
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-    }
-
-    .login-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .form-group {
-      position: relative;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 0.8125rem;
-      font-weight: 500;
-      color: var(--color-text);
-      margin-bottom: 0.5rem;
-    }
-
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background: white;
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      transition: all 0.2s;
-      height: 52px;
-    }
-
-    .input-wrapper.focused {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.12);
-    }
-
-    .input-icon {
-      position: absolute;
-      left: 1rem;
-      width: 20px;
-      height: 20px;
-      color: var(--color-text-muted);
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 0 3rem;
-      background: transparent;
-      border: none;
-      border-radius: 12px;
-      font-size: 0.9375rem;
-      font-family: 'Inter', sans-serif;
-      color: var(--color-text);
-      height: 100%;
-    }
-
-    .form-input:focus {
-      outline: none;
-    }
-
-    .form-input::placeholder {
-      color: #9ca3af;
-    }
-
-    .focus-line {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 2px;
-      width: 0;
-      background: var(--color-primary);
-      transition: width 0.3s ease;
-    }
-
-    .focus-line.active {
-      width: 100%;
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 1rem;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .eye-icon {
-      width: 20px;
-      height: 20px;
-      color: var(--color-text-muted);
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 0.5rem;
-    }
-
-    .remember-me {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-    }
-
-    .remember-checkbox {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--color-primary-light);
-    }
-
-    .remember-text {
-      font-size: 0.8125rem;
-      color: var(--color-text);
-    }
-
-    .forgot-password {
-      font-size: 0.8125rem;
-      color: var(--color-primary);
-      text-decoration: none;
-      transition: color 0.2s;
-      font-weight: 500;
-    }
-
-    .forgot-password:hover {
-      color: var(--color-primary-dark);
-      text-decoration: underline;
-    }
-
-    .error-message {
-      color: #EF4444;
-      font-size: 0.8125rem;
-      margin-top: 0.375rem;
-      font-weight: 500;
-    }
-
-    .submit-btn {
-      position: relative;
-      width: 100%;
-      padding: 1rem;
-      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      height: 52px;
-      overflow: hidden;
-    }
-
-    .submit-btn:hover:not(:disabled) {
-      filter: brightness(1.1);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(15, 76, 129, 0.4);
-    }
-
-    .submit-btn:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .shimmer {
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-
-    .submit-btn:hover .shimmer {
-      left: 100%;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    .card-footer {
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-    }
-
-    .footer-text {
-      margin-right: 0.25rem;
-    }
-
-    .footer-link {
-      color: var(--color-primary);
-      font-weight: 700;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-
-    .footer-link:hover {
-      color: var(--color-primary-dark);
-      text-decoration: underline;
-    }
-
-    .error-banner {
-      margin-top: 0.75rem;
-      padding: 0.75rem 1rem;
-      background: #FEF2F2;
-      border: 1px solid #FECACA;
-      border-radius: 8px;
-      color: #DC2626;
-      font-size: 0.875rem;
-      text-align: center;
-    }
-
-    .dev-section {
-      margin-top: 1.5rem;
-    }
-
-    .dev-divider {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.875rem;
-    }
-
-    .dev-divider::before,
-    .dev-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--color-border);
-    }
-
-    .dev-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--color-text-muted);
-      white-space: nowrap;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .dev-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.625rem;
+      font-family: 'Inter', system-ui, sans-serif;
     }
 
-    .dev-card {
+    /* ── PANNEAU GAUCHE ── */
+    .lp-left {
+      background: linear-gradient(150deg, #081E41 0%, #0A2650 45%, #0F4C81 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 48px 40px;
+    }
+
+    /* Décor lumineux */
+    .lp-left::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      right: -80px;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,152,46,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .lp-left::after {
+      content: '';
+      position: absolute;
+      bottom: -80px;
+      left: -60px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15,76,129,0.4) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .lp-left-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 440px;
+      width: 100%;
+    }
+
+    .lp-logo { display: block; margin-bottom: 40px; }
+    .lp-logo-bg {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border-radius: 24px;
+      padding: 24px 40px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+    }
+    .lp-logo-img {
+      height: 160px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .lp-pitch { margin-bottom: 40px; }
+    .lp-pitch-title {
+      font-size: clamp(22px, 2.4vw, 32px);
+      font-weight: 800;
+      color: white;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .lp-pitch-sub {
+      font-size: 14.5px;
+      color: rgba(255,255,255,0.68);
+      line-height: 1.7;
+    }
+
+    .lp-feats { list-style: none; display: flex; flex-direction: column; gap: 18px; margin-bottom: 40px; }
+    .lp-feat { display: flex; align-items: flex-start; gap: 14px; }
+    .lp-feat-ic {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(201,152,46,0.15);
+      border: 1px solid rgba(201,152,46,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .lp-feat-ic svg { width: 17px; height: 17px; stroke: #C9982E; }
+    .lp-feat-title { display: block; font-size: 13.5px; font-weight: 700; color: white; margin-bottom: 2px; }
+    .lp-feat-desc { font-size: 12px; color: rgba(255,255,255,0.55); }
+
+    .lp-stats {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 16px 24px;
+    }
+    .lp-stat { flex: 1; text-align: center; }
+    .lp-stat-n { display: block; font-size: 18px; font-weight: 800; color: #C9982E; }
+    .lp-stat-l { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; display: block; }
+    .lp-stat-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.12); }
+
+    /* ── PANNEAU DROIT ── */
+    .lp-right {
+      background: #F7F8FB;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+    }
+
+    .lp-form-wrap {
+      width: 100%;
+      max-width: 420px;
+      animation: fadeUp .5s ease-out;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .lf-head { margin-bottom: 32px; }
+    .lf-title { font-size: 28px; font-weight: 800; color: #0A2650; margin-bottom: 6px; }
+    .lf-sub { font-size: 14px; color: #6B7280; }
+
+    .lf-form { display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px; }
+
+    .lf-group { display: flex; flex-direction: column; gap: 6px; }
+    .lf-label { font-size: 13px; font-weight: 600; color: #374151; }
+    .lf-label-row { display: flex; align-items: center; justify-content: space-between; }
+    .lf-forgot { font-size: 12.5px; color: #0F4C81; font-weight: 500; text-decoration: none; }
+    .lf-forgot:hover { text-decoration: underline; }
+
+    .lf-input-wrap {
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 12px;
+      height: 52px;
+      padding: 0 14px;
+      gap: 10px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .lf-input-wrap.lf-focused {
+      border-color: #0F4C81;
+      box-shadow: 0 0 0 3px rgba(15,76,129,0.1);
+    }
+    .lf-input-wrap.lf-error { border-color: #EF4444; }
+    .lf-icon { width: 18px; height: 18px; stroke: #9CA3AF; flex-shrink: 0; }
+    .lf-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14.5px;
+      color: #0A2650;
+      font-family: inherit;
+    }
+    .lf-input::placeholder { color: #D1D5DB; }
+    .lf-eye { background: none; border: none; cursor: pointer; padding: 4px; display: flex; }
+    .lf-eye svg { width: 18px; height: 18px; stroke: #9CA3AF; }
+    .lf-err-msg { font-size: 12px; color: #EF4444; }
+
+    .lf-remember {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 11px 12px;
-      border-radius: 11px;
-      border: 1.5px solid transparent;
-      background: #F8FAFC;
       cursor: pointer;
-      text-align: left;
-      transition: all 0.15s;
-      min-height: 52px;
+      margin-top: -4px;
     }
-
-    .dev-card:hover {
-      background: white;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    .lf-check { display: none; }
+    .lf-check-box {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #D1D5DB;
+      border-radius: 5px;
+      flex-shrink: 0;
+      transition: all .2s;
     }
+    .lf-check:checked + .lf-check-box {
+      background: #0F4C81;
+      border-color: #0F4C81;
+    }
+    .lf-remember-txt { font-size: 13px; color: #374151; }
 
-    .dev-card-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+    .lf-btn {
+      width: 100%;
+      height: 52px;
+      background: linear-gradient(135deg, #0F4C81 0%, #0A2650 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      gap: 10px;
+      transition: filter .2s, transform .15s, box-shadow .2s;
+      margin-top: 4px;
     }
-
-    .dev-card-icon svg {
-      width: 15px;
-      height: 15px;
+    .lf-btn:hover:not(:disabled) {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(15,76,129,0.35);
     }
+    .lf-btn:active:not(:disabled) { transform: scale(0.98); }
+    .lf-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .lf-arrow { width: 16px; height: 16px; }
+    .lf-spinner { width: 18px; height: 18px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .dev-card-info {
-      flex: 1;
-      min-width: 0;
+    .lf-error-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #DC2626;
+      font-size: 13.5px;
     }
+    .lf-error-banner svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    .dev-card-name {
-      font-size: 12.5px;
+    .lf-footer {
+      text-align: center;
+      font-size: 13.5px;
+      color: #6B7280;
+      margin-bottom: 20px;
+    }
+    .lf-register-link {
+      color: #0F4C81;
       font-weight: 700;
-      line-height: 1.2;
+      text-decoration: none;
+      margin-left: 4px;
     }
+    .lf-register-link:hover { text-decoration: underline; }
 
-    .dev-card-route {
-      font-size: 10.5px;
-      font-weight: 500;
-      margin-top: 1px;
-      opacity: 0.6;
+    .lf-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #9CA3AF;
+      text-decoration: none;
+      transition: color .2s;
     }
+    .lf-back:hover { color: #0F4C81; }
+    .lf-back svg { width: 14px; height: 14px; }
 
-    .dev-card-arrow {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
-      opacity: 0.35;
-      transition: opacity 0.15s;
-    }
-
-    .dev-card:hover .dev-card-arrow { opacity: 0.8; }
-
-    /* Couleurs par rôle */
-    .dev-card-blue { border-color: rgba(15,76,129,0.15); }
-    .dev-card-blue:hover { border-color: var(--color-primary); }
-    .dev-card-blue .dev-card-icon { background: rgba(15,76,129,0.1); }
-    .dev-card-blue .dev-card-icon svg { stroke: var(--color-primary); }
-    .dev-card-blue .dev-card-name { color: var(--color-primary); }
-    .dev-card-blue .dev-card-route { color: var(--color-primary); }
-    .dev-card-blue .dev-card-arrow { stroke: var(--color-primary); }
-
-    .dev-card-green { border-color: rgba(16,185,129,0.15); }
-    .dev-card-green:hover { border-color: #10B981; }
-    .dev-card-green .dev-card-icon { background: rgba(16,185,129,0.1); }
-    .dev-card-green .dev-card-icon svg { stroke: #10B981; }
-    .dev-card-green .dev-card-name { color: #059669; }
-    .dev-card-green .dev-card-route { color: #059669; }
-    .dev-card-green .dev-card-arrow { stroke: #10B981; }
-
-    .dev-card-gold { border-color: rgba(201,152,46,0.2); }
-    .dev-card-gold:hover { border-color: var(--color-accent); }
-    .dev-card-gold .dev-card-icon { background: rgba(201,152,46,0.12); }
-    .dev-card-gold .dev-card-icon svg { stroke: var(--color-accent); }
-    .dev-card-gold .dev-card-name { color: #92700e; }
-    .dev-card-gold .dev-card-route { color: #92700e; }
-    .dev-card-gold .dev-card-arrow { stroke: var(--color-accent); }
-
-    .dev-card-red { border-color: rgba(239,68,68,0.15); }
-    .dev-card-red:hover { border-color: #EF4444; }
-    .dev-card-red .dev-card-icon { background: rgba(239,68,68,0.1); }
-    .dev-card-red .dev-card-icon svg { stroke: #EF4444; }
-    .dev-card-red .dev-card-name { color: #DC2626; }
-    .dev-card-red .dev-card-route { color: #DC2626; }
-    .dev-card-red .dev-card-arrow { stroke: #EF4444; }
-
-    @media (max-width: 768px) {
-      .floating-badge {
-        display: none;
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .lp { grid-template-columns: 1fr; }
+      .lp-left {
+        padding: 40px 28px;
+        min-height: auto;
       }
-
-      .login-card {
-        padding: 2rem;
-        max-width: 90%;
-      }
+      .lp-feats { display: none; }
+      .lp-stats { display: none; }
+      .lp-pitch-title { font-size: 22px; }
+      .lp-logo-bg { padding: 18px 28px; }
+      .lp-logo-img { height: 100px; }
     }
 
     @media (max-width: 480px) {
-      .login-container {
-        padding: 1rem;
-      }
-
-      .login-card {
-        padding: 1.5rem;
-        max-width: 100%;
-      }
-
-      .header-title {
-        font-size: 1.5rem;
-      }
+      .lp-right { padding: 32px 20px; }
+      .lf-title { font-size: 24px; }
     }
   `
 })
@@ -664,7 +481,6 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   emailFocused = false;
   passwordFocused = false;
-  mousePosition = { x: 0, y: 0 };
   errorMessage = '';
 
   constructor(
@@ -680,36 +496,23 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    // Si déjà connecté, rediriger directement
     if (this.authService.isLoggedIn()) {
       this.router.navigate([this.authService.getDefaultRoute()]);
     }
   }
 
-  @HostListener('mousemove', ['$event'])
-  onMouseMove(event: MouseEvent) {
-    const x = (event.clientX / window.innerWidth - 0.5) * 20;
-    const y = (event.clientY / window.innerHeight - 0.5) * 20;
-    this.mousePosition = { x, y };
-  }
-
   get email() { return this.loginForm.get('email'); }
   get motDePasse() { return this.loginForm.get('motDePasse'); }
 
-  onSubmitClick() {}
-
   onLogin(): void {
     if (this.loginForm.invalid) return;
-
     this.isLoading = true;
     this.errorMessage = '';
-
     this.authService.login(
       this.loginForm.value.email,
       this.loginForm.value.motDePasse,
     ).subscribe({
-      next: (_user) => {
+      next: () => {
         this.isLoading = false;
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
         this.router.navigate([returnUrl ?? this.authService.getDefaultRoute()]);

@@ -28,7 +28,9 @@ import { RouterLink } from '@angular/router';
 
       <!-- Brand -->
       <div class="pf-brand">
-        <img src="/assets/WARAH-logo.png" alt="WARAH" class="pf-logo">
+        <div class="pf-logo-wrap">
+          <img src="/assets/WARAH-logo.png" alt="WARAH" class="pf-logo">
+        </div>
         <p class="pf-brand-desc">La plateforme de gestion immobilière locative conçue pour le contexte africain. Loyers, quittances et baux — tout en un.</p>
         <div class="pf-social">
           <!-- Facebook -->
@@ -232,7 +234,8 @@ import { RouterLink } from '@angular/router';
     }
 
     /* Brand */
-    .pf-logo { height: 38px; margin-bottom: 14px; }
+    .pf-logo-wrap { display: inline-flex; align-items: center; background: white; border-radius: 12px; padding: 8px 16px; margin-bottom: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+    .pf-logo { height: 54px; width: auto; display: block; }
     .pf-brand-desc {
       font-size: .85rem;
       color: rgba(255,255,255,0.5);
