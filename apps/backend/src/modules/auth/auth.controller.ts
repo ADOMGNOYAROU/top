@@ -15,13 +15,12 @@ import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
-import { MAX_DOCUMENT_BYTES, MAX_PHOTO_BYTES } from '../../common/constants';
+import { MAX_PHOTO_BYTES } from '../../common/constants';
 import { IdentityVerificationFiles } from '../identity/identity.service';
 import {
   AuthService,
   AuthMeResponse,
   SignupOwnerResponse,
-  SignupManagerFiles,
   SignupManagerResponse,
   InviteTenantResponse,
   LoginResponse,
@@ -52,9 +51,11 @@ export class AuthController {
     summary: 'Inscription propriétaire',
     description:
       "Crée le compte Supabase Auth et le profil propriétaire, envoie l'email de confirmation " +
-      'WARAH, puis déclenche la vérification CNI (recto `image` + verso `imageBack`, tous deux ' +
-      "requis). Le compte peut se connecter dès que l'email est confirmé, mais reste en lecture " +
-      "seule tant que la CNI n'est pas VERIFIED.",
+      "WARAH. La pièce d'identité (recto `image` + verso `imageBack`) est facultative à ce " +
+      'stade — si fournie, la vérification CNI démarre immédiatement ; sinon elle peut être ' +
+      'soumise plus tard via POST /api/identity/verify. Le compte peut se connecter dès que ' +
+      "l'email est confirmé, mais la création de bien reste bloquée tant que idVerificationStatus " +
+      "n'est pas VERIFIED (voir POST /api/properties).",
   })
   @UseInterceptors(
     FileFieldsInterceptor(CNI_FILE_FIELDS, { limits: { fileSize: MAX_PHOTO_BYTES } }),
@@ -73,18 +74,15 @@ export class AuthController {
   @ApiOperation({
     summary: 'Inscription gestionnaire',
     description:
-      "Même mécanique que l'inscription propriétaire, avec en plus l'upload optionnel de " +
-      "références professionnelles (`referenceDocuments`, jusqu'à 5 fichiers). Le statut passe " +
-      'à VERIFIED automatiquement dès que la CNI est validée — aucune validation admin requise.',
+      "Même mécanique que l'inscription propriétaire (CNI facultative à l'inscription, " +
+      'création de bien bloquée tant que non VERIFIED).',
   })
   @UseInterceptors(
-    FileFieldsInterceptor([...CNI_FILE_FIELDS, { name: 'referenceDocuments', maxCount: 5 }], {
-      limits: { fileSize: MAX_DOCUMENT_BYTES },
-    }),
+    FileFieldsInterceptor(CNI_FILE_FIELDS, { limits: { fileSize: MAX_PHOTO_BYTES } }),
   )
   async signupManager(
     @Body() dto: SignupManagerDto,
-    @UploadedFiles() files: SignupManagerFiles = {},
+    @UploadedFiles() files: IdentityVerificationFiles = {},
   ): Promise<SignupManagerResponse> {
     return this.authService.signupManager(dto, files);
   }

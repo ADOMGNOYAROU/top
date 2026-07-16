@@ -21,6 +21,17 @@ export class SignupOwnerDto {
   @IsString()
   lastName!: string;
 
+  @ApiProperty({ example: '90330557' })
+  @IsString()
+  @Matches(/^\+?\d{8,15}$/, { message: 'phone doit être un numéro valide' })
+  phone!: string;
+
+  // Texte libre, sans logique métier attachée (voir /architect révision
+  // inscription owner/manager).
+  @ApiProperty({ example: 'Lomé' })
+  @IsString()
+  city!: string;
+
   // Code ISO 3166-1 alpha-2 (ex. "TG" pour un résident togolais, tout autre
   // code pour la diaspora) — aucune branche logique différente selon la
   // valeur, juste stocké tel quel sur OwnerProfile.

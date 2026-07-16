@@ -141,10 +141,11 @@ Aucun modèle Prisma `Receipt`, `MonthlyReport` ou `Invoice` ne stocke un binair
 
 ### Inscription et vérification
 
-- Inscription via Supabase Auth (`POST /api/auth/signup/owner` ou `/signup/manager` ou `/signup/tenant?token=...`) — création parallèle du `User` côté Prisma et du profil correspondant en une transaction
+- Inscription via Supabase Auth (`POST /api/auth/signup/owner` ou `/signup/manager` ou `/signup/tenant?token=...`) — création parallèle du `User` (avec `phone`/`city` obligatoires pour owner/manager) côté Prisma et du profil correspondant en une transaction
 - Le rôle de l'utilisateur (`OWNER`, `TENANT`, `MANAGER`, `ADMIN`) est figé à l'inscription et stocké côté Prisma
-- Pièce d'identité obligatoire pour propriétaire et gestionnaire, optionnelle pour locataire
+- Pièce d'identité **facultative pour tous les rôles** (révisé le 2026-07-16, voir /architect — initialement obligatoire pour propriétaire/gestionnaire) : peut être fournie à l'inscription ou plus tard via `POST /api/identity/verify`
 - Vérification CNI automatique via Tesseract.js (étape 07) — décision `VERIFIED` ou `REJECTED` en moins de 10 secondes, aucune validation humaine
+- **Le verrou fonctionnel n'est plus l'inscription mais la création de bien** : `PropertiesService.create()` refuse tant que `idVerificationStatus !== VERIFIED` (`assertIdentityVerified()`, `src/common/permissions/identity-verified.ts`) — seul point de blocage dans tout le produit, aucune autre action n'en dépend
 - Le statut de compte (`accountStatus`) est suivi côté Prisma : `ACTIVE`, `SUSPENDED_INACTIVITY`, `SUSPENDED_ADMIN`, `SUSPENDED_PAYMENT`
 
 ### Connexion

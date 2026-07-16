@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
 
 export class SignupManagerDto {
   @ApiProperty()
@@ -20,4 +20,15 @@ export class SignupManagerDto {
   @ApiProperty()
   @IsString()
   lastName!: string;
+
+  @ApiProperty({ example: '90330557' })
+  @IsString()
+  @Matches(/^\+?\d{8,15}$/, { message: 'phone doit être un numéro valide' })
+  phone!: string;
+
+  // Texte libre, sans logique métier attachée (voir /architect révision
+  // inscription owner/manager).
+  @ApiProperty({ example: 'Lomé' })
+  @IsString()
+  city!: string;
 }
