@@ -87,13 +87,10 @@ import { GestionnaireService, Rapport, RapportRequest } from '../../services/ges
               <!-- Année -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Année</label>
-                <select
-                  formControlName="annee"
-                  class="input-field"
-                >
-                  <option value="2024">2024</option>
-                  <option value="2023">2023</option>
-                  <option value="2022">2022</option>
+                <select formControlName="annee" class="input-field">
+                  @for (a of annees; track a) {
+                    <option [value]="a">{{ a }}</option>
+                  }
                 </select>
               </div>
 
@@ -169,25 +166,17 @@ import { GestionnaireService, Rapport, RapportRequest } from '../../services/ges
                   <div class="flex gap-2">
                     <button
                       (click)="telechargerRapport(rapport.id)"
-                      [disabled]="isDownloading"
+                      [disabled]="downloadingId === rapport.id"
                       class="btn-primary text-sm px-4 py-2"
                     >
-                      @if (isDownloading) {
-                        Téléchargement...
-                      } @else {
-                        Télécharger
-                      }
+                      {{ downloadingId === rapport.id ? 'Téléchargement...' : 'Télécharger' }}
                     </button>
                     <button
                       (click)="envoyerRapport(rapport.id)"
-                      [disabled]="isSending"
+                      [disabled]="sendingId === rapport.id"
                       class="btn-secondary text-sm px-4 py-2"
                     >
-                      @if (isSending) {
-                        Envoi...
-                      } @else {
-                        Envoyer
-                      }
+                      {{ sendingId === rapport.id ? 'Envoi...' : 'Envoyer' }}
                     </button>
                   </div>
                 </div>
@@ -209,11 +198,15 @@ export class RapportsComponent implements OnInit {
   rapportForm: FormGroup;
   rapports: Rapport[] = [];
   isGenerating = false;
-  isDownloading = false;
-  isSending = false;
+  downloadingId: string | null = null;
+  sendingId: string | null = null;
   loadingRapports = false;
   errorMessage = '';
   successMessage = '';
+  readonly annees: number[] = Array.from(
+    { length: new Date().getFullYear() - 2023 },
+    (_, i) => new Date().getFullYear() - i
+  );
 
   constructor(
     private fb: FormBuilder,
@@ -270,7 +263,7 @@ export class RapportsComponent implements OnInit {
   }
 
   telechargerRapport(rapportId: string): void {
-    this.isDownloading = true;
+    this.downloadingId = rapportId;
     this.gestionnaireService.telechargerRapport(rapportId).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
@@ -279,25 +272,25 @@ export class RapportsComponent implements OnInit {
         a.download = `rapport-${rapportId}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
-        this.isDownloading = false;
+        this.downloadingId = null;
         this.successMessage = 'Rapport téléchargé !';
         setTimeout(() => { this.successMessage = ''; }, 3000);
       },
-      error: () => { this.isDownloading = false; }
+      error: () => { this.downloadingId = null; }
     });
   }
 
   envoyerRapport(rapportId: string): void {
-    this.isSending = true;
+    this.sendingId = rapportId;
     this.gestionnaireService.envoyerRapportParEmail(rapportId).subscribe({
       next: () => {
-        this.isSending = false;
+        this.sendingId = null;
         this.successMessage = 'Rapport envoyé par email !';
         const rapport = this.rapports.find(r => r.id === rapportId);
         if (rapport) rapport.statut = 'envoye';
         setTimeout(() => { this.successMessage = ''; }, 3000);
       },
-      error: () => { this.isSending = false; }
+      error: () => { this.sendingId = null; }
     });
   }
 }

@@ -1,11 +1,13 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
 import { CommonModule } from '@angular/common';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, GestionnaireBien } from '../../services/gestionnaire-dashboard.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { DelegationService, DelegationReceived } from '../../../delegation/delegation.service';
 
 @Component({
   selector: 'app-gestionnaire-dashboard',
@@ -40,109 +42,6 @@ import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, Gest
   ],
   template: `
     <div class="dashboard-layout" @fadeIn>
-      <!-- sidebar supprimée : fournie par GestionnaireLayoutComponent -->
-      <aside class="sidebar" style="display:none">
-        <div class="sidebar-header">
-          <div class="logo">
-            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
-          </div>
-        </div>
-
-        <!-- User Avatar -->
-        <div class="user-section">
-          <div class="user-avatar">GK</div>
-          <div class="user-info">
-            <p class="user-name">Gestionnaire Kouassi</p>
-            <span class="verified-badge">Vérifié ✓</span>
-          </div>
-        </div>
-
-        <!-- Navigation -->
-        <nav class="sidebar-nav">
-          <a routerLink="/" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-            <span class="nav-text">Accueil</span>
-          </a>
-          <a routerLink="/gestionnaire/dashboard" class="nav-item active">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            <span class="nav-text">Dashboard</span>
-          </a>
-          <a routerLink="/gestionnaire/portefeuille" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            </svg>
-            <span class="nav-text">Portefeuille</span>
-          </a>
-          <a routerLink="/gestionnaire/biens" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 21h18"></path>
-              <path d="M5 21V7l8-4 8 4v14"></path>
-            </svg>
-            <span class="nav-text">Biens</span>
-          </a>
-          <a routerLink="/gestionnaire/locataires" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            <span class="nav-text">Locataires</span>
-          </a>
-          <a routerLink="/gestionnaire/paiements" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="1" x2="12" y2="23"></line>
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg>
-            <span class="nav-text">Paiements</span>
-          </a>
-          <a routerLink="/gestionnaire/portefeuille" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            <span class="nav-text">Mandats</span>
-          </a>
-          <a routerLink="/gestionnaire/dashboard" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            <span class="nav-text">Alertes</span>
-          </a>
-          <a routerLink="/gestionnaire/profil-public" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1. 51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-            <span class="nav-text">Paramètres</span>
-          </a>
-        </nav>
-
-        <!-- Logout -->
-        <div class="sidebar-footer">
-          <a routerLink="/auth/login" class="logout-btn">
-            <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            <span>Déconnexion</span>
-          </a>
-          <span class="app-version">v2.1.0</span>
-        </div>
-      </aside>
 
       <!-- Main Content -->
       <main class="main-content">
@@ -180,9 +79,28 @@ import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, Gest
           </div>
         </header>
 
+        <!-- Bannière délégation reçue -->
+        @if (delegationRecue) {
+          <div class="delegation-banner">
+            <div class="delegation-banner-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </div>
+            <div class="delegation-banner-text">
+              <strong>Délégation active</strong> — Vous gérez le portefeuille de <strong>{{ delegationRecue.owner.firstName }} {{ delegationRecue.owner.lastName }}</strong> en leur nom. Ils conservent un accès en lecture seule.
+            </div>
+          </div>
+        }
+
         <!-- Dashboard Content -->
         <div class="dashboard-content">
           <!-- KPI Cards -->
+          @if (loadingKPIs) {
+            <div class="kpi-grid">
+              @for (i of [1,2,3,4]; track i) {
+                <lok-skeleton type="card"></lok-skeleton>
+              }
+            </div>
+          } @else {
           <div class="kpi-grid">
             <div class="kpi-card" @fadeIn>
               <div class="kpi-icon-wrapper building">
@@ -236,13 +154,14 @@ import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, Gest
               <div class="kpi-trend">Ce mois</div>
             </div>
           </div>
+          } <!-- fin @else KPIs -->
 
           <!-- Alerts Section -->
           <div class="section-card" @slideIn>
             <div class="section-header">
               <h2 class="section-title">Alertes actives</h2>
               <span class="alert-count-badge">3</span>
-              <a routerLink="/gestionnaire/dashboard" class="view-all-link">Voir tout →</a>
+              <a routerLink="/gestionnaire/notifications" class="view-all-link">Voir tout →</a>
             </div>
 
             @if (loadingAlertes) {
@@ -327,7 +246,7 @@ import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, Gest
                 <p class="action-description">Rapports mensuels</p>
               </button>
 
-              <button class="action-card" routerLink="/dashboard/export">
+              <button class="action-card" routerLink="/gestionnaire/export">
                 <div class="action-icon-wrapper gray">
                   <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -530,6 +449,21 @@ import { GestionnaireDashboardService, GestionnaireKPI, GestionnaireAlerte, Gest
       display: flex;
       flex-direction: column;
     }
+
+    /* Bannière délégation */
+    .delegation-banner {
+      display: flex; align-items: center; gap: .875rem;
+      background: linear-gradient(90deg, #EEF4FC 0%, #F0F7FF 100%);
+      border-bottom: 1.5px solid #BFDBFE;
+      padding: .75rem 1.5rem;
+      font-size: .875rem; color: #1e3a5f;
+    }
+    .delegation-banner-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--color-primary); color: white;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .delegation-banner-text { line-height: 1.5; }
 
     /* Header */
     .main-header {
@@ -1126,19 +1060,24 @@ export class GestionnaireDashboardComponent implements OnInit {
   prenomGestionnaire = '';
   loadingKPIs = false;
   loadingAlertes = false;
+  delegationRecue: DelegationReceived | null = null;
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private gestionnaireService: GestionnaireDashboardService
+    private gestionnaireService: GestionnaireDashboardService,
+    private auth: AuthService,
+    private delegationService: DelegationService,
   ) {}
 
   ngOnInit(): void {
     this.updateDate();
     this.chargerDonnees();
-    try {
-      const raw = localStorage.getItem('WARAH_user');
-      if (raw) { const u = JSON.parse(raw); this.prenomGestionnaire = u.prenom || 'Gestionnaire'; }
-    } catch {}
+    const user = this.auth.getCurrentUser();
+    this.prenomGestionnaire = user?.firstName ?? 'Gestionnaire';
+    this.delegationService.getReceived().subscribe({
+      next: (d) => { this.delegationRecue = d; this.cdr.markForCheck(); },
+      error: () => {},
+    });
   }
 
   private chargerDonnees(): void {

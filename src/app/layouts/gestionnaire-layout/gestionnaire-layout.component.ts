@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { LokToastComponent } from '../../shared/components/lok-toast/lok-toast.component';
+import { RealtimeNotificationsService } from '../../core/services/realtime-notifications.service';
 
 @Component({
   selector: 'app-gestionnaire-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, LokToastComponent],
   template: `
     <div class="layout">
       <button class="mobile-btn" type="button" (click)="sidebarOpen = !sidebarOpen" aria-label="Menu">
@@ -83,6 +86,13 @@ import { RouterModule } from '@angular/router';
             <span>Paiements</span>
           </a>
 
+          <a routerLink="/gestionnaire/annonces" routerLinkActive="active" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span>Annonces</span>
+          </a>
+
           <div class="nav-section-label">Analyse</div>
 
           <a routerLink="/gestionnaire/rapports" routerLinkActive="active" class="nav-item">
@@ -94,6 +104,8 @@ import { RouterModule } from '@angular/router';
             <span>Rapports</span>
           </a>
 
+          <div class="nav-section-label">Compte</div>
+
           <a routerLink="/gestionnaire/profil-public" routerLinkActive="active" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
@@ -101,6 +113,37 @@ import { RouterModule } from '@angular/router';
               <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
             </svg>
             <span>Profil public</span>
+          </a>
+
+          <a routerLink="/gestionnaire/identite" routerLinkActive="active" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <circle cx="9" cy="12" r="2.5"/>
+              <path d="M14 10h4M14 14h3"/>
+            </svg>
+            <span>Vérification CNI</span>
+          </a>
+
+          <a routerLink="/gestionnaire/notifications" routerLinkActive="active" class="nav-item">
+            <span class="notif-icon-wrap">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              @if (unreadCount > 0) {
+                <span class="notif-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+              }
+            </span>
+            <span>Notifications</span>
+          </a>
+
+          <a routerLink="/gestionnaire/export" routerLinkActive="active" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Export</span>
           </a>
         </nav>
 
@@ -127,6 +170,7 @@ import { RouterModule } from '@angular/router';
         <router-outlet></router-outlet>
       </main>
     </div>
+    <lok-toast></lok-toast>
   `,
   styles: [`
     .layout { display: flex; min-height: 100vh; background: #F5F7FA; }
@@ -162,6 +206,8 @@ import { RouterModule } from '@angular/router';
     .nav-item.active { background: rgba(201,152,46,0.15); color: white; border-left-color: var(--color-accent); font-weight: 600; }
     .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.8; }
     .nav-item.active .nav-icon { opacity: 1; }
+    .notif-icon-wrap { position: relative; display: flex; align-items: center; }
+    .notif-badge { position: absolute; top: -5px; right: -7px; background: #EF4444; color: white; font-size: 9px; font-weight: 700; border-radius: 10px; min-width: 16px; height: 16px; padding: 0 3px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--color-primary); }
     .sidebar-footer { padding: 12px 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 2px; }
     .footer-item, .logout-btn { display: flex; align-items: center; gap: 11px; padding: 10px 14px; border-radius: 10px; color: rgba(255,255,255,0.55); font-size: 13.5px; font-weight: 500; text-decoration: none; transition: all 0.15s; background: none; border: none; cursor: pointer; width: 100%; text-align: left; }
     .footer-item svg, .logout-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
@@ -178,27 +224,34 @@ import { RouterModule } from '@angular/router';
     }
   `]
 })
-export class GestionnaireLayoutComponent implements OnInit {
+export class GestionnaireLayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = false;
   prenom = '';
   nom = '';
   initiales = 'G';
 
-  ngOnInit(): void {
-    try {
-      const raw = localStorage.getItem('WARAH_user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        this.prenom = u.prenom || '';
-        this.nom = u.nom || '';
-        this.initiales = ((u.prenom?.[0] || '') + (u.nom?.[0] || '')).toUpperCase() || 'G';
-      }
-    } catch {}
+  constructor(
+    private auth: AuthService,
+    private realtimeService: RealtimeNotificationsService,
+  ) {}
+
+  get unreadCount(): number {
+    return this.realtimeService.unreadCount;
   }
 
+  ngOnInit(): void {
+    const user = this.auth.getCurrentUser();
+    if (user) {
+      this.prenom = user.firstName;
+      this.nom    = user.lastName;
+      this.initiales = ((user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '')).toUpperCase() || 'G';
+    }
+    this.realtimeService.init();
+  }
+
+  ngOnDestroy(): void {}
+
   deconnecter(): void {
-    localStorage.removeItem('WARAH_token');
-    localStorage.removeItem('WARAH_user');
-    window.location.href = '/auth/login';
+    this.auth.logout();
   }
 }

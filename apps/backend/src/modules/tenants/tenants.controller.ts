@@ -13,6 +13,23 @@ import { LeaseHistoryQueryDto } from './dto/lease-history-query.dto';
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
+  @Get()
+  @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Liste les locataires invités par le propriétaire/gestionnaire courant' })
+  listTenants(@CurrentUser() user: AuthenticatedUser) {
+    return this.tenantsService.listInvitedTenants(user);
+  }
+
+  @Get(':tenantUserId')
+  @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Détail d\'un locataire invité par le propriétaire/gestionnaire courant' })
+  getTenant(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('tenantUserId') tenantUserId: string,
+  ) {
+    return this.tenantsService.getTenantById(user, tenantUserId);
+  }
+
   @Get(':tenantUserId/leases/history')
   // Accessible au locataire lui-même en plus des rôles habituels — le
   // service vérifie qu'il ne consulte que son propre historique (voir

@@ -17,209 +17,180 @@ import { GestionnaireService, ExportRequest, ExportRecord } from '../../../gesti
     LokSkeletonComponent
   ],
   template: `
-    <div class="min-h-screen bg-gray-50">
-      <!-- Header -->
-      <div class="bg-white border-b border-gray-200 px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Export de Données</h1>
-            <p class="text-sm text-gray-600">Exportez vos données en PDF ou Excel</p>
+    <div class="min-h-screen" style="background:#F0F4FA">
+
+      <!-- ── HEADER ── -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-logo">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
-          <button
-            routerLink="/dashboard"
-            class="btn-secondary"
-          >
-            Retour
-          </button>
+          <div class="page-divider"></div>
+          <div>
+            <h1 class="page-title">Export</h1>
+            <p class="page-sub">Téléchargez vos données en PDF, Excel ou CSV</p>
+          </div>
         </div>
       </div>
 
-      <!-- Contenu principal -->
-      <div class="p-6 max-w-4xl mx-auto">
-        <!-- Alerte d'erreur -->
-        @if (errorMessage) {
-          <lok-alerte type="error" [message]="errorMessage"></lok-alerte>
-        }
+      <div class="px-6 pb-8 max-w-4xl mx-auto mt-6">
 
-        <!-- Alerte de succès -->
-        @if (successMessage) {
-          <lok-alerte type="success" [message]="successMessage"></lok-alerte>
-        }
+        @if (errorMessage) { <lok-alerte type="error" [message]="errorMessage" class="mb-4 block"></lok-alerte> }
+        @if (successMessage) { <lok-alerte type="success" [message]="successMessage" class="mb-4 block"></lok-alerte> }
 
-        <!-- Formulaire d'export -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Configurer l'export</h2>
-          
-          <form [formGroup]="exportForm" (ngSubmit)="exporterDonnees()" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Type de données -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Type de données</label>
-                <select
-                  formControlName="typeDonnees"
-                  class="input-field"
-                >
-                  <option value="biens">Biens immobiliers</option>
-                  <option value="locataires">Locataires</option>
-                  <option value="paiements">Paiements</option>
-                  <option value="contrats">Contrats de bail</option>
-                  <option value="rapports">Rapports globaux</option>
-                </select>
-              </div>
+        <!-- Modèles rapides -->
+        <div class="bg-white rounded-2xl overflow-hidden mb-5" style="box-shadow:0 4px 24px rgba(10,38,80,.08)">
+          <div class="px-6 py-4 border-b border-gray-100" style="background:#F7F9FF">
+            <h2 class="text-sm font-bold text-gray-700">Modèles rapides</h2>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              @for (tpl of modeles; track tpl.key) {
+                <button (click)="utiliserModele(tpl.key)"
+                  class="tpl-card text-left rounded-xl p-4 transition-all border border-gray-100 bg-gray-50 hover:bg-white">
+                  <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center" [style]="'background:'+tpl.iconBg">
+                      <svg class="w-4 h-4" fill="none" [attr.stroke]="tpl.iconColor" stroke-width="2" viewBox="0 0 24 24"><path [attr.d]="tpl.icon"/></svg>
+                    </div>
+                    <span class="font-bold text-gray-800 text-sm">{{ tpl.label }}</span>
+                  </div>
+                  <p class="text-xs text-gray-500">{{ tpl.desc }}</p>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
 
-              <!-- Format -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
-                <select
-                  formControlName="format"
-                  class="input-field"
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="excel">Excel (XLSX)</option>
-                  <option value="csv">CSV</option>
-                </select>
-              </div>
-
-              <!-- Période -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Période</label>
-                <select
-                  formControlName="periode"
-                  class="input-field"
-                >
-                  <option value="tout">Tout l'historique</option>
-                  <option value="ce_mois">Ce mois</option>
-                  <option value="ce_trimestre">Ce trimestre</option>
-                  <option value="cette_annee">Cette année</option>
-                  <option value="personnalise">Personnalisé</option>
-                </select>
-              </div>
-
-              <!-- Date début (si personnalisé) -->
-              @if (exportForm.value.periode === 'personnalise') {
+        <!-- Formulaire -->
+        <div class="bg-white rounded-2xl overflow-hidden mb-5" style="box-shadow:0 8px 40px rgba(10,38,80,.12)">
+          <div class="px-6 py-4 border-b border-gray-100" style="background:#F7F9FF">
+            <h2 class="text-sm font-bold text-gray-700">Configurer l'export</h2>
+          </div>
+          <div class="p-6">
+            <form [formGroup]="exportForm" (ngSubmit)="exporterDonnees()" class="space-y-5">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
-                  <input
-                    type="date"
-                    formControlName="dateDebut"
-                    class="input-field"
-                  />
+                  <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Type</label>
+                  <select formControlName="typeDonnees"
+                    class="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all bg-white">
+                    <option value="biens">Biens immobiliers</option>
+                    <option value="locataires">Locataires</option>
+                    <option value="paiements">Paiements</option>
+                    <option value="contrats">Contrats de bail</option>
+                    <option value="rapports">Rapports globaux</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Format</label>
+                  <div class="flex gap-2">
+                    @for (fmt of [{v:'pdf',l:'PDF',c:'#ef4444',bg:'#FEF2F2'},{v:'excel',l:'Excel',c:'#16a34a',bg:'#F0FDF4'},{v:'csv',l:'CSV',c:'#2563eb',bg:'#EFF6FF'}]; track fmt.v) {
+                      <button type="button" (click)="exportForm.patchValue({format:fmt.v})"
+                        class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border-2"
+                        [style]="exportForm.value.format===fmt.v ? 'background:'+fmt.c+';color:#fff;border-color:'+fmt.c : 'background:'+fmt.bg+';color:'+fmt.c+';border-color:'+fmt.c+'40'">
+                        {{ fmt.l }}
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Période</label>
+                  <select formControlName="periode"
+                    class="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all bg-white">
+                    <option value="tout">Tout l'historique</option>
+                    <option value="ce_mois">Ce mois</option>
+                    <option value="ce_trimestre">Ce trimestre</option>
+                    <option value="cette_annee">Cette année</option>
+                    <option value="personnalise">Personnalisé</option>
+                  </select>
+                </div>
+              </div>
+
+              @if (exportForm.value.periode === 'personnalise') {
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Début</label>
+                    <input type="date" formControlName="dateDebut" class="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"/>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Fin</label>
+                    <input type="date" formControlName="dateFin" class="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"/>
+                  </div>
                 </div>
               }
 
-              <!-- Date fin (si personnalisé) -->
-              @if (exportForm.value.periode === 'personnalise') {
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
-                  <input
-                    type="date"
-                    formControlName="dateFin"
-                    class="input-field"
-                  />
+              <div formGroupName="champs">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Champs à inclure</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  @for (champ of [{k:'informationsGenerales',l:'Infos générales'},{k:'financiers',l:'Finances'},{k:'documents',l:'Documents'},{k:'historique',l:'Historique'}]; track champ.k) {
+                    <label class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all select-none champ-label"
+                           [class.champ-label--on]="exportForm.get('champs.'+champ.k)?.value">
+                      <input type="checkbox" [formControlName]="champ.k" class="accent-blue-700 w-4 h-4 flex-shrink-0">
+                      <span class="text-xs font-semibold text-gray-700">{{ champ.l }}</span>
+                    </label>
+                  }
                 </div>
-              }
-            </div>
-
-            <!-- Champs à inclure -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Champs à inclure</label>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <label class="flex items-center">
-                  <input type="checkbox" formControlName="champs.informationsGenerales" class="mr-2">
-                  <span class="text-sm">Informations générales</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="checkbox" formControlName="champs.financiers" class="mr-2">
-                  <span class="text-sm">Données financières</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="checkbox" formControlName="champs.documents" class="mr-2">
-                  <span class="text-sm">Documents</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="checkbox" formControlName="champs.historique" class="mr-2">
-                  <span class="text-sm">Historique</span>
-                </label>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              [disabled]="exportForm.invalid || isExporting"
-              class="btn-primary"
-            >
-              @if (isExporting) {
-                <span class="flex items-center gap-2">
-                  <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Export en cours...
-                </span>
-              } @else {
-                <span class="flex items-center gap-2">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  Exporter
-                </span>
-              }
-            </button>
-          </form>
+              <button type="submit" [disabled]="exportForm.invalid || isExporting"
+                class="flex items-center gap-2 px-7 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-95"
+                style="background:linear-gradient(135deg,#0F4C81,#1a6ab8);color:#fff;box-shadow:0 4px 20px rgba(15,76,129,.3)">
+                @if (isExporting) {
+                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                  Génération en cours…
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  Générer et télécharger
+                }
+              </button>
+            </form>
+          </div>
         </div>
 
         <!-- Exports récents -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div class="p-6 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Exports récents</h2>
+        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow:0 4px 24px rgba(10,38,80,.08)">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between" style="background:#F7F9FF">
+            <h2 class="text-sm font-bold text-gray-700">Exports récents</h2>
+            <span class="text-xs text-gray-400">{{ exportsRecents.length }} fichier{{ exportsRecents.length!==1?'s':'' }}</span>
           </div>
-          
           @if (loadingExports) {
-            <div class="p-6">
-              <lok-skeleton type="text"></lok-skeleton>
-            </div>
+            <div class="p-6"><lok-skeleton type="text"></lok-skeleton></div>
           } @else if (exportsRecents.length === 0) {
-            <div class="p-6 text-center text-gray-500">
-              Aucun export récent
+            <div class="p-10 text-center">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:#EEF4FF">
+                <svg class="w-7 h-7" fill="none" stroke="#0F4C81" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <p class="font-bold text-gray-700 mb-1">Aucun export récent</p>
+              <p class="text-xs text-gray-400">Vos fichiers générés apparaîtront ici.</p>
             </div>
           } @else {
-            <div class="divide-y divide-gray-200">
+            <div class="divide-y divide-gray-50">
               @for (exp of exportsRecents; track exp.id) {
-                <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                  <div class="flex items-center gap-4">
-                    <div
-                      [class]="exp.format === 'pdf' ? 'bg-red-100 text-red-600' : exp.format === 'excel' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'"
-                      class="w-10 h-10 rounded-lg flex items-center justify-center"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-900">{{ exp.titre }}</p>
-                      <p class="text-sm text-gray-600">{{ exp.date | date:'dd/MM/yyyy HH:mm' }} • {{ exp.format.toUpperCase() }}</p>
-                    </div>
+                <div class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors">
+                  <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                       [class]="exp.format==='pdf' ? 'bg-red-100' : exp.format==='excel' ? 'bg-green-100' : 'bg-blue-100'">
+                    <svg class="w-5 h-5" [class]="exp.format==='pdf' ? 'text-red-600' : exp.format==='excel' ? 'text-green-600' : 'text-blue-600'"
+                         fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
                   </div>
-
-                  <div class="flex gap-2">
-                    <button
-                      (click)="telechargerExport(exp.id)"
-                      [disabled]="isDownloading"
-                      class="btn-primary text-sm px-4 py-2"
-                    >
-                      @if (isDownloading) {
-                        Téléchargement...
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-900 truncate">{{ exp.titre }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ exp.date | date:'dd/MM/yyyy à HH:mm' }} · <span class="font-semibold uppercase">{{ exp.format }}</span></p>
+                  </div>
+                  <div class="flex gap-2 flex-shrink-0">
+                    <button (click)="telechargerExport(exp.id)" [disabled]="downloadingId === exp.id"
+                      class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 btn-dl">
+                      @if (downloadingId === exp.id) {
+                        <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                        …
                       } @else {
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3"/><rect x="3" y="17" width="18" height="4" rx="1"/></svg>
                         Télécharger
                       }
                     </button>
-                    <button
-                      (click)="supprimerExport(exp.id)"
-                      class="text-gray-400 hover:text-red-600"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
+                    <button (click)="demanderSuppression(exp.id)"
+                      class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                     </button>
                   </div>
                 </div>
@@ -227,72 +198,103 @@ import { GestionnaireService, ExportRequest, ExportRecord } from '../../../gesti
             </div>
           }
         </div>
+      </div>
+    </div>
 
-        <!-- Modèles d'export -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mt-6">
-          <div class="p-6 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Modèles d'export</h2>
+    <!-- Modale confirmation suppression -->
+    @if (exportASupprimer) {
+      <div class="confirm-overlay" (click)="exportASupprimer = null">
+        <div class="confirm-box" (click)="$event.stopPropagation()">
+          <div class="confirm-icon">
+            <svg width="28" height="28" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
           </div>
-          
-          <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              (click)="utiliserModele('rapport_mensuel')"
-              class="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors text-left"
-            >
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-                <span class="font-medium text-gray-900">Rapport mensuel</span>
-              </div>
-              <p class="text-sm text-gray-600">Export complet des données du mois</p>
-            </button>
-
-            <button
-              (click)="utiliserModele('etats_financiers')"
-              class="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors text-left"
-            >
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <span class="font-medium text-gray-900">États financiers</span>
-              </div>
-              <p class="text-sm text-gray-600">Revenus, dépenses et bénéfices</p>
-            </button>
-
-            <button
-              (click)="utiliserModele('inventaire')"
-              class="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors text-left"
-            >
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                  </svg>
-                </div>
-                <span class="font-medium text-gray-900">Inventaire biens</span>
-              </div>
-              <p class="text-sm text-gray-600">Liste complète des biens</p>
-            </button>
+          <h3 class="confirm-title">Supprimer cet export ?</h3>
+          <p class="confirm-text">Cette action est irréversible. Le fichier sera définitivement supprimé.</p>
+          <div class="confirm-actions">
+            <button type="button" class="confirm-btn confirm-btn--cancel" (click)="exportASupprimer = null">Annuler</button>
+            <button type="button" class="confirm-btn confirm-btn--delete" (click)="confirmerSuppression()">Supprimer</button>
           </div>
         </div>
       </div>
-    </div>
+    }
   `,
+  styles: [`
+    .logo-img { height: 88px; width: auto; object-fit: contain; background: transparent !important; mix-blend-mode: multiply; }
+    .page-header { background: white; border-bottom: 1px solid #E5E7EB; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .page-header-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .page-divider { width: 1px; height: 32px; background: #E5E7EB; flex-shrink: 0; }
+    .page-title { font-size: 22px; font-weight: 700; color: #111827; line-height: 1.2; white-space: nowrap; }
+    .page-sub { font-size: 13px; color: #6B7280; margin-top: 1px; }
+    .tpl-card { transition: all .2s; }
+    .tpl-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(10,38,80,.08); }
+    .btn-dl { background: var(--color-primary); color: #fff; }
+    .btn-dl:hover:not(:disabled) { background: var(--color-primary-dark); }
+    .champ-label { border-color: #E5E7EB; background: #FAFAFA; }
+    .champ-label--on { border-color: var(--color-primary) !important; background: #EEF4FC !important; }
+
+    /* Modale suppression */
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 1rem;
+    }
+    .confirm-box {
+      background: white; border-radius: 16px; padding: 2rem;
+      width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .confirm-icon {
+      width: 56px; height: 56px; border-radius: 50%; background: #FEF2F2;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+    }
+    .confirm-title { font-size: 1.125rem; font-weight: 700; color: #111827; margin-bottom: .5rem; }
+    .confirm-text { font-size: .875rem; color: #6B7280; line-height: 1.5; margin-bottom: 1.5rem; }
+    .confirm-actions { display: flex; gap: .75rem; }
+    .confirm-btn {
+      flex: 1; min-height: 44px; border: none; border-radius: 10px;
+      font-size: .875rem; font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .confirm-btn--cancel { background: #F3F4F6; color: #374151; }
+    .confirm-btn--cancel:hover { background: #E5E7EB; }
+    .confirm-btn--delete { background: #ef4444; color: white; }
+    .confirm-btn--delete:hover { background: #dc2626; }
+
+    @media (max-width: 640px) {
+      .page-header { padding: 12px 16px; }
+      .page-logo { display: none; }
+      .page-divider { display: none; }
+      .page-title { font-size: 18px; }
+      .page-sub { display: none; }
+    }
+  `],
 })
 export class ExportComponent implements OnInit {
   exportForm: FormGroup;
   exportsRecents: ExportRecord[] = [];
   isExporting = false;
-  isDownloading = false;
+  downloadingId: string | null = null;
+  exportASupprimer: string | null = null;
   loadingExports = false;
   errorMessage = '';
   successMessage = '';
+
+  modeles = [
+    {
+      key: 'rapport_mensuel', label: 'Rapport mensuel', desc: 'Export complet des données du mois',
+      bg: '#EFF6FF', border: '#BFDBFE', iconBg: '#DBEAFE', iconColor: '#2563EB',
+      icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+    },
+    {
+      key: 'etats_financiers', label: 'États financiers', desc: 'Revenus, dépenses et bénéfices',
+      bg: '#F0FDF4', border: '#BBF7D0', iconBg: '#DCFCE7', iconColor: '#16A34A',
+      icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+    },
+    {
+      key: 'inventaire', label: 'Inventaire biens', desc: 'Liste complète des biens immobiliers',
+      bg: '#FAF5FF', border: '#DDD6FE', iconBg: '#EDE9FE', iconColor: '#7C3AED',
+      icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
+    }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -362,25 +364,37 @@ export class ExportComponent implements OnInit {
   }
 
   telechargerExport(exportId: string): void {
-    this.isDownloading = true;
+    this.downloadingId = exportId;
+    const exp = this.exportsRecents.find(e => e.id === exportId);
     this.gestionnaireService.telechargerExport(exportId).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `export-${exportId}.pdf`;
+        a.download = `export-${exportId}.${exp?.format ?? 'pdf'}`;
         a.click();
         URL.revokeObjectURL(url);
-        this.isDownloading = false;
+        this.downloadingId = null;
       },
-      error: () => { this.isDownloading = false; }
+      error: () => { this.downloadingId = null; }
     });
   }
 
-  supprimerExport(exportId: string): void {
-    this.gestionnaireService.supprimerExport(exportId).subscribe({
+  demanderSuppression(exportId: string): void {
+    this.exportASupprimer = exportId;
+  }
+
+  confirmerSuppression(): void {
+    if (!this.exportASupprimer) return;
+    const id = this.exportASupprimer;
+    this.exportASupprimer = null;
+    this.gestionnaireService.supprimerExport(id).subscribe({
       next: () => {
-        this.exportsRecents = this.exportsRecents.filter(e => e.id !== exportId);
+        this.exportsRecents = this.exportsRecents.filter(e => e.id !== id);
+      },
+      error: () => {
+        this.errorMessage = 'Erreur lors de la suppression';
+        setTimeout(() => { this.errorMessage = ''; }, 3000);
       }
     });
   }

@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LokAccountBannerComponent } from '../../shared/components/lok-account-banner/lok-account-banner.component';
+import { LokToastComponent } from '../../shared/components/lok-toast/lok-toast.component';
+import { RealtimeNotificationsService } from '../../core/services/realtime-notifications.service';
 
 @Component({
   selector: 'app-proprietaire-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, LokAccountBannerComponent],
+  imports: [CommonModule, RouterModule, LokAccountBannerComponent, LokToastComponent],
   template: `
     <div class="layout">
       <button class="mobile-btn" type="button" (click)="sidebarOpen = !sidebarOpen" aria-label="Menu">
@@ -78,6 +80,7 @@ import { LokAccountBannerComponent } from '../../shared/components/lok-account-b
             <span>Annonces</span>
           </a>
 
+          <!-- V2 — décommenter quand la fonctionnalité baux est activée
           <a routerLink="/dashboard/bails" routerLinkActive="active" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -88,6 +91,7 @@ import { LokAccountBannerComponent } from '../../shared/components/lok-account-b
             </svg>
             <span>Baux</span>
           </a>
+          -->
 
           <p class="nav-group">Compte</p>
 
@@ -99,20 +103,16 @@ import { LokAccountBannerComponent } from '../../shared/components/lok-account-b
             <span>Mon profil</span>
           </a>
 
-          <a routerLink="/dashboard/identite" routerLinkActive="active" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="5" width="20" height="14" rx="2"/>
-              <circle cx="9" cy="12" r="2.5"/>
-              <path d="M14 10h4M14 14h3"/>
-            </svg>
-            <span>Vérification CNI</span>
-          </a>
-
           <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
+            <span class="notif-icon-wrap">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              @if (unreadCount > 0) {
+                <span class="notif-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+              }
+            </span>
             <span>Notifications</span>
           </a>
 
@@ -160,6 +160,7 @@ import { LokAccountBannerComponent } from '../../shared/components/lok-account-b
         <router-outlet></router-outlet>
       </main>
     </div>
+    <lok-toast></lok-toast>
   `,
   styles: [`
     .layout {
@@ -261,9 +262,22 @@ import { LokAccountBannerComponent } from '../../shared/components/lok-account-b
     .nav-icon { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.75; }
     .nav-item:hover .nav-icon,
     .nav-item.active .nav-icon { opacity: 1; }
+    .notif-icon-wrap { position: relative; display: flex; align-items: center; }
+    .notif-badge {
+      position: absolute; top: -5px; right: -7px;
+      background: #EF4444; color: white;
+      font-size: 9px; font-weight: 700; border-radius: 10px;
+      min-width: 16px; height: 16px; padding: 0 3px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1.5px solid white;
+    }
 
     /* ── Bas de sidebar : utilisateur + déconnexion ── */
-    .sidebar-bottom { border-top: 1px solid #EEE8DF; flex-shrink: 0; }
+    .sidebar-bottom {
+      border-top: 1.5px solid #D9D0C4;
+      flex-shrink: 0;
+      background: #F8F6F3;
+    }
 
     .user-card {
       padding: 14px 18px; border-bottom: 1px solid #EEE8DF;
@@ -323,11 +337,17 @@ import { LokAccountBannerComponent } from '../../shared/components/lok-account-b
     }
   `]
 })
-export class ProprietaireLayoutComponent implements OnInit {
+export class ProprietaireLayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = false;
   prenom = '';
   nom = '';
   initiales = 'P';
+
+  constructor(private realtimeService: RealtimeNotificationsService) {}
+
+  get unreadCount(): number {
+    return this.realtimeService.unreadCount;
+  }
 
   ngOnInit(): void {
     try {
@@ -339,7 +359,10 @@ export class ProprietaireLayoutComponent implements OnInit {
         this.initiales = ((this.prenom[0] || '') + (this.nom[0] || '')).toUpperCase() || 'P';
       }
     } catch {}
+    this.realtimeService.init();
   }
+
+  ngOnDestroy(): void {}
 
   deconnecter(): void {
     localStorage.removeItem('warah_access_token');

@@ -420,7 +420,7 @@ export class AuthService {
 
     const secret = this.config.getOrThrow<string>('INVITATION_TOKEN_SECRET');
     const token = createInvitationToken(user.id, secret);
-    const invitationUrl = `${this.config.getOrThrow<string>('FRONTEND_URL')}/activate-account?token=${token}`;
+    const invitationUrl = `${this.config.getOrThrow<string>('FRONTEND_URL')}/auth/activate?token=${token}`;
 
     await this.emailService.sendEmail({
       to: dto.email,
@@ -465,18 +465,14 @@ export class AuthService {
     lastName: string;
     createProfile: (tx: Prisma.TransactionClient, user: User) => Promise<unknown>;
   }): Promise<{ user: User; confirmationUrl: string }> {
-    // `generateLink({ type: 'signup' })` crée le compte Supabase Auth ET
-    // renvoie le lien de confirmation en un seul appel — pas besoin d'un
-    // `admin.createUser()` séparé (voir library-docs.md, section Supabase
-    // Auth, et la doc du SDK : generateLink gère la création pour 'signup').
-    const { data, error } = await this.supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
+    // email_confirm: true — le compte est immédiatement utilisable sans lien
+    // de confirmation. Quand le service email sera opérationnel en production,
+    // remplacer par generateLink({ type: 'signup' }) + envoi du lien.
+    const { data, error } = await this.supabaseAdmin.auth.admin.createUser({
       email: params.email,
       password: params.password,
-      options: {
-        data: { role: params.role },
-        redirectTo: this.config.getOrThrow<string>('FRONTEND_URL'),
-      },
+      email_confirm: true,
+      user_metadata: { role: params.role },
     });
 
     if (error) {
@@ -510,7 +506,7 @@ export class AuthService {
       throw this.mapDuplicateError(dbError);
     }
 
-    return { user, confirmationUrl: data.properties.action_link };
+    return { user, confirmationUrl: '' };
   }
 
   private mapDuplicateError(dbError: unknown): unknown {

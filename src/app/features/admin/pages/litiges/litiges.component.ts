@@ -14,8 +14,13 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
   template: `
     <div class="admin-page">
       <div class="admin-header">
-        <h1 class="admin-title">Gestion des litiges</h1>
-        <p class="admin-subtitle">Différends signalés entre propriétaires, gestionnaires immobiliers et locataires</p>
+        <div>
+          <h1 class="admin-title">Gestion des litiges</h1>
+          <p class="admin-subtitle">Différends signalés entre propriétaires, gestionnaires et locataires</p>
+        </div>
+        @if (!loading && litiges.length > 0) {
+          <span class="compteur-badge">{{ litiges.length }} litige{{ litiges.length > 1 ? 's' : '' }}</span>
+        }
       </div>
 
       @if (loading) {
@@ -92,7 +97,23 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
     }
 
     .admin-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .compteur-badge {
+      background: rgba(15,76,129,0.1);
+      color: var(--color-primary);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      padding: 0.375rem 0.875rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      align-self: center;
     }
 
     .admin-title {

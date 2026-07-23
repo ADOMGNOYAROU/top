@@ -50,16 +50,25 @@ class EnvironmentVariables {
   @IsOptional()
   SUPABASE_JWT_SECRET?: string;
 
-  // Resend
+  // Resend (optionnel — remplacé par Gmail SMTP)
   @IsString()
-  RESEND_API_KEY!: string;
+  @IsOptional()
+  RESEND_API_KEY?: string;
 
   @IsEmail()
-  RESEND_FROM_EMAIL!: string;
+  @IsOptional()
+  RESEND_FROM_EMAIL?: string;
 
   @IsString()
   @IsOptional()
   RESEND_FROM_NAME?: string = 'WARAH';
+
+  // Gmail SMTP
+  @IsEmail()
+  GMAIL_USER!: string;
+
+  @IsString()
+  GMAIL_APP_PASSWORD!: string;
 
   // VAPID (Web Push)
   @IsString()

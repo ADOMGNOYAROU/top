@@ -60,6 +60,26 @@ export class AdminService {
     );
   }
 
+  creerCompte(data: {
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+    role: 'OWNER' | 'MANAGER';
+    motDePasse: string;
+  }): Observable<CompteUtilisateur> {
+    return this.http.post<CompteUtilisateur>(`${this.apiUrl}/comptes`, data).pipe(
+      catchError((error: any) => {
+        console.error('Erreur lors de la création du compte:', error);
+        throw error;
+      })
+    );
+  }
+
+  supprimerCompte(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/comptes/${id}`);
+  }
+
   resoudreLitige(id: string, resolution: string): Observable<Litige> {
     return this.http.patch<Litige>(`${this.apiUrl}/litiges/${id}`, {
       statut: StatutLitige.RESOLU,

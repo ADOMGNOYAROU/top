@@ -30,6 +30,8 @@ export class LokBadgePaiementComponent {
         return 'EN RETARD';
       case StatutPaiement.IMPAYE:
         return 'IMPAYÉ';
+      case StatutPaiement.ATTENDU:
+        return 'ATTENDU';
       default:
         return '';
     }
@@ -48,6 +50,8 @@ export class LokBadgePaiementComponent {
         return 'bg-orange-100 text-orange-800';
       case StatutPaiement.IMPAYE:
         return 'bg-red-100 text-red-800';
+      case StatutPaiement.ATTENDU:
+        return 'bg-blue-50 text-blue-700';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -66,6 +70,8 @@ export class LokBadgePaiementComponent {
         return 'bg-orange-500';
       case StatutPaiement.IMPAYE:
         return 'bg-red-500';
+      case StatutPaiement.ATTENDU:
+        return 'bg-blue-400';
       default:
         return 'bg-gray-500';
     }

@@ -19,7 +19,7 @@ import { TypeAnnonce } from '@core/models/annonce.model';
           </svg>
           Retour à l'accueil
         </button>
-        <button routerLink="/annonces/list" class="annonces-btn">
+        <button routerLink="/dashboard/annonces" class="annonces-btn">
           <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           </svg>
@@ -29,7 +29,7 @@ import { TypeAnnonce } from '@core/models/annonce.model';
       </div>
 
       <div class="breadcrumb">
-        <a routerLink="/annonces/list" class="breadcrumb-link">Mes annonces</a>
+        <a routerLink="/dashboard/annonces" class="breadcrumb-link">Mes annonces</a>
         <svg class="breadcrumb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
@@ -257,7 +257,7 @@ import { TypeAnnonce } from '@core/models/annonce.model';
             <button type="button" class="btn-prev" (click)="previousStep()" *ngIf="currentStep > 1">← Précédent</button>
             <button type="button" class="btn-next" (click)="nextStep()" *ngIf="currentStep < 3">Suivant →</button>
             <div class="final-actions" *ngIf="currentStep === 3">
-              <a href="/annonces/list" class="btn-cancel">Annuler</a>
+              <a routerLink="/dashboard/annonces" class="btn-cancel">Annuler</a>
               <button type="button" class="btn-draft" (click)="saveDraft()">
                 <span *ngIf="!draftSaved">Brouillon</span>
                 <span *ngIf="draftSaved">✓ Sauvegardé</span>
@@ -598,7 +598,7 @@ export class AnnonceFormComponent implements OnInit {
       this.annoncesService.updateAnnonce(this.annonceId, annonceRequest).subscribe({
         next: () => {
           this.submitting = false;
-          this.router.navigate(['/annonces/list']);
+          this.router.navigate(['/dashboard/annonces']);
         },
         error: () => {
           this.submitting = false;
@@ -608,7 +608,7 @@ export class AnnonceFormComponent implements OnInit {
       this.annoncesService.createAnnonce(annonceRequest).subscribe({
         next: () => {
           this.submitting = false;
-          this.router.navigate(['/annonces/list']);
+          this.router.navigate(['/dashboard/annonces']);
         },
         error: () => {
           this.submitting = false;

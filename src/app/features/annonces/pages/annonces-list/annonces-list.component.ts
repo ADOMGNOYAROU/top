@@ -5,7 +5,6 @@ import { Router, RouterModule } from '@angular/router';
 import { AnnoncesService, AnnoncesFilters } from '../../services/annonces.service';
 import { Annonce, TypeAnnonce, StatutAnnonce } from '@core/models/annonce.model';
 import { LokBadgeStatutAnnonceComponent } from '../../../../shared/components/lok-badge-statut-annonce/lok-badge-statut-annonce.component';
-import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
 import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-state/lok-empty-state.component';
 import { LokConfirmModalComponent } from '../../../../shared/components/lok-confirm-modal/lok-confirm-modal.component';
@@ -15,188 +14,229 @@ import { LokConfirmModalComponent } from '../../../../shared/components/lok-conf
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterModule,
-    LokBadgeStatutAnnonceComponent, LokMontantFcfaComponent,
+    LokBadgeStatutAnnonceComponent,
     LokSkeletonComponent, LokEmptyStateComponent, LokConfirmModalComponent
   ],
   template: `
-    <div class="ann-page">
+    <div class="min-h-screen" style="background:#F0F4FA">
 
-      <!-- En-tête de section -->
+      <!-- ── EN-TÊTE ── -->
       <div class="page-header">
         <div class="page-header-left">
-          <div class="page-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
+          <div class="page-logo">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
+          <div class="page-divider"></div>
           <div>
-            <h1 class="page-title">Mes annonces</h1>
-            <p class="page-sub">{{ annonces.length }} annonce{{ annonces.length > 1 ? 's' : '' }} publiée{{ annonces.length > 1 ? 's' : '' }}</p>
+            <h1 class="page-title">Annonces</h1>
+            <p class="page-sub">{{ annonces.length }} annonce{{ annonces.length !== 1 ? 's' : '' }} publiée{{ annonces.length !== 1 ? 's' : '' }}</p>
           </div>
         </div>
-        <button (click)="navigateToNew()" class="new-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
+        <button (click)="navigateToNew()" class="btn-primary page-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          Nouvelle annonce
+          <span class="page-btn-full">Publier un bien</span>
+          <span class="page-btn-short">Publier</span>
         </button>
       </div>
 
-      <!-- Stats rapides -->
-      <div class="stats-row">
-        <div class="stat-chip stat-chip-blue">
-          <span class="stat-val">{{ annonces.length }}</span>
-          <span class="stat-lbl">Total</span>
+      <!-- ── KPI ── -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <p class="kpi-label">Total</p>
+          <p class="kpi-val" style="color:#111827">{{ annonces.length }}</p>
         </div>
-        <div class="stat-chip stat-chip-green">
-          <span class="stat-val">{{ countByStatut('ACTIVE') }}</span>
-          <span class="stat-lbl">Actives</span>
+        <div class="kpi-card">
+          <p class="kpi-label">Actives</p>
+          <p class="kpi-val" style="color:#16a34a">{{ countByStatut('ACTIVE') }}</p>
         </div>
-        <div class="stat-chip stat-chip-gold">
-          <span class="stat-val">{{ countByStatut('RESERVEE') }}</span>
-          <span class="stat-lbl">Réservées</span>
+        <div class="kpi-card">
+          <p class="kpi-label">Réservées</p>
+          <p class="kpi-val" style="color:#d97706">{{ countByStatut('RESERVEE') }}</p>
         </div>
-        <div class="stat-chip stat-chip-gray">
-          <span class="stat-val">{{ countByStatut('EXPIREE') }}</span>
-          <span class="stat-lbl">Expirées</span>
+        <div class="kpi-card">
+          <p class="kpi-label">Expirées</p>
+          <p class="kpi-val" style="color:#6b7280">{{ countByStatut('EXPIREE') }}</p>
         </div>
       </div>
 
-      <!-- Barre de filtres -->
-      <div class="filter-bar">
-        <div class="search-wrap">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            [(ngModel)]="recherche"
-            (ngModelChange)="applyFilters()"
-            placeholder="Rechercher une annonce..."
-            class="search-input">
-          @if (recherche) {
-            <button (click)="recherche = ''; applyFilters()" class="search-clear">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
+      <!-- ── FILTRES — masqués si aucune annonce ── -->
+      @if (!loading && annonces.length > 0) {
+        <div class="px-6 mt-6 mb-6">
+          <div class="bg-white rounded-2xl border border-white/80 p-3 flex gap-3 flex-wrap items-center"
+               style="box-shadow:0 8px 40px rgba(10,38,80,.13)">
+            <!-- Recherche -->
+            <div class="relative flex-1 min-w-52">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="#374151" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
-            </button>
-          }
+              <input type="text" [(ngModel)]="recherche" (ngModelChange)="applyFilters()"
+                placeholder="Titre, quartier, ville..."
+                class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border-0 bg-gray-50 focus:outline-none focus:ring-2 transition-all">
+            </div>
+            <!-- Pills type -->
+            <div class="flex gap-1.5 flex-wrap">
+              <button (click)="setType(undefined)"
+                [class]="!filters.type ? 'ftab-on' : 'ftab-off'">Tous types</button>
+              <button (click)="setType(TypeAnnonce.LOCATION)"
+                [class]="filters.type === TypeAnnonce.LOCATION ? 'ftab-on' : 'ftab-off'">Location</button>
+              <button (click)="setType(TypeAnnonce.VENTE)"
+                [class]="filters.type === TypeAnnonce.VENTE ? 'ftab-on' : 'ftab-off'">Vente</button>
+            </div>
+            <!-- Select statut -->
+            <select [(ngModel)]="filters.statut" (ngModelChange)="applyFilters()"
+              class="text-sm rounded-xl border-0 bg-gray-50 px-3 py-2.5 focus:outline-none transition-all">
+              <option [ngValue]="undefined">Tous statuts</option>
+              <option value="ACTIVE">Active</option>
+              <option value="RESERVEE">Réservée</option>
+              <option value="EXPIREE">Expirée</option>
+            </select>
+            <!-- Select ville -->
+            <select [(ngModel)]="filters.ville" (ngModelChange)="applyFilters()"
+              class="text-sm rounded-xl border-0 bg-gray-50 px-3 py-2.5 focus:outline-none transition-all">
+              <option [ngValue]="undefined">Toutes villes</option>
+              <option value="Lomé">Lomé</option>
+              <option value="Sokodé">Sokodé</option>
+              <option value="Kara">Kara</option>
+              <option value="Atakpamé">Atakpamé</option>
+              <option value="Kpalimé">Kpalimé</option>
+            </select>
+            @if (hasActiveFilters()) {
+              <button (click)="clearAllFilters()" class="text-xs text-gray-400 hover:text-red-500 transition-colors px-1">✕</button>
+            }
+          </div>
         </div>
-        <select [(ngModel)]="filters.type" (ngModelChange)="applyFilters()" class="filter-sel">
-          <option value="">Tous types</option>
-          <option value="LOCATION">Location</option>
-          <option value="VENTE">Vente</option>
-        </select>
-        <select [(ngModel)]="filters.statut" (ngModelChange)="applyFilters()" class="filter-sel">
-          <option value="">Tous statuts</option>
-          <option value="ACTIVE">Active</option>
-          <option value="RESERVEE">Réservée</option>
-          <option value="EXPIREE">Expirée</option>
-        </select>
-        <select [(ngModel)]="filters.ville" (ngModelChange)="applyFilters()" class="filter-sel">
-          <option value="">Toutes villes</option>
-          <option value="Lomé">Lomé</option>
-          <option value="Sokodé">Sokodé</option>
-          <option value="Kara">Kara</option>
-          <option value="Atakpamé">Atakpamé</option>
-          <option value="Kpalimé">Kpalimé</option>
-        </select>
-        @if (hasActiveFilters()) {
-          <button (click)="clearAllFilters()" class="reset-btn">Tout effacer</button>
+      }
+
+      <!-- ── GRILLE ── -->
+      <div class="px-6 pb-8">
+        @if (loading) {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @for (i of [1,2,3,4,5,6]; track i) { <lok-skeleton type="card"></lok-skeleton> }
+          </div>
+
+        } @else if (annonces.length === 0) {
+          <lok-empty-state
+            titre="Aucune annonce pour l'instant"
+            description="Ouvrez la fiche d'un bien VACANT et cliquez sur 'Publier en annonce'."
+            ctaLabel="Voir mes biens"
+            icon="default"
+            (ctaAction)="navigateToNew()">
+          </lok-empty-state>
+
+        } @else if (filteredAnnonces.length === 0) {
+          <lok-empty-state
+            titre="Aucun résultat"
+            description="Aucune annonce ne correspond à vos critères. Modifiez ou réinitialisez vos filtres."
+            icon="search"
+            ctaLabel="Réinitialiser les filtres"
+            (ctaAction)="clearAllFilters()">
+          </lok-empty-state>
+
+        } @else {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @for (annonce of filteredAnnonces; track annonce.id) {
+
+              <div class="ann-card bg-white rounded-2xl overflow-hidden group"
+                   style="box-shadow:0 2px 16px rgba(10,38,80,.07)"
+                   (click)="viewAnnonce(annonce.id)">
+
+                <!-- Image -->
+                <div class="relative h-48 overflow-hidden">
+                  @if (annonce.photos[0]) {
+                    <img [src]="annonce.photos[0]" [alt]="annonce.titre"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center"
+                         style="background:linear-gradient(135deg,#EEF4FF 0%,#dbeafe 100%)">
+                      <div class="w-16 h-16 rounded-2xl flex items-center justify-center"
+                           style="background:rgba(15,76,129,.1)">
+                        <svg class="w-8 h-8" fill="none" stroke="#0F4C81" stroke-width="1.5" viewBox="0 0 24 24">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                          <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                      </div>
+                    </div>
+                  }
+                  <!-- Gradient -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                  <!-- Type chip haut-gauche -->
+                  <div class="absolute top-3 left-3">
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold backdrop-blur-sm"
+                          [style]="annonce.type === TypeAnnonce.LOCATION
+                            ? 'background:rgba(255,255,255,.9);color:#0A2650'
+                            : 'background:#C9982E;color:white'">
+                      {{ annonce.type === TypeAnnonce.LOCATION ? 'Location' : 'Vente' }}
+                    </span>
+                  </div>
+                  <!-- Statut haut-droit -->
+                  <div class="absolute top-3 right-3">
+                    <lok-badge-statut-annonce [statut]="annonce.statut"></lok-badge-statut-annonce>
+                  </div>
+                  <!-- Prix bas-gauche -->
+                  <div class="absolute bottom-3 left-3">
+                    <span class="text-white text-sm font-extrabold drop-shadow">
+                      {{ annonce.prix | number }} FCFA
+                      @if (annonce.type === TypeAnnonce.LOCATION) {
+                        <span class="text-xs font-medium opacity-70">/mois</span>
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Corps -->
+                <div class="p-4">
+                  <h3 class="text-sm font-extrabold text-gray-900 mb-1 truncate">{{ annonce.titre }}</h3>
+                  <p class="text-xs text-gray-400 flex items-center gap-1 mb-4">
+                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    {{ annonce.adresse.quartier }}, {{ annonce.adresse.ville }}
+                    · {{ annonce.dateCreation | date:'dd/MM/yy' }}
+                  </p>
+                  <div class="flex gap-2" (click)="$event.stopPropagation()">
+                    <button (click)="viewPublicAnnonce(annonce.id)"
+                      class="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                      style="background:#F0F4FA;color:#6b7280">
+                      Aperçu
+                    </button>
+                    <button (click)="viewAnnonce(annonce.id)"
+                      class="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                      style="background:#0F4C81;color:#fff">
+                      Gérer
+                    </button>
+                    <button (click)="editAnnonce(annonce.id)"
+                      class="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center"
+                      style="background:#F0FDF4;color:#059669"
+                      title="Modifier">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button (click)="deleteAnnonce(annonce.id)"
+                      class="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center"
+                      style="background:#FEF2F2;color:#DC2626"
+                      title="Supprimer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            }
+          </div>
+          <p class="text-center text-xs text-gray-400 mt-5">
+            {{ filteredAnnonces.length }} annonce{{ filteredAnnonces.length !== 1 ? 's' : '' }} affichée{{ filteredAnnonces.length !== 1 ? 's' : '' }}
+          </p>
         }
       </div>
 
-      <!-- Liste -->
-      @if (loading) {
-        <div class="ann-grid">
-          @for (i of [1,2,3,4,5,6]; track i) {
-            <lok-skeleton type="card"></lok-skeleton>
-          }
-        </div>
-      } @else if (filteredAnnonces.length === 0) {
-        <lok-empty-state
-          titre="Aucune annonce"
-          description="Créez votre première annonce pour démarrer."
-          ctaLabel="Nouvelle annonce"
-          icon="default"
-          (ctaAction)="navigateToNew()"
-        ></lok-empty-state>
-      } @else {
-        <div class="ann-grid">
-          @for (annonce of filteredAnnonces; track annonce.id) {
-            <div class="ann-card">
-              <!-- Image -->
-              <div class="ann-img-wrap" (click)="viewAnnonce(annonce.id)">
-                @if (annonce.photos[0]) {
-                  <img [src]="annonce.photos[0]" [alt]="annonce.titre" class="ann-img">
-                } @else {
-                  <div class="ann-img-placeholder">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                  </div>
-                }
-                <span class="type-chip" [class.chip-loc]="annonce.type === TypeAnnonce.LOCATION" [class.chip-ven]="annonce.type === TypeAnnonce.VENTE">
-                  {{ annonce.type === TypeAnnonce.LOCATION ? 'Location' : 'Vente' }}
-                </span>
-              </div>
-
-              <!-- Corps -->
-              <div class="ann-body">
-                <div class="ann-top" (click)="viewAnnonce(annonce.id)">
-                  <div class="ann-top-left">
-                    <h3 class="ann-title">{{ annonce.titre }}</h3>
-                    <p class="ann-location">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                      {{ annonce.adresse.quartier }}, {{ annonce.adresse.ville }}
-                    </p>
-                  </div>
-                  <div class="ann-top-right">
-                    <lok-badge-statut-annonce [statut]="annonce.statut"></lok-badge-statut-annonce>
-                  </div>
-                </div>
-
-                <div class="ann-meta">
-                  <lok-montant-fcfa [montant]="annonce.prix" size="sm"></lok-montant-fcfa>
-                  <span class="ann-date">{{ annonce.dateCreation | date:'dd/MM/yy' }}</span>
-                </div>
-
-                <!-- Actions -->
-                <div class="ann-actions">
-                  <button (click)="viewAnnonce(annonce.id)" class="action-btn action-view" title="Voir">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    Voir
-                  </button>
-                  <button (click)="editAnnonce(annonce.id)" class="action-btn action-edit" title="Modifier">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                    Modifier
-                  </button>
-                  <button (click)="deleteAnnonce(annonce.id)" class="action-btn action-del" title="Supprimer">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                    </svg>
-                    Supprimer
-                  </button>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      }
     </div>
 
     @if (showConfirmModal) {
@@ -209,364 +249,48 @@ import { LokConfirmModalComponent } from '../../../../shared/components/lok-conf
       ></lok-confirm-modal>
     }
   `,
-  styles: `
-    .ann-page {
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
+  styles: [`
     /* ── En-tête ── */
-    .page-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
+    .logo-img { height: 88px; width: auto; object-fit: contain; mix-blend-mode: multiply; }
+    .page-header { background: white; border-bottom: 1px solid #E5E7EB; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .page-header-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .page-divider { width: 1px; height: 32px; background: #E5E7EB; flex-shrink: 0; }
+    .page-title { font-size: 22px; font-weight: 700; color: #111827; line-height: 1.2; white-space: nowrap; }
+    .page-sub { font-size: 13px; color: #6B7280; margin-top: 1px; }
+    .page-btn { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .page-btn-short { display: none; }
+    .btn-primary { background: #0F4C81; color: white; border: none; border-radius: .625rem; padding: .625rem 1.25rem; font-weight: 600; cursor: pointer; font-size: .9rem; transition: background .2s; }
+    .btn-primary:hover { background: #0A2650; }
 
-    .page-header-left {
-      display: flex;
-      align-items: center;
-      gap: 0.875rem;
-    }
+    /* ── KPI ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; padding: 32px 24px 24px; }
+    .kpi-card { background: #fff; border-radius: 14px; padding: 20px 24px; box-shadow: 0 2px 12px rgba(10,38,80,.08); border: 1px solid #E8EDF5; }
+    .kpi-label { font-size: 13px; color: #6B7280; margin-bottom: 8px; font-weight: 500; }
+    .kpi-val { font-size: 2.25rem; font-weight: 800; line-height: 1; }
 
-    .page-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: var(--color-primary-50);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .page-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke: var(--color-primary);
-    }
-
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--color-text);
-    }
-
-    .page-sub {
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-    }
-
-    .new-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      height: 44px;
-      padding: 0 1.25rem;
-      background: var(--color-primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.9375rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
-      white-space: nowrap;
-    }
-
-    .new-btn svg { width: 18px; height: 18px; }
-    .new-btn:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
-
-    /* ── Stats ── */
-    .stats-row {
-      display: flex;
-      gap: 0.875rem;
-      flex-wrap: wrap;
-    }
-
-    .stat-chip {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0.75rem 1.5rem;
-      border-radius: 10px;
-      border: 1px solid transparent;
-      min-width: 90px;
-    }
-
-    .stat-val { font-size: 1.5rem; font-weight: 800; }
-    .stat-lbl { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.125rem; }
-
-    .stat-chip-blue  { background: rgba(15,76,129,.08); border-color: rgba(15,76,129,.2); }
-    .stat-chip-blue .stat-val { color: var(--color-primary); }
-    .stat-chip-blue .stat-lbl { color: var(--color-primary); opacity: .7; }
-
-    .stat-chip-green { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.2); }
-    .stat-chip-green .stat-val { color: #059669; }
-    .stat-chip-green .stat-lbl { color: #059669; opacity: .7; }
-
-    .stat-chip-gold  { background: rgba(201,152,46,.1); border-color: rgba(201,152,46,.25); }
-    .stat-chip-gold .stat-val { color: #92400E; }
-    .stat-chip-gold .stat-lbl { color: #92400E; opacity: .7; }
-
-    .stat-chip-gray  { background: rgba(107,114,128,.08); border-color: rgba(107,114,128,.2); }
-    .stat-chip-gray .stat-val { color: #374151; }
-    .stat-chip-gray .stat-lbl { color: #374151; opacity: .7; }
-
-    /* ── Filtres ── */
-    .filter-bar {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      align-items: center;
-      background: white;
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      padding: 0.875rem 1.125rem;
-    }
-
-    .search-wrap {
-      position: relative;
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      color: var(--color-text-muted);
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      height: 40px;
-      padding: 0 2.25rem 0 2.25rem;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      font-size: 0.875rem;
-      color: var(--color-text);
-      box-sizing: border-box;
-      transition: border-color 0.2s;
-    }
-
-    .search-input:focus { outline: none; border-color: var(--color-primary); }
-
-    .search-clear {
-      position: absolute;
-      right: 0.625rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 20px;
-      height: 20px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--color-text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-
-    .search-clear svg { width: 14px; height: 14px; }
-
-    .filter-sel {
-      height: 40px;
-      padding: 0 0.75rem;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      font-size: 0.875rem;
-      color: var(--color-text);
-      background: white;
-      cursor: pointer;
-      min-width: 130px;
-    }
-
-    .filter-sel:focus { outline: none; border-color: var(--color-primary); }
-
-    .reset-btn {
-      height: 40px;
-      padding: 0 0.875rem;
-      background: #FEF3C7;
-      color: #92400E;
-      border: 1px solid #FDE68A;
-      border-radius: 8px;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    .reset-btn:hover { background: #FDE68A; }
-
-    /* ── Grille ── */
-    .ann-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.25rem;
-    }
+    /* ── Pills filtres ── */
+    .ftab-on  { padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; background: #0F4C81; color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; }
+    .ftab-off { padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 500; background: #F3F4F6; color: #6b7280; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; }
+    .ftab-off:hover { background: #E5E7EB; color: #374151; }
 
     /* ── Card ── */
-    .ann-card {
-      background: white;
-      border-radius: 14px;
-      border: 1px solid var(--color-border);
-      overflow: hidden;
-      transition: box-shadow 0.2s;
-    }
+    .ann-card { transition: transform .2s, box-shadow .2s; cursor: pointer; }
+    .ann-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(10,38,80,.15) !important; }
 
-    .ann-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.08); }
-
-    .ann-img-wrap {
-      position: relative;
-      height: 180px;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    .ann-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.3s;
-    }
-
-    .ann-card:hover .ann-img { transform: scale(1.04); }
-
-    .ann-img-placeholder {
-      width: 100%;
-      height: 100%;
-      background: #F3F4F6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .ann-img-placeholder svg { width: 48px; height: 48px; color: #9CA3AF; }
-
-    .type-chip {
-      position: absolute;
-      top: 0.75rem;
-      left: 0.75rem;
-      padding: 0.2rem 0.625rem;
-      border-radius: 999px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .chip-loc { background: rgba(15,76,129,.9); color: white; }
-    .chip-ven { background: rgba(201,152,46,.95); color: var(--color-primary-900); }
-
-    .ann-body { padding: 1rem; }
-
-    .ann-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.625rem;
-      cursor: pointer;
-    }
-
-    .ann-title {
-      font-size: 0.9375rem;
-      font-weight: 700;
-      color: var(--color-text);
-      line-height: 1.3;
-      margin-bottom: 0.25rem;
-    }
-
-    .ann-location {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.8125rem;
-      color: var(--color-text-muted);
-    }
-
-    .ann-location svg { width: 12px; height: 12px; flex-shrink: 0; }
-
-    .ann-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.625rem 0;
-      border-top: 1px solid #F3F4F6;
-      border-bottom: 1px solid #F3F4F6;
-      margin-bottom: 0.75rem;
-    }
-
-    .ann-date {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-    }
-
-    .ann-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .action-btn {
-      flex: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.3rem;
-      height: 36px;
-      border-radius: 8px;
-      border: 1px solid;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .action-btn svg { width: 13px; height: 13px; }
-
-    .action-view {
-      background: var(--color-primary-50);
-      border-color: rgba(15,76,129,.2);
-      color: var(--color-primary);
-    }
-
-    .action-view:hover { background: var(--color-primary); color: white; border-color: var(--color-primary); }
-
-    .action-edit {
-      background: #F0FDF4;
-      border-color: #BBF7D0;
-      color: #059669;
-    }
-
-    .action-edit:hover { background: #059669; color: white; border-color: #059669; }
-
-    .action-del {
-      background: #FEF2F2;
-      border-color: #FECACA;
-      color: #DC2626;
-    }
-
-    .action-del:hover { background: #DC2626; color: white; border-color: #DC2626; }
-
+    /* ── Responsive ── */
     @media (max-width: 768px) {
-      .ann-page { padding: 1rem; gap: 1rem; }
-      .page-header { flex-direction: column; align-items: flex-start; }
-      .new-btn { align-self: stretch; justify-content: center; }
-      .stats-row { gap: 0.5rem; }
-      .stat-chip { padding: 0.625rem 1rem; min-width: 70px; }
-      .filter-bar { flex-direction: column; }
-      .search-wrap, .filter-sel { width: 100%; }
-      .ann-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2,1fr); gap: 12px; padding: 20px 16px 16px; }
     }
-  `
+    @media (max-width: 640px) {
+      .page-header { padding: 12px 16px 12px 64px; }
+      .page-logo { display: none; }
+      .page-divider { display: none; }
+      .page-title { font-size: 18px; }
+      .page-sub { display: none; }
+      .page-btn-full { display: none; }
+      .page-btn-short { display: inline; }
+    }
+  `]
 })
 export class AnnoncesListComponent implements OnInit {
   annonces: Annonce[] = [];
@@ -590,7 +314,7 @@ export class AnnoncesListComponent implements OnInit {
 
   loadAnnonces(): void {
     this.loading = true;
-    this.annoncesService.getAllAnnonces().subscribe({
+    this.annoncesService.getMesAnnonces().subscribe({
       next: (data) => {
         this.annonces = data;
         this.applyFilters();
@@ -604,6 +328,11 @@ export class AnnoncesListComponent implements OnInit {
     this.annoncesService.filterAnnonces({ ...this.filters, recherche: this.recherche }).subscribe({
       next: (data) => { this.filteredAnnonces = data; }
     });
+  }
+
+  setType(type: TypeAnnonce | undefined): void {
+    this.filters.type = type;
+    this.applyFilters();
   }
 
   countByStatut(statut: string): number {
@@ -620,9 +349,10 @@ export class AnnoncesListComponent implements OnInit {
     this.applyFilters();
   }
 
-  navigateToNew(): void { this.router.navigate(['/annonces/new']); }
-  viewAnnonce(id: string): void { this.router.navigate(['/annonces/list', id]); }
-  editAnnonce(id: string): void { this.router.navigate(['/annonces/list', id, 'edit']); }
+  navigateToNew(): void { this.router.navigate(['/dashboard/biens']); }
+  viewAnnonce(id: string): void { this.router.navigate(['/dashboard/annonces', id]); }
+  viewPublicAnnonce(id: string): void { window.open('/annonces/' + id, '_blank'); }
+  editAnnonce(id: string): void { this.router.navigate(['/dashboard/annonces', id, 'edit']); }
 
   deleteAnnonce(id: string): void {
     this.annonceIdPendingDelete = id;

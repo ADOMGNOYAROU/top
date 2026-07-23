@@ -28,7 +28,7 @@
               "node_modules/leaflet/dist/leaflet.css"
             ],
             "scripts": [],
-            "allowedCommonJsDependencies": [],
+            "allowedCommonJsDependencies": ["leaflet"],
             "preserveSymlinks": true
           },
           "configurations": {

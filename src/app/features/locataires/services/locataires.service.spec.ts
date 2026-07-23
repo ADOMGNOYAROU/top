@@ -1,26 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { LocatairesService, LocataireRequest } from './locataires.service';
-import { Locataire, StatutLocataire } from '@core/models/locataire.model';
+import { LocatairesService } from './locataires.service';
 import { environment } from '@env/environment';
 
-const API = `${environment.apiUrl}/locataires`;
+const TENANTS_API = `${environment.apiUrl}/tenants`;
+const AUTH_API    = `${environment.apiUrl}/auth`;
 
 const locataireMock = {
-  id: 'l1',
-  nom: 'Mensah',
-  prenoms: 'Kofi',
+  id: 't1',
+  firstName: 'Kofi',
+  lastName: 'Mensah',
   email: 'kofi@example.com',
-  telephone: '+22890000001',
-  adresse: { quartier: 'Tokoin', ville: 'Lomé' },
-  pieceIdentite: { type: 'CNI', numero: 'CNI123', dateExpiration: new Date('2030-01-01') },
-  bienId: 'b1',
-  statut: StatutLocataire.ACTIF,
-  dateDebutBail: new Date('2025-01-01'),
-  dateNaissance: new Date('1990-06-15'),
-  dateCreation: new Date('2025-01-01'),
-} as unknown as Locataire;
+  phone: '+22890000001',
+  role: 'TENANT' as const,
+  accountStatus: 'ACTIVE',
+  createdAt: '2025-01-01T00:00:00.000Z',
+  updatedAt: '2025-01-01T00:00:00.000Z',
+};
 
 describe('LocatairesService', () => {
   let service: LocatairesService;
@@ -41,67 +38,65 @@ describe('LocatairesService', () => {
   afterEach(() => http.verify());
 
   describe('getLocataires()', () => {
-    it('fait un GET /locataires', () => {
-      service.getLocataires().subscribe();
-      const req = http.expectOne(API);
-      expect(req.request.method).toBe('GET');
-      req.flush([locataireMock]);
+    it('récupère la liste depuis GET /api/tenants', (done) => {
+      service.getLocataires().subscribe(locataires => {
+        expect(locataires.length).toBe(1);
+        expect(locataires[0].firstName).toBe('Kofi');
+        expect(locataires[0].accountStatus).toBe('ACTIVE');
+        done();
+      });
+      http.expectOne(TENANTS_API).flush([locataireMock]);
     });
 
-    it('filtre par statut et recherche', () => {
-      service.getLocataires({ statut: StatutLocataire.ACTIF, recherche: 'Mensah' }).subscribe();
-      const req = http.expectOne((r) => r.url === API);
-      expect(req.request.params.get('statut')).toBe('ACTIF');
-      expect(req.request.params.get('recherche')).toBe('Mensah');
-      req.flush([locataireMock]);
+    it('filtre par statut', (done) => {
+      service.getLocataires({ statut: 'ACTIVE' }).subscribe(locataires => {
+        expect(locataires.length).toBe(1);
+        done();
+      });
+      http.expectOne(TENANTS_API).flush([locataireMock]);
+    });
+
+    it('filtre par recherche textuelle', (done) => {
+      service.getLocataires({ search: 'kofi' }).subscribe(locataires => {
+        expect(locataires.length).toBe(1);
+        done();
+      });
+      http.expectOne(TENANTS_API).flush([locataireMock]);
+    });
+
+    it('retourne une liste vide si le backend renvoie []', (done) => {
+      service.getLocataires().subscribe(locataires => {
+        expect(locataires).toEqual([]);
+        done();
+      });
+      http.expectOne(TENANTS_API).flush([]);
     });
   });
 
   describe('getLocataireById()', () => {
-    it('fait un GET /locataires/:id', (done) => {
-      service.getLocataireById('l1').subscribe((loc) => {
-        expect(loc.id).toBe('l1');
-        expect(loc.nom).toBe('Mensah');
+    it('appelle GET /api/tenants/:id', (done) => {
+      service.getLocataireById('t1').subscribe(loc => {
+        expect(loc.id).toBe('t1');
+        expect(loc.firstName).toBe('Kofi');
         done();
       });
-      http.expectOne(`${API}/l1`).flush(locataireMock);
+      http.expectOne(`${TENANTS_API}/t1`).flush(locataireMock);
     });
   });
 
-  describe('createLocataire()', () => {
-    it('fait un POST /locataires', () => {
-      const payload: LocataireRequest = {
-        nom: 'Koffi', prenoms: 'Yao',
-        telephone: '+22891000002',
-        adresse: { quartier: 'Bé', ville: 'Lomé' },
-        pieceIdentite: { type: 'CNI', numero: 'CNI456' },
-        bienId: 'b1',
-        dateDebutBail: new Date('2025-07-01'),
+  describe('inviteLocataire()', () => {
+    it('poste sur POST /api/auth/invite/tenant', () => {
+      const payload = {
+        firstName: 'Yao',
+        lastName: 'Koffi',
+        email: 'yao@example.com',
+        propertyId: 'p1',
       };
-      service.createLocataire(payload).subscribe();
-      const req = http.expectOne(API);
+      service.inviteLocataire(payload).subscribe();
+      const req = http.expectOne(`${AUTH_API}/invite/tenant`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body.nom).toBe('Koffi');
-      req.flush(locataireMock);
-    });
-  });
-
-  describe('deleteLocataire()', () => {
-    it('fait un DELETE /locataires/:id', () => {
-      service.deleteLocataire('l1').subscribe();
-      const req = http.expectOne(`${API}/l1`);
-      expect(req.request.method).toBe('DELETE');
-      req.flush(null);
-    });
-  });
-
-  describe('changerStatut()', () => {
-    it('fait un PATCH /locataires/:id/statut', () => {
-      service.changerStatut('l1', StatutLocataire.INACTIF).subscribe();
-      const req = http.expectOne(`${API}/l1/statut`);
-      expect(req.request.method).toBe('PATCH');
-      expect(req.request.body).toEqual({ statut: 'INACTIF' });
-      req.flush({ ...locataireMock, statut: StatutLocataire.INACTIF });
+      expect(req.request.body.email).toBe('yao@example.com');
+      req.flush({ user: {}, invitationUrl: 'https://example.com/invite/...' });
     });
   });
 });

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { BiensService } from '../../services/biens.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { AnnoncesService } from '../../../annonces/services/annonces.service';
 import { Bien, PropertyStatus, PROPERTY_TYPE_LABELS, PROPERTY_STATUS_LABELS } from '@core/models/bien.model';
 import { LokBadgeStatutComponent } from '../../../../shared/components/lok-badge-statut/lok-badge-statut.component';
 import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
@@ -193,6 +194,39 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h2>
                 <div class="space-y-2">
                   @if (bien.status === 'VACANT') {
+                    <!-- Publier en annonce -->
+                    @if (publishSuccess() || annonceDejaActive()) {
+                      <!-- Annonce active : état désactivé -->
+                      <div class="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold"
+                           style="background:#FEF9EC;border:1.5px solid #E8C56A;color:#A07820;cursor:default">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ publishSuccess() ? 'Annonce publiée !' : 'Annonce déjà active' }}
+                      </div>
+                      <p class="text-xs mt-1.5 pl-1" style="color:#A07820">
+                        <a routerLink="/dashboard/annonces" class="underline font-semibold" style="color:#0F4C81">Voir mes annonces →</a>
+                      </p>
+                    } @else {
+                      <button (click)="publierAnnonce()"
+                        [disabled]="publishLoading()"
+                        class="btn-annonce w-full flex items-center justify-center gap-2.5">
+                        @if (publishLoading()) {
+                          <svg class="w-4 h-4 animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                          </svg>
+                          Publication…
+                        } @else {
+                          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                          </svg>
+                          Publier en annonce
+                        }
+                      </button>
+                      @if (publishError() && !annonceDejaActive()) {
+                        <p class="text-xs text-red-600 mt-1.5 pl-1">{{ publishError() }}</p>
+                      }
+                    }
                     <!-- Inviter un locataire -->
                     <button (click)="showInviteModal = true" class="w-full btn-primary text-left flex items-center gap-2">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +234,7 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
                       </svg>
                       Inviter un locataire
                     </button>
-                    <!-- Créer un bail -->
+                    <!-- V2 — décommenter quand la fonctionnalité baux est activée
                     <a [routerLink]="['/dashboard/bails/nouveau']" [queryParams]="{ propertyId: bienId }"
                       class="w-full btn-secondary text-left flex items-center gap-2 no-underline">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,6 +242,7 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
                       </svg>
                       Créer un bail
                     </a>
+                    -->
                     <button (click)="changerStatut('OCCUPIED')" class="w-full btn-secondary text-left flex items-center gap-2">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -241,8 +276,8 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
             message="Êtes-vous sûr de vouloir archiver ce bien ? Le bien sera marqué comme archivé et n'apparaîtra plus dans les listes actives."
             confirmLabel="Archiver"
             cancelLabel="Annuler"
-            (confirm)="deleteBien()"
-            (cancel)="showDeleteModal = false"
+            (onConfirm)="deleteBien()"
+            (onCancel)="showDeleteModal = false"
           ></lok-confirm-modal>
         }
 
@@ -311,6 +346,20 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
       padding: .5rem 1rem; font-size: .875rem; font-weight: 600; cursor: pointer; transition: background .2s; }
     .btn-primary-sm:hover:not(:disabled) { background: #0A2650; }
     .btn-primary-sm:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-annonce {
+      background: linear-gradient(135deg, #C9982E 0%, #E0AE40 100%);
+      color: white; border: none; border-radius: .75rem;
+      padding: .75rem 1.25rem; font-size: .875rem; font-weight: 700;
+      cursor: pointer; letter-spacing: .01em;
+      box-shadow: 0 4px 14px rgba(201,152,46,.35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-annonce:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(201,152,46,.45);
+    }
+    .btn-annonce:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 8px rgba(201,152,46,.3); }
+    .btn-annonce:disabled { opacity: .65; cursor: not-allowed; }
     .btn-secondary { border: 1.5px solid #d1d5db; border-radius: .5rem;
       padding: .5rem .875rem; font-weight: 500; color: #374151; background: white;
       cursor: pointer; transition: border-color .2s; display: inline-flex; align-items: center; }
@@ -335,11 +384,18 @@ export class BienDetailComponent implements OnInit {
   inviteSuccess = signal(false);
   invite = { firstName: '', lastName: '', email: '', phone: '' };
 
+  // Publication annonce
+  publishLoading = signal(false);
+  publishError = signal('');
+  publishSuccess = signal(false);
+  annonceDejaActive = signal(false);
+
   readonly LABELS = PROPERTY_STATUS_LABELS;
 
   constructor(
     private biensService: BiensService,
     private authService: AuthService,
+    private annoncesService: AnnoncesService,
     private router: Router,
     private route: ActivatedRoute,
   ) {}
@@ -416,6 +472,27 @@ export class BienDetailComponent implements OnInit {
       error: (err: any) => {
         this.inviteLoading.set(false);
         this.inviteError.set(err.error?.message || 'Erreur lors de l\'invitation.');
+      },
+    });
+  }
+
+  publierAnnonce(): void {
+    this.publishLoading.set(true);
+    this.publishError.set('');
+    this.annoncesService.publierBien(this.bienId).subscribe({
+      next: () => {
+        this.publishLoading.set(false);
+        this.publishSuccess.set(true);
+      },
+      error: (err: any) => {
+        this.publishLoading.set(false);
+        const msg: string = err.error?.message || '';
+        // 409 = annonce déjà active sur ce bien
+        if (err.status === 409 || msg.toLowerCase().includes('annonce active')) {
+          this.annonceDejaActive.set(true);
+        } else {
+          this.publishError.set(msg || 'Erreur lors de la publication.');
+        }
       },
     });
   }

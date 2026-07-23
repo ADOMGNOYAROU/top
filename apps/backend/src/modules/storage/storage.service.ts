@@ -34,6 +34,12 @@ export function isAllowedMimeType(bucket: StorageBucket, mimetype: string): bool
   return BUCKET_LIMITS[bucket].allowedMimeTypes.has(mimetype);
 }
 
+// Cache centralisé des URLs signées — évite N aller-retours réseau vers Supabase
+// Storage (latence ~1-3s depuis Afrique/Togo vers serveurs US). TTL 55 min
+// (les URLs signées expirent à 60 min par défaut).
+interface CachedSignedUrl { url: string; expiresAt: number }
+const URL_CACHE_TTL_MS = 55 * 60 * 1000;
+
 // Wrapper Supabase Storage — seul point d'entrée pour manipuler les 6 buckets
 // privés du projet (voir architecture.md, invariant Storage — mis à jour à
 // l'étape 10 pour ajouter profile-photos). La compression image (sharp) est
@@ -41,6 +47,8 @@ export function isAllowedMimeType(bucket: StorageBucket, mimetype: string): bool
 // — ce service reste générique et ignore tout du contenu métier du fichier.
 @Injectable()
 export class StorageService {
+  private readonly urlCache = new Map<string, CachedSignedUrl>();
+
   constructor(private readonly supabase: SupabaseAdminService) {}
 
   async upload(
@@ -63,11 +71,59 @@ export class StorageService {
     path: string,
     expiresIn: number = SIGNED_URL_EXPIRY_SECONDS,
   ): Promise<string> {
+    const cacheKey = `${bucket}:${path}`;
+    const cached = this.urlCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) return cached.url;
+
     const { data, error } = await this.supabase.raw.storage
       .from(bucket)
       .createSignedUrl(path, expiresIn);
     if (error || !data) throw new InternalServerErrorException(`URL signée ${bucket} échouée`);
+    this.urlCache.set(cacheKey, { url: data.signedUrl, expiresAt: Date.now() + URL_CACHE_TTL_MS });
     return data.signedUrl;
+  }
+
+  // Génère plusieurs URLs signées en un seul appel HTTP pour les chemins non cachés
+  async getSignedUrls(
+    bucket: StorageBucket,
+    paths: string[],
+    expiresIn: number = SIGNED_URL_EXPIRY_SECONDS,
+  ): Promise<Map<string, string>> {
+    if (paths.length === 0) return new Map();
+
+    const now = Date.now();
+    const result = new Map<string, string>();
+    const uncached: string[] = [];
+
+    for (const path of paths) {
+      const cached = this.urlCache.get(`${bucket}:${path}`);
+      if (cached && now < cached.expiresAt) {
+        result.set(path, cached.url);
+      } else {
+        uncached.push(path);
+      }
+    }
+
+    if (uncached.length > 0) {
+      const { data, error } = await this.supabase.raw.storage
+        .from(bucket)
+        .createSignedUrls(uncached, expiresIn);
+      if (!error && data) {
+        for (const item of data) {
+          if (item.signedUrl && item.path) {
+            result.set(item.path, item.signedUrl);
+            this.urlCache.set(`${bucket}:${item.path}`, { url: item.signedUrl, expiresAt: now + URL_CACHE_TTL_MS });
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // Invalide le cache d'une URL (ex. après suppression d'un fichier)
+  invalidateCachedUrl(bucket: StorageBucket, path: string): void {
+    this.urlCache.delete(`${bucket}:${path}`);
   }
 
   async remove(bucket: StorageBucket, path: string): Promise<void> {

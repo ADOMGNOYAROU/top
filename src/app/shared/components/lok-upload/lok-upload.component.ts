@@ -36,7 +36,8 @@ export interface UploadedFile {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
           </svg>
           <p class="text-sm text-gray-600">
-            <button 
+            <button
+              type="button"
               (click)="fileInput.click()"
               class="text-primary font-semibold hover:underline"
             >
@@ -71,7 +72,8 @@ export interface UploadedFile {
               }
               
               <!-- Bouton supprimer -->
-              <button 
+              <button
+                type="button"
                 (click)="removeFile(uploadedFile.id)"
                 class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                 aria-label="Supprimer"

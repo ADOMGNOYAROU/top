@@ -107,6 +107,26 @@
   cursor: not-allowed;
 }
 
+.btn-danger {
+  background-color: #DC2626;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: #B91C1C;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-accent {
   background-color: var(--color-accent);
   color: var(--color-text);

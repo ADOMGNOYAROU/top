@@ -22,10 +22,11 @@ export const dashboardRoutes: Routes = [
         path: 'paiements',
         loadChildren: () => import('../paiements/paiements.routes').then(m => m.paiementsRoutes)
       },
-      {
-        path: 'bails',
-        loadChildren: () => import('../bails/bails.routes').then(m => m.bailsRoutes)
-      },
+      // V2 — décommenter quand la fonctionnalité baux est activée
+      // {
+      //   path: 'bails',
+      //   loadChildren: () => import('../bails/bails.routes').then(m => m.bailsRoutes)
+      // },
       {
         path: 'profil',
         loadChildren: () => import('../profil/profil.routes').then(m => m.profilRoutes)
@@ -44,7 +45,12 @@ export const dashboardRoutes: Routes = [
       },
       {
         path: 'annonces',
-        loadChildren: () => import('../annonces/annonces.routes').then(m => m.annoncesRoutes)
+        children: [
+          { path: '', loadComponent: () => import('../annonces/pages/annonces-list/annonces-list.component').then(m => m.AnnoncesListComponent) },
+          { path: 'new', loadComponent: () => import('../annonces/pages/annonce-form/annonce-form.component').then(m => m.AnnonceFormComponent) },
+          { path: ':id', loadComponent: () => import('../annonces/pages/annonce-detail/annonce-detail.component').then(m => m.AnnonceDetailComponent) },
+          { path: ':id/edit', loadComponent: () => import('../annonces/pages/annonce-form/annonce-form.component').then(m => m.AnnonceFormComponent) }
+        ]
       },
       {
         path: 'abonnements',

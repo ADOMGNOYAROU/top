@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Locataire } from '@core/models/locataire.model';
+import { map } from 'rxjs/operators';
+import { Locataire, InviteLocataireRequest, InviteLocataireResponse } from '@core/models/locataire.model';
 import { environment } from '@env/environment';
 
 export interface LocatairesFilters {
@@ -11,18 +12,38 @@ export interface LocatairesFilters {
 
 @Injectable({ providedIn: 'root' })
 export class LocatairesService {
-  private readonly apiUrl = `${environment.apiUrl}/tenants`;
+  private readonly tenantsUrl = `${environment.apiUrl}/tenants`;
 
   constructor(private http: HttpClient) {}
 
   getLocataires(filters?: LocatairesFilters): Observable<Locataire[]> {
-    let params = new HttpParams();
-    if (filters?.statut) params = params.set('status', filters.statut);
-    if (filters?.search) params = params.set('search', filters.search);
-    return this.http.get<Locataire[]>(this.apiUrl, { params });
+    return this.http.get<Locataire[]>(this.tenantsUrl).pipe(
+      map(locataires => {
+        let result = locataires;
+        if (filters?.statut) {
+          result = result.filter(l => l.accountStatus === filters.statut);
+        }
+        if (filters?.search) {
+          const q = filters.search.toLowerCase();
+          result = result.filter(l =>
+            l.firstName.toLowerCase().includes(q) ||
+            l.lastName.toLowerCase().includes(q) ||
+            (l.email ?? '').toLowerCase().includes(q) ||
+            (l.phone ?? '').includes(q)
+          );
+        }
+        return result;
+      })
+    );
   }
 
-  getLocataireById(id: string): Observable<Locataire> {
-    return this.http.get<Locataire>(`${this.apiUrl}/${id}`);
+  getLocataireById(tenantUserId: string): Observable<Locataire> {
+    return this.http.get<Locataire>(`${this.tenantsUrl}/${tenantUserId}`);
+  }
+
+  inviteLocataire(data: InviteLocataireRequest): Observable<InviteLocataireResponse> {
+    return this.http.post<InviteLocataireResponse>(
+      `${environment.apiUrl}/auth/invite/tenant`, data
+    );
   }
 }

@@ -28,7 +28,7 @@ import { CommonModule } from '@angular/common';
             <h1 class="text-2xl font-bold text-gray-900">{{ isEditMode ? 'Modifier le bien' : 'Ajouter un bien' }}</h1>
             <p class="text-sm text-gray-600">{{ isEditMode ? 'Modifiez les informations du bien' : 'Remplissez les informations pour ajouter un nouveau bien' }}</p>
           </div>
-          <button routerLink="/dashboard/biens" class="btn-secondary">Annuler</button>
+          <button type="button" routerLink="/dashboard/biens" class="btn-secondary">Annuler</button>
         </div>
       </div>
 
@@ -442,13 +442,12 @@ export class BienFormComponent implements OnInit {
 
     if (this.isEditMode && this.bienId) {
       this.biensService.updateBien(this.bienId, dto).subscribe({
-        next: () => this.afterSave(),
+        next: () => this.uploadMedia(this.bienId!),
         error: (err: any) => this.handleError(err),
       });
     } else {
       this.biensService.createBien(dto).subscribe({
         next: (bien: Bien) => {
-          // Après création, upload les photos et documents si présents
           this.uploadMedia(bien.id);
         },
         error: (err: any) => this.handleError(err),

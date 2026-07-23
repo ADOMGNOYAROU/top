@@ -34,6 +34,27 @@ export const gestionnaireRoutes: Routes = [
       {
         path: 'paiements',
         loadChildren: () => import('../paiements/paiements.routes').then(m => m.paiementsRoutes)
+      },
+      {
+        path: 'annonces',
+        children: [
+          { path: '', loadComponent: () => import('../annonces/pages/annonces-list/annonces-list.component').then(m => m.AnnoncesListComponent) },
+          { path: 'new', loadComponent: () => import('../annonces/pages/annonce-form/annonce-form.component').then(m => m.AnnonceFormComponent) },
+          { path: ':id', loadComponent: () => import('../annonces/pages/annonce-detail/annonce-detail.component').then(m => m.AnnonceDetailComponent) },
+          { path: ':id/edit', loadComponent: () => import('../annonces/pages/annonce-form/annonce-form.component').then(m => m.AnnonceFormComponent) }
+        ]
+      },
+      {
+        path: 'notifications',
+        loadChildren: () => import('../notifications/notifications.routes').then(m => m.notificationsRoutes)
+      },
+      {
+        path: 'export',
+        loadChildren: () => import('../export/export.routes').then(m => m.exportRoutes)
+      },
+      {
+        path: 'identite',
+        loadChildren: () => import('../identite/identite.routes').then(m => m.identiteRoutes)
       }
     ]
   }

@@ -21,7 +21,7 @@ export interface WARAHUser {
 const ROLE_ROUTES: Record<string, string> = {
   OWNER:   '/dashboard',
   TENANT:  '/locataire',
-  MANAGER: '/dashboard',
+  MANAGER: '/gestionnaire/dashboard',
   ADMIN:   '/admin',
 };
 

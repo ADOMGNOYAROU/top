@@ -22,7 +22,7 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 import { ListPropertiesQueryDto } from './dto/list-properties-query.dto';
 
 export type PaginatedProperties = {
-  data: Property[];
+  data: PropertyWithPhotos[];
   page: number;
   limit: number;
   total: number;
@@ -92,15 +92,31 @@ export class PropertiesService {
       ...propertyVisibilityWhere(user),
     };
 
-    const [data, total] = await Promise.all([
+    const [raw, total] = await Promise.all([
       this.prisma.property.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        // Une seule photo par bien pour la vignette liste — les autres restent
+        // chargées à la demande via GET /properties/:id (voir findOne).
+        include: { photos: { orderBy: { position: 'asc' }, take: 1 } },
       }),
       this.prisma.property.count({ where }),
     ]);
+
+    // Batch : une seule requête Storage pour toutes les photos de tous les biens
+    const allPaths = raw.flatMap((p) => p.photos.map((ph) => ph.storagePath));
+    const urlMap = await this.storage.getSignedUrls('property-photos', allPaths);
+
+    const data: PropertyWithPhotos[] = raw.map(({ photos, ...p }) => ({
+      ...p,
+      photos: photos.map((photo) => ({
+        id: photo.id,
+        position: photo.position,
+        url: urlMap.get(photo.storagePath) ?? '',
+      })),
+    }));
 
     return { data, page, limit, total };
   }
@@ -118,13 +134,14 @@ export class PropertiesService {
     const access = await canActOnProperty(this.prisma, user, property);
     if (!access.canRead) throw new ForbiddenException('Accès refusé à ce bien');
 
-    const photos = await Promise.all(
-      property.photos.map(async (photo) => ({
-        id: photo.id,
-        position: photo.position,
-        url: await this.storage.getSignedUrl('property-photos', photo.storagePath),
-      })),
-    );
+    const paths = property.photos.map((ph) => ph.storagePath);
+    const urlMap = await this.storage.getSignedUrls('property-photos', paths);
+
+    const photos = property.photos.map((photo) => ({
+      id: photo.id,
+      position: photo.position,
+      url: urlMap.get(photo.storagePath) ?? '',
+    }));
 
     return { ...property, photos };
   }
@@ -244,6 +261,7 @@ export class PropertiesService {
     }
 
     await this.storage.remove('property-photos', photo.storagePath);
+    this.storage.invalidateCachedUrl('property-photos', photo.storagePath);
     await this.prisma.propertyPhoto.delete({ where: { id: photoId } });
   }
 
@@ -305,14 +323,15 @@ export class PropertiesService {
       take: 100,
     });
 
-    return Promise.all(
-      documents.map(async (document) => ({
-        id: document.id,
-        type: document.type,
-        createdAt: document.createdAt,
-        url: await this.storage.getSignedUrl('property-documents', document.storagePath),
-      })),
-    );
+    const paths = documents.map((d) => d.storagePath);
+    const urlMap = await this.storage.getSignedUrls('property-documents', paths);
+
+    return documents.map((document) => ({
+      id: document.id,
+      type: document.type,
+      createdAt: document.createdAt,
+      url: urlMap.get(document.storagePath) ?? '',
+    }));
   }
 
   async removeDocument(
@@ -330,6 +349,7 @@ export class PropertiesService {
     }
 
     await this.storage.remove('property-documents', document.storagePath);
+    this.storage.invalidateCachedUrl('property-documents', document.storagePath);
     await this.prisma.propertyDocument.delete({ where: { id: documentId } });
   }
 
@@ -339,21 +359,12 @@ export class PropertiesService {
     return property;
   }
 
-  // Seule autorité pour les transitions de statut (voir /architect unité
-  // 12) — OCCUPIED est piloté exclusivement par LeasesService.create()
-  // (unité 15), jamais via ce PATCH ; ARCHIVED n'est atteignable que via
-  // remove().
   private async assertValidTransition(property: Property, next: PropertyStatus): Promise<void> {
     if (property.status === 'ARCHIVED') {
       throw new BadRequestException('Un bien archivé ne peut plus changer de statut');
     }
     if (next === 'ARCHIVED') {
       throw new BadRequestException('Utilisez DELETE /properties/:id pour archiver un bien');
-    }
-    if (next === 'OCCUPIED') {
-      throw new BadRequestException(
-        "Le statut OCCUPIED est déterminé automatiquement à la création d'un bail — voir POST /api/leases",
-      );
     }
     if (property.status === 'OCCUPIED' && next === 'VACANT') {
       const activeLease = await this.prisma.lease.findFirst({

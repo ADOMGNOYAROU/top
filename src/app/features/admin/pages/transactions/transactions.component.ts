@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 import { TransactionSupervisee, StatutTransaction } from '@core/models/admin.model';
 import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
@@ -13,8 +13,13 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
   template: `
     <div class="admin-page">
       <div class="admin-header">
-        <h1 class="admin-title">Supervision des transactions</h1>
-        <p class="admin-subtitle">Paiements traités sur la plateforme WARAH</p>
+        <div>
+          <h1 class="admin-title">Supervision des transactions</h1>
+          <p class="admin-subtitle">Paiements traités sur la plateforme WARAH</p>
+        </div>
+        @if (!loading && transactions.length > 0) {
+          <span class="compteur-badge">{{ transactions.length }} transaction{{ transactions.length > 1 ? 's' : '' }}</span>
+        }
       </div>
 
       @if (loading) {
@@ -51,7 +56,7 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
                   <td>{{ labelMode(txn.modePaiement) }}</td>
                   <td><lok-montant-fcfa [montant]="txn.montant" size="sm"></lok-montant-fcfa></td>
                   <td><lok-montant-fcfa [montant]="txn.commission" size="sm" color="primary"></lok-montant-fcfa></td>
-                  <td>{{ txn.date }}</td>
+                  <td>{{ txn.date | date:'dd/MM/yyyy' }}</td>
                   <td>
                     <span class="statut-pill" [class]="statutClasses(txn.statut)">{{ labelStatut(txn.statut) }}</span>
                   </td>
@@ -69,7 +74,23 @@ import { LokEmptyStateComponent } from '../../../../shared/components/lok-empty-
     }
 
     .admin-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .compteur-badge {
+      background: rgba(15,76,129,0.1);
+      color: var(--color-primary);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      padding: 0.375rem 0.875rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      align-self: center;
     }
 
     .admin-title {

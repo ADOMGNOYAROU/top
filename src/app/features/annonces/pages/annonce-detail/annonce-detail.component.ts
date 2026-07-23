@@ -526,10 +526,10 @@ export class AnnonceDetailComponent implements OnInit {
     });
   }
 
-  goBack(): void { this.router.navigate(['/annonces/list']); }
+  goBack(): void { this.router.navigate(['/dashboard/annonces']); }
 
   editAnnonce(): void {
-    if (this.annonce) this.router.navigate(['/annonces/list', this.annonce.id, 'edit']);
+    if (this.annonce) this.router.navigate(['/dashboard/annonces', this.annonce.id, 'edit']);
   }
 
   deleteAnnonce(): void {
@@ -539,7 +539,7 @@ export class AnnonceDetailComponent implements OnInit {
   confirmerSuppression(): void {
     if (this.annonce) {
       this.annoncesService.deleteAnnonce(this.annonce.id).subscribe({
-        next: () => this.router.navigate(['/annonces/list'])
+        next: () => this.router.navigate(['/dashboard/annonces'])
       });
     }
   }

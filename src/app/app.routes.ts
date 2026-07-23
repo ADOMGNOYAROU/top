@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -25,12 +26,18 @@ export const routes: Routes = [
         path: 'activate',
         loadComponent: () => import('./features/auth/pages/activate/activate.component').then(m => m.ActivateComponent),
         title: 'Activation de compte - WARAH'
+      },
+      {
+        path: 'verify-2fa',
+        loadComponent: () => import('./features/auth/pages/verify-2fa/verify-2fa.component').then(m => m.Verify2FAComponent),
+        title: 'Vérification 2FA - WARAH'
       }
     ]
   },
   {
     path: 'dashboard',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['OWNER'] },
     loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.dashboardRoutes)
   },
   {
@@ -43,22 +50,26 @@ export const routes: Routes = [
   },
   {
     path: 'proprietaires',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['OWNER'] },
     loadChildren: () => import('./features/proprietaires/proprietaires.routes').then(m => m.proprietairesRoutes)
   },
   {
     path: 'gestionnaire',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['MANAGER'] },
     loadChildren: () => import('./features/gestionnaire/gestionnaire.routes').then(m => m.gestionnaireRoutes)
   },
   {
     path: 'locataire',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['TENANT'] },
     loadChildren: () => import('./features/locataire/locataire.routes').then(m => m.locataireRoutes)
   },
   {
     path: 'admin',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN'] },
     loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes)
   },
   {

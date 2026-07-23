@@ -55,23 +55,32 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
         @if (errorMessage) {
           <lok-alerte type="error" [message]="errorMessage" class="mb-4 block"></lok-alerte>
         }
+
+        <!-- Bandeau info module en déploiement -->
+        <div class="info-banner mb-5">
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>Les échéances ci-dessous sont calculées depuis vos <strong>baux actifs</strong>. Le suivi des paiements réels (confirmations, reçus, quittances) sera disponible lors du déploiement du module paiements.</span>
+        </div>
+
         <!-- Statistiques rapides -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Total collecté</p>
-            <lok-montant-fcfa [montant]="statistiques.totalMontant" size="lg" color="primary"></lok-montant-fcfa>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <p class="kpi-label">Montant attendu</p>
+            <lok-montant-fcfa [montant]="statistiques.montantAttendu ?? 0" size="lg" color="primary"></lok-montant-fcfa>
           </div>
-          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Payés</p>
-            <p class="text-2xl font-bold text-green-600">{{ statistiques.payes }}</p>
+          <div class="kpi-card">
+            <p class="kpi-label">Échéances</p>
+            <p class="kpi-val" style="color:#0F4C81">{{ statistiques.attendus ?? filteredPaiements.length }}</p>
           </div>
-          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">En retard</p>
-            <p class="text-2xl font-bold text-orange-600">{{ statistiques.enRetard }}</p>
+          <div class="kpi-card">
+            <p class="kpi-label">Confirmés</p>
+            <p class="kpi-val text-green-600">{{ statistiques.payes }}</p>
           </div>
-          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <p class="text-sm text-gray-600">Impayés</p>
-            <p class="text-2xl font-bold text-red-600">{{ statistiques.impayes }}</p>
+          <div class="kpi-card">
+            <p class="kpi-label">Impayés</p>
+            <p class="kpi-val text-red-600">{{ statistiques.impayes }}</p>
           </div>
         </div>
 
@@ -82,6 +91,7 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
             <div>
               <select [(ngModel)]="filters.statut" (ngModelChange)="applyFilters()" class="input-field">
                 <option [value]="undefined">Tous les statuts</option>
+                <option [value]="StatutPaiement.ATTENDU">Attendu</option>
                 <option [value]="StatutPaiement.PAYE">Payé</option>
                 <option [value]="StatutPaiement.PARTIEL">Partiel</option>
                 <option [value]="StatutPaiement.EN_RETARD">En retard</option>
@@ -293,6 +303,12 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
       .pmt-btn-short { display: inline; }
       .pmt-btn { padding: 8px 14px; font-size: 13px; }
     }
+    .info-banner { display:flex; align-items:flex-start; gap:10px; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:12px 16px; font-size:13px; color:#1E40AF; line-height:1.5; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; padding:0 0 24px; }
+    .kpi-card { background:#fff; border-radius:14px; padding:20px 24px; box-shadow:0 2px 12px rgba(10,38,80,.08); border:1px solid #E8EDF5; }
+    .kpi-label { font-size:13px; color:#6B7280; margin-bottom:8px; font-weight:500; }
+    .kpi-val { font-size:2.25rem; font-weight:800; line-height:1; }
+    @media(max-width:768px){ .kpi-grid { grid-template-columns:repeat(2,1fr); gap:12px; } }
   `]
 })
 export class PaiementsListComponent implements OnInit {
@@ -307,7 +323,9 @@ export class PaiementsListComponent implements OnInit {
     totalMontant: 0,
     payes: 0,
     impayes: 0,
-    enRetard: 0
+    enRetard: 0,
+    attendus: 0,
+    montantAttendu: 0,
   };
 
   filters: any = {

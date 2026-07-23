@@ -58,6 +58,14 @@ export class AnnoncesService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  getMesAnnonces(): Observable<Annonce[]> {
+    return this.http.get<Annonce[]>(`${this.apiUrl}/mine`);
+  }
+
+  publierBien(propertyId: string): Observable<{ id: string; slug: string }> {
+    return this.http.post<{ id: string; slug: string }>(this.apiUrl, { propertyId });
+  }
+
   filterAnnonces(filters: AnnoncesFilters): Observable<Annonce[]> {
     let params = new HttpParams();
     if (filters.type)      params = params.set('type', filters.type);

@@ -27,7 +27,9 @@ export enum StatutPaiement {
   PAYE = 'PAYE',
   PARTIEL = 'PARTIEL',
   EN_RETARD = 'EN_RETARD',
-  IMPAYE = 'IMPAYE'
+  IMPAYE = 'IMPAYE',
+  // Échéance dérivée du bail — statut réel non encore confirmé par le backend
+  ATTENDU = 'ATTENDU'
 }
 
 export enum ModePaiement {

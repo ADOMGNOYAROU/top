@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { environment } from '@env/environment';
-import { Bail, CreateBailRequest, TerminateBailRequest, BailAvecLocataire, PaymentFrequency } from '@core/models/locataire.model';
+import { Bail, CreateBailRequest, TerminateBailRequest, BailAvecLocataire } from '@core/models/locataire.model';
 
 export interface LeaseHistoryEntry extends BailAvecLocataire {}
 
@@ -42,8 +43,30 @@ export class BailsService {
     );
   }
 
+  // GET /api/leases n'existe pas encore — agrège depuis l'historique par bien.
   getAllLeases(page = 1, limit = 50): Observable<PaginatedLeaseHistory> {
-    return this.http.get<PaginatedLeaseHistory>(this.apiUrl, { params: { page, limit } });
+    return this.http.get<{ data: { id: string }[] }>(
+      this.propertiesUrl, { params: { limit: 200, page: 1 } }
+    ).pipe(
+      switchMap(({ data: props }) => {
+        if (!props.length) return of({ data: [], total: 0, page, limit });
+        return combineLatest(
+          props.map(p =>
+            this.http.get<PaginatedLeaseHistory>(
+              `${this.propertiesUrl}/${p.id}/tenants/history`,
+              { params: { page: '1', limit: '100' } }
+            ).pipe(catchError(() => of({ data: [] as BailAvecLocataire[], total: 0, page: 1, limit: 100 })))
+          )
+        ).pipe(
+          map(results => {
+            const all = results.flatMap(r => r.data);
+            const total = all.length;
+            const start = (page - 1) * limit;
+            return { data: all.slice(start, start + limit), total, page, limit };
+          })
+        );
+      })
+    );
   }
 
   blockTenant(propertyId: string, tenantUserId: string, reason: string): Observable<any> {

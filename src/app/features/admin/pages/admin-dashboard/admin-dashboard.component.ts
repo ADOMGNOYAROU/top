@@ -5,6 +5,7 @@ import { AdminService } from '../../services/admin.service';
 import { StatistiquesPlateforme } from '@core/models/admin.model';
 import { LokMontantFcfaComponent } from '../../../../shared/components/lok-montant-fcfa/lok-montant-fcfa.component';
 import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton/lok-skeleton.component';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -37,9 +38,9 @@ import { LokSkeletonComponent } from '../../../../shared/components/lok-skeleton
               {{ stats.nombreLitigesOuverts }} litige{{ stats.nombreLitigesOuverts > 1 ? 's' : '' }} ouvert{{ stats.nombreLitigesOuverts > 1 ? 's' : '' }}
             </a>
           }
-          <div class="topbar-avatar">AD</div>
+          <div class="topbar-avatar">{{ initiales }}</div>
           <div class="topbar-user-info">
-            <p class="topbar-name">Super Admin</p>
+            <p class="topbar-name">{{ nomAdmin }}</p>
             <p class="topbar-role">Administrateur</p>
           </div>
         </div>
@@ -436,13 +437,20 @@ export class AdminDashboardComponent implements OnInit {
   stats: StatistiquesPlateforme | null = null;
   loading = true;
   dateCourante = '';
+  nomAdmin = 'Administrateur';
+  initiales = 'AD';
 
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.dateCourante = new Date().toLocaleDateString('fr-FR', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
+    const user = this.auth.getCurrentUser();
+    if (user) {
+      this.nomAdmin = `${user.firstName} ${user.lastName}`;
+      this.initiales = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
     this.adminService.getStatistiques().subscribe(s => {
       this.stats = s;
       this.loading = false;

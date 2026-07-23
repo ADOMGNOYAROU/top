@@ -14,29 +14,60 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
   imports: [CommonModule, FormsModule, RouterModule, LokSkeletonComponent, LokEmptyStateComponent, LokAlerteComponent],
   template: `
     <div class="min-h-screen bg-gray-50">
-      <div class="bg-white border-b border-gray-200 px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Baux</h1>
-            <p class="text-sm text-gray-600">Contrats de bail actifs et historique</p>
+      <!-- ── HEADER ── -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-logo">
+            <img src="/assets/WARAH-logo.png" alt="WARAH" class="logo-img">
           </div>
-          <a routerLink="nouveau" class="btn-primary">+ Nouveau bail</a>
+          <div class="page-divider"></div>
+          <div>
+            <h1 class="page-title">Baux</h1>
+            <p class="page-sub">Contrats de bail actifs et historique</p>
+          </div>
         </div>
+        <button routerLink="nouveau" class="btn-primary page-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="page-btn-full">Nouveau bail</span>
+          <span class="page-btn-short">Nouveau</span>
+        </button>
+      </div>
 
-        <!-- Filtres -->
-        <div class="flex gap-2 mt-4">
-          @for (f of filtres; track f.val) {
-            <button
-              class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
-              [class]="filtreActif() === f.val ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-              (click)="filtreActif.set(f.val)">
-              {{ f.label }}
-            </button>
-          }
-        </div>
+      <!-- ── FILTRES ── -->
+      <div class="bg-white border-b border-gray-100 px-6 py-2 flex flex-wrap gap-2">
+        @for (f of filtres; track f.val) {
+          <button
+            class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+            [class]="filtreActif() === f.val ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+            (click)="filtreActif.set(f.val)">
+            {{ f.label }}
+          </button>
+        }
       </div>
 
       <div class="p-6">
+        <!-- ── KPI cards ── -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-600">Total</p>
+            <p class="text-2xl font-bold" style="color:#111827">{{ totalBails() }}</p>
+          </div>
+          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-600">Actifs</p>
+            <p class="text-2xl font-bold" style="color:#16a34a">{{ actifs() }}</p>
+          </div>
+          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-600">Expirés</p>
+            <p class="text-2xl font-bold" style="color:#d97706">{{ expires() }}</p>
+          </div>
+          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-600">Résiliés</p>
+            <p class="text-2xl font-bold" style="color:#dc2626">{{ resilies() }}</p>
+          </div>
+        </div>
+
         @if (loading()) {
           <div class="grid gap-4">
             @for (i of [1,2,3]; track i) { <lok-skeleton type="card"></lok-skeleton> }
@@ -127,14 +158,31 @@ import { LokAlerteComponent } from '../../../../shared/components/lok-alerte/lok
     }
   `,
   styles: [`
+    .logo-img { height: 88px; width: auto; object-fit: contain; background: transparent !important; mix-blend-mode: multiply; }
+    .page-header { background: white; border-bottom: 1px solid #E5E7EB; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .page-header-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .page-divider { width: 1px; height: 32px; background: #E5E7EB; flex-shrink: 0; }
+    .page-title { font-size: 22px; font-weight: 700; color: #111827; line-height: 1.2; white-space: nowrap; }
+    .page-sub { font-size: 13px; color: #6B7280; margin-top: 1px; }
+    .page-btn { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .page-btn-short { display: none; }
     .btn-primary { background: #0F4C81; color: white; border: none; border-radius: .625rem;
       padding: .625rem 1.25rem; font-size: .9rem; font-weight: 600; cursor: pointer;
-      text-decoration: none; display: inline-block; transition: background .2s; }
+      transition: background .2s; }
     .btn-primary:hover { background: #0A2650; }
     .btn-secondary { border: 1.5px solid #d1d5db; border-radius: .5rem;
       padding: .5rem .875rem; font-weight: 500; color: #374151; background: white;
       cursor: pointer; transition: border-color .2s; }
     .btn-secondary:hover { border-color: #0F4C81; color: #0F4C81; }
+    @media (max-width: 640px) {
+      .page-header { padding: 12px 16px 12px 64px; }
+      .page-logo { display: none; }
+      .page-divider { display: none; }
+      .page-title { font-size: 18px; }
+      .page-sub { display: none; }
+      .page-btn-full { display: none; }
+      .page-btn-short { display: inline; }
+    }
   `],
 })
 export class BailsListComponent implements OnInit {
@@ -215,4 +263,10 @@ export class BailsListComponent implements OnInit {
       },
     });
   }
+
+  /** Getters KPI */
+  totalBails(): number { return this.bails().length; }
+  actifs(): number { return this.bails().filter(b => b.status === 'ACTIVE').length; }
+  expires(): number { return this.bails().filter(b => b.status === 'EXPIRED').length; }
+  resilies(): number { return this.bails().filter(b => b.status === 'TERMINATED').length; }
 }
