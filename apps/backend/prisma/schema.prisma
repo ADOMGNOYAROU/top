@@ -178,6 +178,10 @@ model User {
   role                UserRole
   firstName           String
   lastName            String
+  // Ville de résidence — texte libre, aucune logique métier attachée
+  // (contrairement à OwnerProfile.residenceCountry qui pilote la distinction
+  // local/diaspora). Voir /architect révision inscription owner/manager.
+  city                String?
   accountStatus       AccountStatus       @default(ACTIVE)
   notificationConsent NotificationConsent @default(NOT_ASKED)
   reminderDaysBefore  Int                 @default(5)
@@ -262,7 +266,6 @@ model ManagerProfile {
   user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   idVerificationStatus IdVerificationStatus @default(PENDING)
   zonesOfIntervention  String[]             @default([])
-  referenceDocumentPaths String[]           @default([])
   pricingNote          String?
   ratingAverage        Float                @default(0)
   ratingCount          Int                  @default(0)

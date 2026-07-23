@@ -26,7 +26,7 @@ describe('AuthService', () => {
     property: { findUnique: jest.Mock };
     mandate: { findFirst: jest.Mock };
     tenantPropertyBlock: { findUnique: jest.Mock };
-    managerProfile: { update: jest.Mock };
+    identityVerification: { findFirst: jest.Mock };
     passwordResetOtp: {
       updateMany: jest.Mock;
       create: jest.Mock;
@@ -53,7 +53,6 @@ describe('AuthService', () => {
     anonAuth: { signInWithPassword: jest.Mock };
   };
   let emailService: { sendEmail: jest.Mock };
-  let storage: { upload: jest.Mock };
   let identityService: { verify: jest.Mock };
 
   const CONFIG_VALUES: Record<string, string> = {
@@ -66,6 +65,8 @@ describe('AuthService', () => {
     password: 'password123',
     firstName: 'Jean',
     lastName: 'Dupont',
+    phone: '90330557',
+    city: 'Lomé',
     residenceCountry: 'TG',
   };
   const managerDto: SignupManagerDto = {
@@ -73,6 +74,8 @@ describe('AuthService', () => {
     password: 'password123',
     firstName: 'Awa',
     lastName: 'Gerant',
+    phone: '91445566',
+    city: 'Kara',
   };
   const frontFile = {
     buffer: Buffer.from('front'),
@@ -105,7 +108,7 @@ describe('AuthService', () => {
       property: { findUnique: jest.fn() },
       mandate: { findFirst: jest.fn().mockResolvedValue(null) },
       tenantPropertyBlock: { findUnique: jest.fn().mockResolvedValue(null) },
-      managerProfile: { update: jest.fn().mockResolvedValue({}) },
+      identityVerification: { findFirst: jest.fn().mockResolvedValue(null) },
       passwordResetOtp: {
         updateMany: jest.fn().mockResolvedValue({ count: 0 }),
         create: jest.fn().mockResolvedValue({}),
@@ -139,7 +142,6 @@ describe('AuthService', () => {
       },
     };
     emailService = { sendEmail: jest.fn().mockResolvedValue(undefined) };
-    storage = { upload: jest.fn().mockResolvedValue('path') };
     identityService = { verify: jest.fn().mockResolvedValue({ id: 'verif-1', status: 'PENDING' }) };
 
     service = new AuthService(
@@ -147,7 +149,6 @@ describe('AuthService', () => {
       config as never,
       supabaseAdmin as never,
       emailService as never,
-      storage as never,
       identityService as never,
     );
   });
@@ -298,7 +299,7 @@ describe('AuthService', () => {
   });
 
   describe('signupOwner', () => {
-    it("crée le compte Supabase, le User+OwnerProfile, envoie l'email de confirmation et déclenche la vérification CNI", async () => {
+    it("crée le compte Supabase, le User+OwnerProfile (avec phone/city), envoie l'email de confirmation et déclenche la vérification CNI quand une image est fournie", async () => {
       const result = await service.signupOwner(ownerDto, files);
 
       expect(supabaseAdmin.auth.admin.generateLink).toHaveBeenCalledWith({
@@ -306,6 +307,17 @@ describe('AuthService', () => {
         email: ownerDto.email,
         password: ownerDto.password,
         options: { data: { role: 'OWNER' }, redirectTo: 'http://localhost:4200' },
+      });
+      expect(tx.user.create).toHaveBeenCalledWith({
+        data: {
+          supabaseId: 'supabase-uid-1',
+          email: ownerDto.email,
+          role: 'OWNER',
+          firstName: ownerDto.firstName,
+          lastName: ownerDto.lastName,
+          phone: ownerDto.phone,
+          city: ownerDto.city,
+        },
       });
       expect(tx.ownerProfile.create).toHaveBeenCalledWith({
         data: { userId: createdUser.id, residenceCountry: ownerDto.residenceCountry },
@@ -325,19 +337,22 @@ describe('AuthService', () => {
       });
     });
 
-    it('rejette avec 400 si le recto de la CNI est absent, sans appeler Supabase', async () => {
-      await expect(service.signupOwner(ownerDto, { imageBack: [backFile] })).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(supabaseAdmin.auth.admin.generateLink).not.toHaveBeenCalled();
+    // CNI facultative à l'inscription (voir /architect révision inscription
+    // owner/manager) — le compte se crée normalement sans aucune image, et
+    // la vérification n'est jamais tentée.
+    it('crée le compte sans aucune CNI fournie, sans appeler identityService.verify()', async () => {
+      const result = await service.signupOwner(ownerDto, {});
+
+      expect(supabaseAdmin.auth.admin.generateLink).toHaveBeenCalled();
+      expect(identityService.verify).not.toHaveBeenCalled();
+      expect(result).toEqual({ user: createdUser, identityVerification: null });
     });
 
-    it('rejette avec 400 si une image CNI dépasse la taille maximale, sans appeler Supabase', async () => {
-      const tooLarge = { ...backFile, size: 10 * 1024 * 1024 };
-      await expect(
-        service.signupOwner(ownerDto, { image: [frontFile], imageBack: [tooLarge] }),
-      ).rejects.toThrow(BadRequestException);
-      expect(supabaseAdmin.auth.admin.generateLink).not.toHaveBeenCalled();
+    it('ne tente pas la vérification si seul le verso est fourni sans le recto', async () => {
+      const result = await service.signupOwner(ownerDto, { imageBack: [backFile] });
+
+      expect(identityService.verify).not.toHaveBeenCalled();
+      expect(result.identityVerification).toBeNull();
     });
 
     it('convertit une erreur Supabase email_exists en 409, sans toucher à Prisma', async () => {
@@ -369,72 +384,39 @@ describe('AuthService', () => {
   });
 
   describe('signupManager', () => {
-    it('crée le compte (ManagerProfile vide) avant tout upload, puis uploade les références sous userId/randomUUID et met à jour les chemins', async () => {
-      const referenceDoc = {
-        buffer: Buffer.from('cv'),
-        mimetype: 'application/pdf',
-        originalname: 'cv.pdf',
-      } as Express.Multer.File;
-      const managerFiles = { ...files, referenceDocuments: [referenceDoc] };
+    it('crée le compte (User avec phone/city, ManagerProfile) et déclenche la vérification CNI quand une image est fournie', async () => {
+      const result = await service.signupManager(managerDto, files);
 
-      await service.signupManager(managerDto, managerFiles);
-
+      expect(tx.user.create).toHaveBeenCalledWith({
+        data: {
+          supabaseId: 'supabase-uid-1',
+          email: managerDto.email,
+          role: 'MANAGER',
+          firstName: managerDto.firstName,
+          lastName: managerDto.lastName,
+          phone: managerDto.phone,
+          city: managerDto.city,
+        },
+      });
       expect(tx.managerProfile.create).toHaveBeenCalledWith({
-        data: { userId: createdUser.id, referenceDocumentPaths: [] },
+        data: { userId: createdUser.id },
       });
-
-      const [bucket, path, buffer, mimetype] = storage.upload.mock.calls[0] as [
-        string,
-        string,
-        Buffer,
-        string,
-      ];
-      expect(bucket).toBe('manager-documents');
-      expect(path).toMatch(new RegExp(`^${createdUser.id}/[0-9a-f-]+\\.pdf$`));
-      expect(path).not.toContain('cv.pdf');
-      expect(buffer).toBe(referenceDoc.buffer);
-      expect(mimetype).toBe('application/pdf');
-
-      expect(prisma.managerProfile.update).toHaveBeenCalledWith({
-        where: { userId: createdUser.id },
-        data: { referenceDocumentPaths: [path] },
+      expect(identityService.verify).toHaveBeenCalledWith(createdUser, files);
+      expect(result).toEqual({
+        user: createdUser,
+        identityVerification: { id: 'verif-1', status: 'PENDING' },
       });
     });
 
-    it('fonctionne sans référence professionnelle fournie (optionnel), sans upload ni update', async () => {
-      await service.signupManager(managerDto, files);
-      expect(storage.upload).not.toHaveBeenCalled();
-      expect(prisma.managerProfile.update).not.toHaveBeenCalled();
-      expect(tx.managerProfile.create).toHaveBeenCalledWith({
-        data: { userId: createdUser.id, referenceDocumentPaths: [] },
-      });
-    });
+    // Même mécanique que signupOwner — CNI facultative à l'inscription (voir
+    // /architect révision inscription owner/manager). Le document de
+    // référence professionnelle (PDF) a été retiré du flux, jugé non
+    // indispensable — plus aucun test à son sujet.
+    it('crée le compte sans aucune CNI fournie, sans appeler identityService.verify()', async () => {
+      const result = await service.signupManager(managerDto, {});
 
-    it('rejette avec 400 si le verso de la CNI est absent', async () => {
-      await expect(service.signupManager(managerDto, { image: [frontFile] })).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('rejette avec 400 si une image CNI dépasse la taille maximale', async () => {
-      const tooLarge = { ...frontFile, size: 10 * 1024 * 1024 };
-      await expect(
-        service.signupManager(managerDto, { image: [tooLarge], imageBack: [backFile] }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it("n'uploade aucune référence si la création du compte échoue", async () => {
-      prisma.$transaction.mockRejectedValue(new Error('DB down'));
-      const referenceDoc = {
-        buffer: Buffer.from('cv'),
-        mimetype: 'application/pdf',
-        originalname: 'cv.pdf',
-      } as Express.Multer.File;
-
-      await expect(
-        service.signupManager(managerDto, { ...files, referenceDocuments: [referenceDoc] }),
-      ).rejects.toThrow('DB down');
-      expect(storage.upload).not.toHaveBeenCalled();
+      expect(identityService.verify).not.toHaveBeenCalled();
+      expect(result).toEqual({ user: createdUser, identityVerification: null });
     });
   });
 
@@ -615,17 +597,50 @@ describe('AuthService', () => {
     });
   });
 
-  it("getMe renvoie l'utilisateur avec son profil de rôle", async () => {
-    prisma.user.findUniqueOrThrow.mockResolvedValue({
-      id: 'user-1',
-      email: ownerDto.email,
-      ownerProfile: { id: 'profile-1' },
-      tenantProfile: null,
-      managerProfile: null,
-      adminProfile: null,
+  describe('getMe', () => {
+    it("renvoie l'utilisateur avec son profil de rôle et identityVerifiedAt à null tant qu'aucune vérification n'a abouti", async () => {
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        id: 'user-1',
+        email: ownerDto.email,
+        ownerProfile: { id: 'profile-1' },
+        tenantProfile: null,
+        managerProfile: null,
+        adminProfile: null,
+      });
+      prisma.identityVerification.findFirst.mockResolvedValue(null);
+
+      const result = await service.getMe(createdUser as never);
+
+      expect(result.profile).toEqual({ id: 'profile-1' });
+      expect(result.identityVerifiedAt).toBeNull();
     });
 
-    const result = await service.getMe(createdUser as never);
-    expect(result.profile).toEqual({ id: 'profile-1' });
+    // Badge de vérification (voir /architect révision inscription
+    // owner/manager) — dérivé du updatedAt de la dernière IdentityVerification
+    // VERIFIED, jamais stocké en double.
+    it('renvoie identityVerifiedAt = updatedAt de la dernière IdentityVerification VERIFIED', async () => {
+      const verifiedAt = new Date('2026-07-10T12:00:00Z');
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        id: 'user-1',
+        email: ownerDto.email,
+        ownerProfile: { id: 'profile-1' },
+        tenantProfile: null,
+        managerProfile: null,
+        adminProfile: null,
+      });
+      prisma.identityVerification.findFirst.mockResolvedValue({
+        id: 'verif-1',
+        status: 'VERIFIED',
+        updatedAt: verifiedAt,
+      });
+
+      const result = await service.getMe(createdUser as never);
+
+      expect(prisma.identityVerification.findFirst).toHaveBeenCalledWith({
+        where: { userId: createdUser.id, status: 'VERIFIED' },
+        orderBy: { updatedAt: 'desc' },
+      });
+      expect(result.identityVerifiedAt).toBe(verifiedAt);
+    });
   });
 });

@@ -12,6 +12,7 @@ import {
   canActOnProperty,
   propertyVisibilityWhere,
 } from '../../common/permissions/property-access';
+import { assertIdentityVerified } from '../../common/permissions/identity-verified';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { StorageService } from '../storage/storage.service';
 import { compressPhoto } from '../storage/image-processor';
@@ -55,6 +56,11 @@ export class PropertiesService {
   // 12 : un bien démarre toujours VACANT, et n'appartient jamais qu'à
   // l'utilisateur authentifié.
   async create(user: AuthenticatedUser, dto: CreatePropertyDto): Promise<Property> {
+    // CNI facultative à l'inscription (voir /architect révision inscription
+    // owner/manager) — c'est ici, à la création du premier bien, que la
+    // vérification devient bloquante.
+    await assertIdentityVerified(this.prisma, user);
+
     const property = await this.prisma.property.create({
       data: {
         ownerId: user.id,

@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
@@ -10,14 +10,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { IdentityVerification, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { MAX_PHOTO_BYTES } from '../../common/constants';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { canActOnProperty } from '../../common/permissions/property-access';
 import { assertTenantNotBlocked } from '../../common/permissions/tenant-block';
 import { createInvitationToken, verifyInvitationToken } from '../../common/utils/invitation-token';
 import { SupabaseAdminService } from '../supabase/supabase-admin.service';
 import { EmailService } from '../email/email.service';
-import { StorageService } from '../storage/storage.service';
 import { IdentityService, IdentityVerificationFiles } from '../identity/identity.service';
 import { SignupOwnerDto } from './dto/signup-owner.dto';
 import { SignupManagerDto } from './dto/signup-manager.dto';
@@ -53,20 +51,21 @@ export type AuthMeResponse = Omit<
     | UserWithProfiles['tenantProfile']
     | UserWithProfiles['managerProfile']
     | UserWithProfiles['adminProfile'];
+  // Date à laquelle idVerificationStatus est passé à VERIFIED — dérivée de
+  // IdentityVerification.updatedAt, jamais stockée en double (voir
+  // /architect révision inscription owner/manager, "badge type LinkedIn").
+  // null tant que le compte n'a jamais été vérifié.
+  identityVerifiedAt: Date | null;
 };
 
 export type SignupOwnerResponse = {
   user: User;
-  identityVerification: IdentityVerification;
-};
-
-export type SignupManagerFiles = IdentityVerificationFiles & {
-  referenceDocuments?: Express.Multer.File[];
+  identityVerification: IdentityVerification | null;
 };
 
 export type SignupManagerResponse = {
   user: User;
-  identityVerification: IdentityVerification;
+  identityVerification: IdentityVerification | null;
 };
 
 export type InviteTenantResponse = {
@@ -87,7 +86,6 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly supabaseAdmin: SupabaseAdminService,
     private readonly emailService: EmailService,
-    private readonly storage: StorageService,
     private readonly identityService: IdentityService,
   ) {}
 
@@ -103,9 +101,15 @@ export class AuthService {
         },
       });
 
+    const lastVerified = await this.prisma.identityVerification.findFirst({
+      where: { userId: user.id, status: 'VERIFIED' },
+      orderBy: { updatedAt: 'desc' },
+    });
+
     return {
       ...base,
       profile: ownerProfile ?? tenantProfile ?? managerProfile ?? adminProfile ?? null,
+      identityVerifiedAt: lastVerified?.updatedAt ?? null,
     };
   }
 
@@ -256,19 +260,14 @@ export class AuthService {
     dto: SignupOwnerDto,
     files: IdentityVerificationFiles,
   ): Promise<SignupOwnerResponse> {
-    // Échec rapide avant toute création de compte Supabase/Prisma — la CNI
-    // est obligatoire dès l'inscription (voir build-plan.md unité 08). La
-    // taille est aussi vérifiée ici : sans ça, un fichier trop volumineux ne
-    // serait rejeté qu'après coup par identityService.verify(), alors que le
-    // compte existe déjà et est confirmé — échec trompeur pour le client.
-    this.assertCniFiles(files);
-
     const { user, confirmationUrl } = await this.createConfirmedAccount({
       email: dto.email,
       password: dto.password,
       role: 'OWNER',
       firstName: dto.firstName,
       lastName: dto.lastName,
+      phone: dto.phone,
+      city: dto.city,
       createProfile: (tx, created) =>
         tx.ownerProfile.create({
           data: { userId: created.id, residenceCountry: dto.residenceCountry },
@@ -281,47 +280,33 @@ export class AuthService {
       variables: { firstName: dto.firstName, confirmationUrl },
     });
 
-    const identityVerification = await this.identityService.verify(user, files);
+    // La CNI est facultative à l'inscription (voir /architect révision
+    // inscription owner/manager) — le compte se crée sans elle. Si une image
+    // est fournie, on tente la vérification tout de suite ; sinon, elle
+    // reste à faire plus tard via POST /api/identity/verify, et le compte
+    // reste bloqué à la création de bien tant qu'elle n'est pas VERIFIED
+    // (voir PropertiesService.create()).
+    const identityVerification = files.image?.[0]
+      ? await this.identityService.verify(user, files)
+      : null;
 
     return { user, identityVerification };
   }
 
   async signupManager(
     dto: SignupManagerDto,
-    files: SignupManagerFiles,
+    files: IdentityVerificationFiles,
   ): Promise<SignupManagerResponse> {
-    this.assertCniFiles(files);
-
-    // Le compte est créé avant tout upload de référence — si la création
-    // échoue (email déjà pris, etc.), aucun fichier n'a été envoyé en
-    // Storage, donc rien à nettoyer. À l'inverse, uploader avant aurait
-    // laissé des documents orphelins en cas d'échec (voir /review).
     const { user, confirmationUrl } = await this.createConfirmedAccount({
       email: dto.email,
       password: dto.password,
       role: 'MANAGER',
       firstName: dto.firstName,
       lastName: dto.lastName,
-      createProfile: (tx, created) =>
-        tx.managerProfile.create({
-          data: { userId: created.id, referenceDocumentPaths: [] },
-        }),
+      phone: dto.phone,
+      city: dto.city,
+      createProfile: (tx, created) => tx.managerProfile.create({ data: { userId: created.id } }),
     });
-
-    const referenceDocuments = files.referenceDocuments ?? [];
-    if (referenceDocuments.length > 0) {
-      const referenceDocumentPaths: string[] = [];
-      for (const document of referenceDocuments) {
-        const extension = document.mimetype.split('/')[1];
-        const path = `${user.id}/${randomUUID()}.${extension}`;
-        await this.storage.upload('manager-documents', path, document.buffer, document.mimetype);
-        referenceDocumentPaths.push(path);
-      }
-      await this.prisma.managerProfile.update({
-        where: { userId: user.id },
-        data: { referenceDocumentPaths },
-      });
-    }
 
     await this.emailService.sendEmail({
       to: dto.email,
@@ -329,22 +314,12 @@ export class AuthService {
       variables: { firstName: dto.firstName, confirmationUrl },
     });
 
-    const identityVerification = await this.identityService.verify(user, files);
+    // Même mécanique que signupOwner — CNI facultative à l'inscription.
+    const identityVerification = files.image?.[0]
+      ? await this.identityService.verify(user, files)
+      : null;
 
     return { user, identityVerification };
-  }
-
-  private assertCniFiles(files: IdentityVerificationFiles): void {
-    const front = files.image?.[0];
-    const back = files.imageBack?.[0];
-    if (!front || !back) {
-      throw new BadRequestException('Photos du recto et du verso de la CNI requises');
-    }
-    if (front.size > MAX_PHOTO_BYTES || back.size > MAX_PHOTO_BYTES) {
-      throw new BadRequestException(
-        `Image trop volumineuse (max ${MAX_PHOTO_BYTES / (1024 * 1024)} Mo)`,
-      );
-    }
   }
 
   async inviteTenant(
@@ -463,6 +438,8 @@ export class AuthService {
     role: 'OWNER' | 'MANAGER';
     firstName: string;
     lastName: string;
+    phone: string;
+    city: string;
     createProfile: (tx: Prisma.TransactionClient, user: User) => Promise<unknown>;
   }): Promise<{ user: User; confirmationUrl: string }> {
     // email_confirm: true — le compte est immédiatement utilisable sans lien
@@ -494,6 +471,8 @@ export class AuthService {
             role: params.role,
             firstName: params.firstName,
             lastName: params.lastName,
+            phone: params.phone,
+            city: params.city,
           },
         });
         await params.createProfile(tx, created);

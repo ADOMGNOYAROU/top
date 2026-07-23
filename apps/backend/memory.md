@@ -1,61 +1,65 @@
-# Mémoire — Backend WARAH (Phase 3 en cours, unité 13 terminée)
+# Mémoire — Backend WARAH (révision inscription terminée, vérification passeport en discussion)
 
-Dernière mise à jour : 2026-07-07
+Dernière mise à jour : 2026-07-16
 
 ## Historique condensé (avant cette session)
 
-Phase 1 (unités 01-06) terminée le 2026-07-01/02, renommage DINAWA→WARAH, frontend Angular intégré par le développeur. Débogage Railway : build passait mais le healthcheck échouait (timeout 60s) — cause suspectée : variables d'environnement applicatives absentes côté Railway. **Apparemment résolu depuis** (le dernier commit sur `dev` avant cette session, `dc138f5 fix(infra): restructure dockerfile, node 22 et openssl`, semble avoir clos le sujet), mais pas revérifié explicitement pendant cette session — à confirmer avant tout nouveau déploiement Railway.
+Phases 1-2 (unités 01-11) terminées début juillet. Phase 3 — unités 12-13 (CRUD biens, photos/documents) puis 14-15 (locataires : blocage locataire↔bien + historiques, sans nouveau `POST /api/tenants` — le flux d'invitation de l'unité 09 reste l'unique chemin ; baux V1 : `POST /api/leases`, `POST /api/leases/:id/terminate`) terminées le 2026-07-09/10. Campagne de nettoyage lint/type-safety sur ~50 fichiers frontend menée en parallèle (hors périmètre backend).
 
-## Ce qui a été créé (cette session)
+## Ce qui a été fait (cette session)
 
-**Phase 2 — Comptes utilisateurs, terminée (unités 07 à 11) :**
+**1. Push vers `origin/dev` — découverte d'un travail parallèle du compagnon.** En préparant un simple `git push`, découverte que le compagnon (même repo, email git différent) avait poussé 4+ commits en parallèle : un **backend concurrent en routes françaises** (`/api/biens`, `/api/locataires`, `/api/paiements`, `/api/proprietaires`) avec un modèle de données plus simple (pas de `Lease` dédié, création de locataire sans compte Supabase), plus 7 modules nets-nouveaux (`admin`, `dashboard`, `gestionnaire`, `listings`, `notifications`, `payments`, `proprietaires`) qui n'existaient pas du tout côté moi. Le frontend réel (déjà présent avant cette session) appelle déjà ces routes françaises — mon backend unités 12-15 n'a **jamais été relié à aucun écran réel**.
 
-- Unité 07 : `src/modules/identity/` — OCR CNI togolaise (Tesseract.js, 4 rotations), recto+verso, MRZ (checksum ICAO, signal secondaire uniquement)
-- Unité 08 : `POST /auth/signup/owner` — création compte + profil + vérification CNI en une transaction logique
-- Unité 09 : `src/common/utils/invitation-token.ts` (HMAC signé), `POST /auth/invite/tenant`, `POST /auth/signup/tenant`, `POST /auth/signup/manager`
-- Unité 10 : verrouillage 5 échecs/15 min (`AuthService.login()`), reset mot de passe par OTP, `src/modules/profile/` (photo compressée, anonymisation), `src/modules/storage/image-processor.ts` (`compressPhoto()`)
-- Unité 11 : `src/modules/account/` (`AccountActivationService`, `GET /account/status`), `src/modules/scheduling/` (`InactivityTask`, cron `0 7 * * *`), `src/common/utils/advisory-lock.ts`
+- Décision prise avec le développeur : **garder mon backend tel quel** (properties/tenants/leases/auth, testé, suit le build-plan), **prendre le frontend du compagnon tel quel** (déjà testé contre son backend), et reporter la réconciliation frontend↔mon-backend à plus tard. Les 7 modules nets-nouveaux du compagnon ne sont **pas** intégrés.
+- Deux commits de merge (`cf19fc8`, `ff95ce1`) créés et poussés — le remote avait bougé deux fois pendant la résolution.
+- Hook pre-commit bypassé (`--no-verify`, accord explicite) sur les commits de merge : ~1017 erreurs de lint pré-existantes dans le code frontend du compagnon (repris tel quel), à traiter comme chantier séparé plus tard.
+- Deux vrais bugs trouvés et corrigés au passage : alias TS `@env/*` manquant (cassait le build frontend), `@types/jasmine` manquant (cassait la résolution de types dans les `*.spec.ts` frontend).
+- **Bug latent découvert ensuite** : `apps/backend/tsconfig.json` n'avait aucune restriction `types` → `@types/jasmine` (hoisté en racine par les workspaces npm) polluait la compilation backend, 130 erreurs sans rapport. Corrigé par `"types": ["node", "jest", "express", "multer", "supertest", "web-push", "pdfkit"]`.
 
-**Phase 3 — Patrimoine immobilier, en cours (unités 12-13 terminées) :**
+**2. `/architect` puis implémentation — révision inscription owner/manager (2026-07-16).** Suite à des questions du développeur sur le formulaire d'inscription (téléphone manquant, utilité du PDF gestionnaire, pertinence de la CNI obligatoire) :
 
-- Unité 12 : `src/modules/properties/` — CRUD complet, pagination offset-based (premier précédent du projet), règles de transition de statut
-- Unité 13 : extension du même module — photos (compression WebP, plafond 10) et documents (jamais compressés, plafond 20) d'un bien, tous deux avec URLs signées
+- `phone` et `city` ajoutés sur `User` (pas par profil), obligatoires pour owner et manager.
+- CNI redevenue **facultative à l'inscription** pour tous les rôles — `assertCniFiles()` supprimé. Nouveau verrou fonctionnel unique : `PropertiesService.create()` refuse via `assertIdentityVerified()` (`src/common/permissions/identity-verified.ts`) tant que `idVerificationStatus !== VERIFIED`.
+- Document PDF de référence gestionnaire (`referenceDocuments`, `ManagerProfile.referenceDocumentPaths`) **retiré entièrement** — jugé non indispensable, jamais consommé (Phase 8 marketplace non construite).
+- `GET /api/auth/me` renvoie `identityVerifiedAt` (badge de vérification, visible par l'utilisateur lui-même uniquement pour l'instant).
+- Migration `20260716090000_user_city_and_manager_reference_removal`.
+- 211 tests unitaires (17 suites), testé en conditions réelles (Supabase) de bout en bout.
+- `build-plan.md`, `architecture.md`, `progress-tracker.md` mis à jour.
 
-**Autre :** `apps/backend/contexte/postman-testing-guide.md` créé — guide de test manuel avec données fictives togolaises et scénarios par endpoint pour les 26 endpoints construits à date.
+**3. En cours (interrompu par `/remember save`) — `/architect` vérification par passeport.** Nouvelle demande : ajouter une deuxième méthode de preuve d'identité (passeport), en particulier pour les propriétaires diaspora sans CNI togolaise. Recherche faite : la librairie `mrz` (déjà en dépendance, v5.0.2) supporte nativement TD1/TD2/**TD3** (passeport) — pas de nouvelle dépendance nécessaire. Mais `checkMrzChecksum()` actuel est calé sur TD1 (3 lignes, 25-35 caractères) et ne détecterait pas une MRZ TD3 (2 lignes, 44 caractères). Tension architecturale identifiée : pour la CNI, les marqueurs texte sont l'autorité principale et la MRZ un signal secondaire ; pour un passeport, il n'y a pas d'équivalent texte fiable universel (varie par pays émetteur) — la MRZ (standardisée ICAO 9303, vrai checksum) deviendrait probablement l'autorité principale à la place. Questions posées au développeur, **pas encore répondues** :
 
-156 tests unitaires backend passent (12 suites), typecheck/lint/build propres.
+1.  « Nouvel évènement » = événement de domaine distinct (`PASSPORT_VERIFICATION_REQUESTED`) ou événement existant enrichi d'un type de document ?
+2.  Confirmation que la vérification passeport cible surtout les propriétaires diaspora.
 
 ## Décisions prises
 
-- **`AccountActivationService.reactivateIfEligible(userId)`** (unité 11) est LA fonction qui décide si un compte suspendu pour inactivité peut redevenir `ACTIVE`. Doit être appelée par toute future action qui « débloque » un compte — déjà câblée dans `PropertiesService.create()` (unité 12), **reste à câbler dans `MandatesService.accept()`** (unité 31, pas construite).
-- **`@AllowWhileSuspended()`** (`src/common/decorators/`) — exception explicite au blocage `403 ACCOUNT_SUSPENDED` de `SupabaseAuthGuard`, réservée aux actions dont le but est de débloquer le compte. Sans ça, un compte suspendu ne peut jamais se débloquer lui-même (le guard rejette la mutation avant que le service ait la main). Appliqué à `POST /properties` ; **à appliquer aussi à l'acceptation de mandat** (unité 31).
-- **`propertyVisibilityWhere(user)`** (`src/common/permissions/property-access.ts`) — co-localisée avec `canActOnProperty()`, dérive le filtre Prisma d'une liste depuis la même règle de visibilité (`ownerId` ou mandat actif). Toujours utiliser cette fonction plutôt que de réécrire l'`OR` à la main dans un futur endpoint de liste.
-- **Pagination offset-based** (`page`/`limit`, plafond 100, enveloppe `{ data, page, limit, total }`) — précédent posé à l'unité 12, à réutiliser pour tout futur endpoint de liste (locataires, baux, paiements...).
-- **Statuts `Property`** : `OCCUPIED` est injoignable via l'API tant que le module Baux (unité 15) n'existe pas (uniquement dérivable d'un futur bail) ; `ARCHIVED` est terminal, atteignable uniquement via `DELETE` (jamais `PATCH`).
-- **Plafonds cumulatifs** (photos/documents d'un bien) : comptés sur les lignes déjà en base, rejet total si dépassement — jamais d'acceptation partielle silencieuse. Même philosophie à réutiliser pour tout futur plafond métier.
+- **Mon backend (unités 11-15) reste la référence** ; le backend concurrent du compagnon (routes françaises) n'est pas intégré — reste un chantier de réconciliation frontend↔backend à planifier avec lui.
+- `phone`/`city` sur `User` (partagé par tous les rôles), jamais par profil — aucune logique métier attachée à la ville (contrairement à `residenceCountry` qui pilote la distinction local/diaspora).
+- La vérification CNI ne bloque plus jamais l'inscription — seul point de blocage dans tout le produit : `PropertiesService.create()`.
+- Mandats (unité 31, future) : accepter un mandat ne nécessitera pas de vérification d'identité propre au gestionnaire — la confiance transite par le propriétaire déjà vérifié.
+- `apps/backend/tsconfig.json` doit garder un `types` explicite — ne jamais le retirer, sous peine de re-souffrir de la pollution cross-workspace npm.
 
 ## Problèmes résolus
 
-- **Verrou mortel compte suspendu** : un compte `SUSPENDED_INACTIVITY` ne pouvait jamais se débloquer lui-même (`POST /properties` bloqué par le guard avant même d'atteindre le service) → `@AllowWhileSuspended()`.
-- **Duplication de logique d'autorisation** : `PropertiesService.findAll()` réimplémentait la règle de `canActOnProperty()` à la main → extraction de `propertyVisibilityWhere()`.
-- **Gap `@MaxLength()`** sur les champs texte des DTOs `Property` (documenté dans `code-standards.md`, jamais appliqué depuis l'étape 08) → corrigé sur `CreatePropertyDto`/`UpdatePropertyDto` uniquement, pas de sweep rétroactif sur les DTOs plus anciens.
-- **Faux positif encodage** : des caractères accentués (`Bè`, `Lomé`) apparaissaient corrompus (`B�`) dans les réponses `curl` du terminal Windows — vérifié directement en base via Prisma : stockage UTF-8 correct, pur artefact d'affichage terminal. Ne pas re-diagnostiquer ça si ça revient.
-- **Pièges opérationnels Windows/Git Bash notés pour la suite** : `sharp`/`curl` exigent des chemins Windows cohérents (`C:/...` à l'intérieur de Node, chemins avec backslashes entre guillemets pour `curl -F`) — les chemins `/c/...` de Git Bash échouent silencieusement ou de façon trompeuse pour ces deux outils.
+- Push rejeté deux fois (remote bougé pendant la résolution) → cycles fetch/merge/résolution/commit séquentiels, deux commits de merge.
+- ~1017 erreurs de lint pré-existantes bloquant le hook pre-commit sur le code frontend repris du compagnon → bypass `--no-verify` explicitement autorisé, chantier reporté.
+- `@types/jasmine` polluait la compilation backend via le hoisting des workspaces npm → `types` explicite dans `apps/backend/tsconfig.json`.
+- `identityService.verify()` levait une exception si les fichiers étaient incomplets ; appelé maintenant seulement si `files.image` est présent, sans casser la validation existante sur soumission partielle.
 
 ## État actuel
 
-- Backend : Phase 1 et 2 terminées, Phase 3 en cours (unités 12-13 faites, 14-15 restantes).
-- Tout testé en conditions réelles contre la vraie base Supabase à chaque unité (comptes/biens/fichiers jetables, nettoyés après chaque validation) — jamais seulement les tests unitaires.
-- `progress-tracker.md` à jour jusqu'à l'unité 13 inclus.
-- Frontend Angular (intégré par le développeur, hors périmètre de mon travail) : lancé et compilé avec succès en local pendant cette session (`ng serve`, port 4200) pour exploration, aucune modification apportée.
+- Backend : build clean, lint clean, 211 tests unitaires (17 suites) passent.
+- Inscription owner/manager sans CNI testée de bout en bout en conditions réelles (Supabase) : signup → création de bien refusée → vérification simulée → création acceptée → badge visible sur `/auth/me`.
+- **Écart connu non résolu** : le frontend actuellement déployé (celui du compagnon) n'appelle **aucune** route de mon backend (`/api/properties`, `/api/tenants`, `/api/leases`, `/api/auth/signup/*`) — il appelle des routes françaises que mon backend n'expose pas. Réconciliation explicitement reportée, sans date.
+- Vérification passeport : discussion `/architect` commencée, vocabulaire pas encore aligné, aucun code écrit.
 
 ## La prochaine session commencera par
 
-`/remember restore` puis `/architect unité 14` (Locataires) — voir `contexte/build-plan.md`. Points à garder en tête dès l'architecture de l'unité 14 : la contrainte « un seul `Lease` `ACTIVE` par locataire » et l'historique locataire (paiements/baux passés conservés) sont déjà décrits au build-plan ; vérifier si `TenantProfile` (schéma existant depuis l'étape 02) a besoin d'un champ ou d'une migration avant de commencer.
+`/remember restore` puis reprendre la discussion `/architect` sur la vérification passeport, en repartant des deux questions posées et non répondues (voir section 3 ci-dessus). Une fois le vocabulaire aligné, décisions à trancher : ajout d'un champ type de document sur `IdentityVerification` (migration), MRZ comme autorité principale (pas secondaire) pour les passeports, gestion d'une seule image (pas de verso passeport), adaptation de `checkMrzChecksum()` pour détecter TD3 en plus de TD1.
 
 ## Questions en suspens
 
-- Domaine `warah.tg` toujours pas vérifié sur Resend — emails de prod bloqués (hérité, toujours vrai).
-- Statut réel du healthcheck Railway — probablement résolu mais pas reconfirmé cette session.
-- Dépendance `AccountActivationService`/`@AllowWhileSuspended()` à câbler à l'unité 31 (mandats) — ne pas oublier en y arrivant.
-- Nom du dossier racine du disque et projet Supabase toujours « DINAWA » — pas renommés (hérité, hors périmètre sauf demande explicite).
+- Réconciliation frontend (routes françaises du compagnon) ↔ mon backend (routes anglaises) — reportée sans date, décision à prendre avec le compagnon.
+- Nettoyage lint du frontend repris tel quel (~1017 erreurs pré-existantes) — chantier séparé, pas planifié.
+- Domaine `warah.tg` toujours pas vérifié sur Resend (hérité, toujours vrai).
+- Vérification passeport — architecture pas encore tranchée avec le développeur.
