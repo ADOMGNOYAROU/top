@@ -50,7 +50,13 @@ describe('PropertiesService', () => {
     };
   };
   let accountActivation: { reactivateIfEligible: jest.Mock };
-  let storage: { upload: jest.Mock; getSignedUrl: jest.Mock; remove: jest.Mock };
+  let storage: {
+    upload: jest.Mock;
+    getSignedUrl: jest.Mock;
+    getSignedUrls: jest.Mock;
+    invalidateCachedUrl: jest.Mock;
+    remove: jest.Mock;
+  };
 
   const owner = { id: 'owner-1', role: 'OWNER' } as AuthenticatedUser;
   const manager = { id: 'manager-1', role: 'MANAGER' } as AuthenticatedUser;
@@ -117,6 +123,12 @@ describe('PropertiesService', () => {
     storage = {
       upload: jest.fn().mockResolvedValue('path'),
       getSignedUrl: jest.fn().mockResolvedValue('https://signed.example/url'),
+      getSignedUrls: jest
+        .fn()
+        .mockImplementation((_bucket: string, paths: string[]) =>
+          Promise.resolve(new Map(paths.map((p) => [p, 'https://signed.example/url']))),
+        ),
+      invalidateCachedUrl: jest.fn(),
       remove: jest.fn().mockResolvedValue(undefined),
     };
 
