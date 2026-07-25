@@ -120,7 +120,15 @@ export class AuthService {
   // jamais un mot de passe »). Utilise anonAuth (jamais service_role) pour
   // signInWithPassword — moindre privilège.
   async login(dto: LoginDto): Promise<LoginResponse> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    // Parallélisation : DB lookup et auth Supabase lancés simultanément
+    // → économise ~200 ms de latence Frankfurt pour les utilisateurs en Afrique.
+    const [user, { data, error }] = await Promise.all([
+      this.prisma.user.findUnique({ where: { email: dto.email } }),
+      this.supabaseAdmin.anonAuth.signInWithPassword({
+        email: dto.email,
+        password: dto.password,
+      }),
+    ]);
 
     if (user?.accountStatus === 'SUSPENDED_ADMIN') {
       throw new UnauthorizedException('Compte suspendu');
@@ -132,11 +140,6 @@ export class AuthService {
         `Trop de tentatives échouées — réessayez dans ${minutesLeft} minute(s)`,
       );
     }
-
-    const { data, error } = await this.supabaseAdmin.anonAuth.signInWithPassword({
-      email: dto.email,
-      password: dto.password,
-    });
 
     if (error || !data.session) {
       if (user) {
@@ -472,7 +475,6 @@ export class AuthService {
             firstName: params.firstName,
             lastName: params.lastName,
             phone: params.phone,
-            city: params.city,
           },
         });
         await params.createProfile(tx, created);

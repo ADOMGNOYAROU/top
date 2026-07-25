@@ -77,9 +77,14 @@ export class ListingsService {
     const limit = query.limit ?? 20;
     const listings = await this.prisma.listing.findMany({
       where, skip: (page - 1) * limit, take: limit, orderBy: { publishedAt: 'desc' },
-      // Pour la liste, on ne prend que la 1re photo (moins d'URLs signées à générer)
       include: {
-        property: { include: { photos: { orderBy: { position: 'asc' }, take: 1 } } },
+        property: {
+          select: {
+            id: true, type: true, address: true, neighborhood: true, city: true,
+            monthlyRent: true, monthlyCharges: true, description: true,
+            photos: { orderBy: { position: 'asc' }, take: 1, select: { storagePath: true } },
+          },
+        },
         publishedBy: { select: { firstName: true, lastName: true, phone: true } },
       },
     });
@@ -95,7 +100,13 @@ export class ListingsService {
       where: { publishedByUserId: userId },
       orderBy: { publishedAt: 'desc' },
       include: {
-        property: { include: { photos: { orderBy: { position: 'asc' }, take: 1 } } },
+        property: {
+          select: {
+            id: true, type: true, address: true, neighborhood: true, city: true,
+            monthlyRent: true, monthlyCharges: true, description: true,
+            photos: { orderBy: { position: 'asc' }, take: 1, select: { storagePath: true } },
+          },
+        },
         publishedBy: { select: { firstName: true, lastName: true, phone: true } },
       },
     });

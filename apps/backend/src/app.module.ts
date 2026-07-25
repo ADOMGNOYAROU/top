@@ -6,6 +6,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { LoggerModule } from 'nestjs-pino';
 import { APP_GUARD } from '@nestjs/core';
 import { DelegationGuard } from './common/guards/delegation.guard';
+import { CacheModule } from './common/cache/cache.module';
 import { validate } from './config/env.validation';
 import { pinoConfig } from './config/logger.config';
 import { PrismaModule } from './prisma/prisma.module';
@@ -27,6 +28,7 @@ import { ListingsModule } from './modules/listings/listings.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ExportsModule } from './modules/exports/exports.module';
 import { DelegationModule } from './modules/delegation/delegation.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SupabaseAuthGuard } from './common/guards/supabase-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -55,6 +57,9 @@ import { RolesGuard } from './common/guards/roles.guard';
 
     // Événements internes découplés
     EventEmitterModule.forRoot({ wildcard: false }),
+
+    // Cache in-memory TTL disponible globalement
+    CacheModule,
 
     // Prisma disponible globalement via @Global()
     PrismaModule,
@@ -112,6 +117,9 @@ import { RolesGuard } from './common/guards/roles.guard';
 
     // Délégation de pouvoir propriétaire → gestionnaire
     DelegationModule,
+
+    // Dashboard agrégé — remplace le N+1 frontend (voir dashboard.service.ts)
+    DashboardModule,
   ],
   providers: [
     {

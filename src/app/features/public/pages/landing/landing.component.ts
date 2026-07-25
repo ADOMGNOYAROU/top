@@ -7,7 +7,7 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PublicFooterComponent } from '../../../../shared/components/public-footer/public-footer.component';
 
-interface HeroSlide { badge: string; title: string; subtitle: string; cta: string; link: string; }
+interface HeroSlide { badge: string; title: string; subtitle: string; cta: string; link: string; photo: string; }
 
 @Component({
   selector: 'app-landing',
@@ -51,140 +51,54 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
 
   <!-- ── HERO ── -->
   <section class="hero">
-    <!-- Formes organiques de fond (style split-hero) -->
-    <div class="hero-shapes" aria-hidden="true">
-      <svg class="hero-wave-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="heroMainGrad" x1="20%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#0A2650"/>
-            <stop offset="55%" stop-color="#0F4C81"/>
-            <stop offset="100%" stop-color="#081E41"/>
-          </linearGradient>
-        </defs>
-        <!-- légère teinte bleue (transition douce) -->
-        <path d="M870,0 C815,118 795,285 812,462 C830,636 800,776 782,900 L1440,900 L1440,0 Z" fill="#dbeafe" opacity="0.55"/>
-        <!-- blob bleu principal -->
-        <path d="M840,0 C782,118 762,285 778,462 C794,636 765,776 748,900 L1440,900 L1440,0 Z" fill="url(#heroMainGrad)"/>
-      </svg>
-      <!-- accent or bas-gauche -->
-      <svg class="hero-gold-blob" viewBox="0 0 560 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,95 C90,52 210,32 320,68 C400,92 470,118 560,106 L560,150 L0,150 Z" fill="#C9982E" opacity="0.88"/>
-      </svg>
-    </div>
     <div class="slides">
       @for (s of slides; track s.badge; let i = $index) {
-        <div class="slide" [class.slide-on]="currentSlide() === i">
-          <div class="slide-text">
-            <span class="s-badge">{{ s.badge }}</span>
-            <h1 class="s-title">{{ s.title }}</h1>
-            <p class="s-sub">{{ s.subtitle }}</p>
-            <div class="s-btns">
-              <a [routerLink]="s.link" class="s-cta">
-                {{ s.cta }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="s-arrow">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </a>
-              <a routerLink="/annonces" class="s-cta-ghost">
-                Voir les annonces
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="s-arrow"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </a>
+        <div class="slide" [class.slide-on]="currentSlide() === i" [style.backgroundImage]="'url(' + s.photo + ')'">
+          <div class="slide-overlay" aria-hidden="true"></div>
+          <div class="slide-content">
+            <div class="slide-text">
+              <span class="s-badge">{{ s.badge }}</span>
+              <h1 class="s-title">{{ s.title }}</h1>
+              <p class="s-sub">{{ s.subtitle }}</p>
+              <div class="s-btns">
+                <a [routerLink]="s.link" class="s-cta">
+                  {{ s.cta }}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="s-arrow">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </a>
+                <a routerLink="/annonces" class="s-cta-ghost">
+                  Voir les annonces
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="s-arrow"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+              </div>
             </div>
-          </div>
-          <div class="slide-visual">
-            @switch (i) {
-              @case (0) {
-                <!-- Gestion immobilière — gestionnaire avec laptop et icône maison -->
-                <div class="hero-photo-wrap">
-                  <img src="/assets/man-showing-house-icon-couch.jpg.jpeg" alt="Gestionnaire immobilier avec laptop" class="hero-photo" loading="eager" style="object-position: center top;">
-                  <div class="hbf hbf-1">
-                    <div class="hbf-icon" style="background:#e8f0fa">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">12</span><span class="hbf-l">biens gérés</span></div>
-                  </div>
-                  <div class="hbf hbf-2">
-                    <div class="hbf-icon" style="background:#fef3dc">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#C9982E" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">1 250 000 F</span><span class="hbf-l">revenus / mois</span></div>
-                  </div>
-                </div>
-              }
-              @case (1) {
-                <!-- Paiements loyers — mobile money -->
-                <div class="hero-photo-wrap">
-                  <img src="/assets/handsome-young-african-man-holding-mobile-phone-gesturing-while-standing-against-grey-wall.jpg.jpeg" alt="Paiement mobile money" class="hero-photo" loading="lazy" style="object-position: center top;">
-                  <div class="hbf hbf-1">
-                    <div class="hbf-icon" style="background:#dcfce7">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">98 %</span><span class="hbf-l">paiements à temps</span></div>
-                  </div>
-                  <div class="hbf hbf-2">
-                    <div class="hbf-icon" style="background:#fce7f3">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">0 impayé</span><span class="hbf-l">ce mois-ci</span></div>
-                  </div>
-                </div>
-              }
-              @case (2) {
-                <!-- Quittances — professionnel immobilier avec maison et clés -->
-                <div class="hero-photo-wrap">
-                  <img src="/assets/black-businessman-happy-expression.jpg.jpeg" alt="Professionnel immobilier avec clés" class="hero-photo" loading="lazy" style="object-position: center center;">
-                  <div class="hbf hbf-1">
-                    <div class="hbf-icon" style="background:#e8f0fa">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">PDF en 2 min</span><span class="hbf-l">quittance générée</span></div>
-                  </div>
-                  <div class="hbf hbf-2">
-                    <div class="hbf-icon" style="background:#f3e8ff">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">Signé &amp; horodaté</span><span class="hbf-l">valeur juridique</span></div>
-                  </div>
-                </div>
-              }
-              @case (3) {
-                <!-- Annonces — propriétaire montrant sa maison -->
-                <div class="hero-photo-wrap">
-                  <img src="/assets/happy-man-with-house.jpg.jpeg" alt="Propriétaire heureux avec maison" class="hero-photo" loading="lazy" style="object-position: center center;">
-                  <div class="hbf hbf-1">
-                    <div class="hbf-icon" style="background:#fef3dc">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#C9982E" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">48 h</span><span class="hbf-l">délai moyen</span></div>
-                  </div>
-                  <div class="hbf hbf-2">
-                    <div class="hbf-icon" style="background:#e8f0fa">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#0F4C81" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                    </div>
-                    <div class="hbf-txt"><span class="hbf-n">+300 candidats</span><span class="hbf-l">locataires actifs</span></div>
-                  </div>
-                </div>
-              }
-            }
           </div>
         </div>
       }
     </div>
-    <div class="hero-controls">
-      <button class="h-arrow" (click)="prevSlide()" aria-label="Précédent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 5l-7 7 7 7"/></svg>
-      </button>
-      <div class="h-dots">
-        @for (s of slides; track s.badge; let i = $index) {
-          <button class="dot" [class.dot-on]="currentSlide() === i" (click)="goToSlide(i)"></button>
-        }
+
+    <!-- Bande bas : témoignages + opérateurs + contrôles -->
+    <div class="hero-bottom">
+      <div class="hb-right">
+        <div class="hb-controls">
+          <button class="h-arrow" (click)="prevSlide()" aria-label="Précédent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          </button>
+          <div class="h-dots">
+            @for (s of slides; track s.badge; let i = $index) {
+              <button class="dot" [class.dot-on]="currentSlide() === i" (click)="goToSlide(i)"></button>
+            }
+          </div>
+          <button class="h-arrow" (click)="nextSlide()" aria-label="Suivant">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
       </div>
-      <button class="h-arrow" (click)="nextSlide()" aria-label="Suivant">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
     </div>
     <div class="h-prog"><div class="h-prog-bar" [style.width.%]="((currentSlide()+1)/slides.length)*100"></div></div>
   </section>
+
 
   <!-- ── COMMENT ÇA FONCTIONNE ── -->
   <section class="howto-section" id="comment" #howtoSection [class.howto-on]="howtoVisible()">
@@ -691,56 +605,75 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .mm-sep { height: 12px; }
     .mm-cta { margin-top: 8px; background: #0F4C81; color: #fff; text-align: center; padding: 13px; border-radius: 8px; font-weight: 700; text-decoration: none; display: block; }
 
-    /* ── HERO — fond sombre avec photos pro ── */
-    .hero { position: relative; min-height: 100vh; background: linear-gradient(135deg, #081E41 0%, #0F4C81 55%, #0A2650 100%); overflow: hidden; display: flex; flex-direction: column; }
+    /* ── HERO — plein écran photo ── */
+    .hero { position: relative; min-height: 100vh; background: #081E41; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* Décor de fond */
-    .hero-shapes { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-    .hero-wave-svg { display: none; }
-    .hero-gold-blob { position: absolute; bottom: 0; left: 0; width: 520px; height: 130px; opacity: 0.75; }
-
-    /* Slides */
+    /* Slides plein écran */
     .slides { position: relative; flex: 1; z-index: 1; }
-    .slide { position: absolute; inset: 0; display: flex; align-items: center; max-width: 1200px; padding: 80px 40px 60px; gap: 48px; opacity: 0; pointer-events: none; transition: opacity .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1); left: 50%; transform: translateX(calc(-50% + 40px)); }
-    .slide.slide-on { opacity: 1; pointer-events: auto; transform: translateX(-50%); }
-    .slide-text { flex: 1; max-width: 460px; }
-    .s-badge { display: inline-block; background: rgba(201,152,46,0.2); color: #C9982E; border: 1px solid rgba(201,152,46,0.4); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
-    .s-title { font-size: clamp(22px, 2.6vw, 36px); font-weight: 800; line-height: 1.18; color: #fff; margin-bottom: 14px; }
-    .s-sub { font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.75); margin-bottom: 26px; max-width: 420px; }
+    .slide {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center 20%;
+      opacity: 0; pointer-events: none;
+      transition: opacity .9s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column;
+    }
+    .slide.slide-on { opacity: 1; pointer-events: auto; }
+
+    /* Voile dégradé sur la photo */
+    .slide-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(108deg, rgba(4,13,44,0.92) 0%, rgba(8,28,62,0.72) 45%, rgba(8,30,65,0.22) 100%);
+      pointer-events: none;
+    }
+
+    /* Contenu texte — centré sur la largeur, aligné en bas */
+    .slide-content {
+      position: relative; z-index: 1;
+      max-width: 1200px; width: 100%; margin: 0 auto;
+      padding: 100px 60px 160px;
+      flex: 1; display: flex; align-items: flex-end;
+    }
+    .slide-text { max-width: 600px; }
+
+    .s-badge { display: inline-block; background: rgba(201,152,46,0.18); color: #E0B655; border: 1px solid rgba(201,152,46,0.38); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 18px; }
+    .s-title { font-size: clamp(34px, 4.8vw, 64px); font-weight: 900; line-height: 1.06; color: #fff; margin-bottom: 18px; white-space: pre-line; text-wrap: balance; }
+    .s-sub { font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.72); margin-bottom: 32px; max-width: 460px; }
     .s-btns { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    .s-cta { display: inline-flex; align-items: center; gap: 10px; background: #C9982E; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 28px; border-radius: 10px; transition: background .2s, transform .2s; box-shadow: 0 4px 22px rgba(201,152,46,0.42); }
-    .s-cta:hover { background: #b8881f; transform: translateY(-1px); }
-    .s-cta-ghost { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.88); font-weight: 600; font-size: 15px; border: 1.5px solid rgba(255,255,255,0.28); padding: 13px 22px; border-radius: 10px; transition: background .2s, border-color .2s; }
-    .s-cta-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.5); }
+    .s-cta { display: inline-flex; align-items: center; gap: 10px; background: #C9982E; color: #fff; font-weight: 700; font-size: 15px; padding: 15px 30px; border-radius: 10px; transition: background .2s, transform .15s; box-shadow: 0 6px 28px rgba(201,152,46,0.45); }
+    .s-cta:hover { background: #b8881f; transform: translateY(-2px); }
+    .s-cta-ghost { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.88); font-weight: 600; font-size: 15px; border: 1.5px solid rgba(255,255,255,0.3); padding: 14px 24px; border-radius: 10px; transition: background .2s, border-color .2s; }
+    .s-cta-ghost:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.55); }
     .s-arrow { width: 18px; height: 18px; }
-    .slide-visual { flex: 0 0 400px; display: flex; align-items: center; justify-content: center; padding: 40px 0; }
 
-    /* ── Photos héro professionnelles ── */
-    .hero-photo-wrap { position: relative; width: 380px; flex-shrink: 0; }
-    .hero-photo { width: 100%; height: 360px; object-fit: cover; border-radius: 32px 110px 32px 64px; display: block; box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 0 3px rgba(201,152,46,0.35); }
-    .hero-photo-wrap::before { content: ''; position: absolute; inset: 0; background: linear-gradient(145deg, rgba(8,30,65,0.28) 0%, transparent 55%); border-radius: 32px 110px 32px 64px; pointer-events: none; z-index: 1; }
+    /* ── Bande bas : témoignages + logos + contrôles ── */
+    .hero-bottom {
+      position: absolute; bottom: 3px; left: 0; right: 0; z-index: 10;
+      padding: 48px 60px 28px;
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+      background: linear-gradient(to top, rgba(4,13,44,0.78) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .hb-temos { display: flex; gap: 36px; pointer-events: auto; }
+    .hb-t { display: flex; flex-direction: column; gap: 3px; }
+    .hb-t-name { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.88); }
+    .hb-t-stars { font-size: 11px; color: #C9982E; letter-spacing: 1px; }
+    .hb-t-role { font-size: 11px; color: rgba(255,255,255,0.42); }
+    .hb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: auto; }
+    .hb-logos { text-align: right; }
+    .hb-logos-label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: rgba(255,255,255,0.38); margin-bottom: 5px; }
+    .hb-logos-row { display: flex; align-items: center; gap: 8px; }
+    .hb-logo { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.82); }
+    .hb-logo-dot { color: rgba(255,255,255,0.28); }
+    .hb-controls { display: flex; align-items: center; gap: 12px; }
 
-    /* Badges flottants */
-    .hbf { position: absolute; background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); border-radius: 14px; padding: 11px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); z-index: 2; min-width: 150px; }
-    .hbf-1 { bottom: 56px; left: -32px; animation: hbfUp 4s ease-in-out infinite; }
-    .hbf-2 { top: 20px; right: -28px; animation: hbfDown 4s ease-in-out infinite; }
-    @keyframes hbfUp { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
-    @keyframes hbfDown { 0%,100%{ transform:translateY(-5px) } 50%{ transform:translateY(2px) } }
-    .hbf-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .hbf-icon svg { width: 18px; height: 18px; }
-    .hbf-txt { display: flex; flex-direction: column; gap: 1px; }
-    .hbf-n { font-size: 15px; font-weight: 800; color: #0A2650; line-height: 1.1; }
-    .hbf-l { font-size: 10px; font-weight: 600; color: #6B7280; letter-spacing: .03em; }
-
-    /* Contrôles (fond sombre) */
-    .hero-controls { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; z-index: 10; }
-    .h-arrow { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
-    .h-arrow:hover { background: rgba(255,255,255,0.22); }
-    .h-arrow svg { width: 18px; height: 18px; }
-    .h-dots { display: flex; gap: 8px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.35); border: none; cursor: pointer; transition: background .25s, width .25s; padding: 0; }
-    .dot.dot-on { background: #C9982E; width: 24px; border-radius: 4px; }
-    .h-prog { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.12); }
+    /* Contrôles (intégrés dans hb-right) */
+    .h-arrow { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+    .h-arrow:hover { background: rgba(255,255,255,0.2); }
+    .h-arrow svg { width: 16px; height: 16px; }
+    .h-dots { display: flex; gap: 7px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.32); border: none; cursor: pointer; transition: background .25s, width .25s; padding: 0; }
+    .dot.dot-on { background: #C9982E; width: 22px; border-radius: 4px; }
+    .h-prog { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.1); z-index: 11; }
     .h-prog-bar { height: 100%; background: #C9982E; transition: width .4s ease; }
 
     /* ── SECTION HEADERS (shared) ── */
@@ -1185,13 +1118,6 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     .price-note { text-align: center; font-size: 12.5px; color: #9CA3AF; margin-top: 32px; }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 1280px) {
-      .slide-visual { flex: 0 0 340px; }
-      .hero-photo-wrap { width: 320px; }
-      .hero-photo { height: 300px; }
-      .hbf-1 { left: -16px; }
-      .hbf-2 { right: -12px; }
-    }
     @media (max-width: 1024px) {
       .why-layout { grid-template-columns: 1fr; }
       .why-preview { position: static; }
@@ -1204,18 +1130,13 @@ interface HeroSlide { badge: string; title: string; subtitle: string; cta: strin
     @media (max-width: 768px) {
       .nav-links, .nav-cta { display: none; }
       .hamburger { display: flex; }
-      .hero-shapes { display: none; }
-      .slide { flex-direction: column; padding: 90px 24px 120px; text-align: center; gap: 28px; left: 0; transform: translateX(40px); }
-      .slide.slide-on { transform: translateX(0); }
-      .s-title { font-size: 26px; }
-      .s-sub, .s-btns { margin: 0 auto; }
-      .s-btns { justify-content: center; }
-      .slide-visual { flex: 0 0 auto; padding: 0; }
-      .hero-photo-wrap { width: 100%; max-width: 300px; }
-      .hero-photo { height: 240px; border-radius: 20px 60px 20px 40px; }
-      .hero-photo-wrap::before { border-radius: 20px 60px 20px 40px; }
-      .hbf { display: none; }
-      .hero-controls { bottom: 30px; }
+      .slide-content { padding: 80px 24px 180px; }
+      .slide-text { max-width: 100%; }
+      .s-title { font-size: clamp(28px, 8vw, 38px); white-space: normal; }
+      .s-sub { font-size: 15px; }
+      .hb-temos { display: none; }
+      .hero-bottom { padding: 40px 24px 20px; justify-content: flex-end; }
+      .hb-right { flex-direction: row; align-items: center; gap: 16px; }
       .hw-grid { flex-direction: column; gap: 16px; }
       .hw-col { flex-direction: column; width: 100%; }
       .hw-arrow { transform: rotate(90deg); }
@@ -1275,10 +1196,10 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Données statiques ──
   readonly slides: HeroSlide[] = [
-    { badge: 'Gestion immobilière',   title: 'Gérez vos biens en toute simplicité',      subtitle: 'Suivez l\'occupation, les baux et l\'historique de chaque bien depuis une seule interface intuitive.', cta: 'Commencer gratuitement', link: '/auth/register' },
-    { badge: 'Paiements des loyers',  title: 'Encaissez vos loyers sans effort',          subtitle: 'Suivez chaque paiement en temps réel. Alertes automatiques pour les impayés, rappels avant échéance.',  cta: 'Découvrir WARAH',        link: '/auth/register' },
-    { badge: 'Génération de quittances', title: 'Quittances professionnelles en un clic', subtitle: 'Créez et envoyez des quittances de loyer signées directement à vos locataires, à tout moment.',          cta: 'Essayer gratuitement',   link: '/auth/register' },
-    { badge: 'Annonces immobilières', title: 'Trouvez vos locataires rapidement',          subtitle: 'Publiez vos annonces et recevez des candidatures qualifiées depuis partout au Togo.',                    cta: 'Voir les annonces',      link: '/annonces'       },
+    { badge: 'Gestion immobilière',      title: 'Gérez vos biens\nen toute simplicité',        subtitle: 'Suivez l\'occupation, les baux et l\'historique de chaque bien depuis une seule interface intuitive.', cta: 'Commencer gratuitement', link: '/auth/register', photo: '/assets/man-showing-house-icon-couch.jpg.jpeg' },
+    { badge: 'Paiements des loyers',     title: 'Encaissez vos loyers\nsans effort',            subtitle: 'Suivez chaque paiement en temps réel. Alertes automatiques pour les impayés, rappels avant échéance.',  cta: 'Découvrir WARAH',        link: '/auth/register', photo: '/assets/handsome-young-african-man-holding-mobile-phone-gesturing-while-standing-against-grey-wall.jpg.jpeg' },
+    { badge: 'Quittances automatiques',  title: 'Quittances professionnelles\nen un clic',      subtitle: 'Créez et envoyez des quittances de loyer signées directement à vos locataires, à tout moment.',          cta: 'Essayer gratuitement',   link: '/auth/register', photo: '/assets/black-businessman-happy-expression.jpg.jpeg' },
+    { badge: 'Annonces immobilières',    title: 'Trouvez vos locataires\nrapidement',            subtitle: 'Publiez vos annonces et recevez des candidatures qualifiées depuis partout au Togo.',                    cta: 'Voir les annonces',      link: '/annonces',      photo: '/assets/happy-man-with-house.jpg.jpeg' },
   ];
 
   readonly fonctionnement = [
@@ -1336,6 +1257,8 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       texte: 'Je possède 8 biens à Sokodé et Lomé. Avant WARAH, je perdais des journées entières à relancer les loyers. Maintenant tout est automatisé — je récupère du temps pour ma famille.',
     },
   ];
+
+  readonly heroTemos = this.temoignages.slice(0, 3);
 
   readonly faqs = [
     {

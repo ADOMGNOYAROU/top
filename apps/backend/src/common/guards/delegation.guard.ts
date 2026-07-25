@@ -2,18 +2,18 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import { AuthenticatedUser } from '../types/authenticated-user.type';
-import { PrismaService } from '../../prisma/prisma.service';
+import { DelegationService } from '../../modules/delegation/delegation.service';
 
 export const SKIP_DELEGATION_CHECK = 'skipDelegationCheck';
 
 // Bloque les mutations OWNER quand une délégation active existe.
-// À appliquer uniquement sur les endpoints de mutation (POST/PATCH/PUT/DELETE)
-// via le décorateur @SkipDelegationCheck() pour les contourner.
+// Utilise DelegationService.hasActiveDelegation() qui est mis en cache 15s
+// — évite un findFirst DB sur chaque mutation OWNER.
 @Injectable()
 export class DelegationGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly prisma: PrismaService,
+    private readonly delegationService: DelegationService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -33,15 +33,10 @@ export class DelegationGuard implements CanActivate {
     const method: string = req.method;
     if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return true;
 
-    // Vérifie si le propriétaire a une délégation active
-    const delegation = await this.prisma.powerDelegation.findFirst({
-      where: { ownerId: user.id, status: 'ACTIVE' },
-      select: { id: true },
-    });
-
-    if (delegation) {
+    const hasDelegation = await this.delegationService.hasActiveDelegation(user.id);
+    if (hasDelegation) {
       throw new ForbiddenException(
-        'Vous avez une délégation active — révoquez-la avant d\'effectuer des modifications',
+        "Vous avez une délégation active — révoquez-la avant d'effectuer des modifications",
       );
     }
 

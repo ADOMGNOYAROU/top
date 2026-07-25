@@ -2,15 +2,24 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AccountStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SupabaseAdminService } from '../supabase/supabase-admin.service';
+import { CacheService } from '../../common/cache/cache.service';
+
+const TTL_COMPTES = 30_000;   // 30 s
+const TTL_STATS   = 60_000;   // 60 s
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly supabase: SupabaseAdminService,
+    private readonly cache: CacheService,
   ) {}
 
   async listComptes() {
+    return this.cache.wrap('admin:comptes', TTL_COMPTES, () => this._fetchComptes());
+  }
+
+  private async _fetchComptes() {
     const users = await this.prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       select: {
@@ -52,6 +61,7 @@ export class AdminService {
       },
     });
 
+    this.cache.del('admin:comptes');
     return {
       id:              updated.id,
       prenom:          updated.firstName,
@@ -69,16 +79,20 @@ export class AdminService {
     const user = await this.prisma.user.findUnique({ where: { id }, select: { supabaseId: true } });
     if (!user) throw new NotFoundException('Utilisateur introuvable');
 
-    // Supprime d'abord de Supabase Auth pour révoquer toute session active
     if (user.supabaseId) {
       await this.supabase.auth.admin.deleteUser(user.supabaseId);
     }
 
-    // La suppression Prisma propage la cascade définie dans le schéma
     await this.prisma.user.delete({ where: { id } });
+    this.cache.del('admin:comptes');
+    this.cache.del('admin:stats');
   }
 
   async getStatistiques() {
+    return this.cache.wrap('admin:stats', TTL_STATS, () => this._fetchStats());
+  }
+
+  private async _fetchStats() {
     const [parRole, biens, biensOccupes] = await Promise.all([
       this.prisma.user.groupBy({ by: ['role'], _count: true }),
       this.prisma.property.count({ where: { status: { not: 'ARCHIVED' } } }),

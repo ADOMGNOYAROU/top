@@ -2,14 +2,18 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotifyService } from '../notify/notify.service';
+import { CacheService } from '../../common/cache/cache.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { GrantDelegationDto } from './dto/grant-delegation.dto';
+
+const DELEGATION_CACHE_TTL = 15_000; // 15 s — courte durée pour la cohérence des guards
 
 @Injectable()
 export class DelegationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notify: NotifyService,
+    private readonly cache: CacheService,
   ) {}
 
   async getActiveDelegation(ownerId: string) {
@@ -22,11 +26,18 @@ export class DelegationService {
   }
 
   async hasActiveDelegation(ownerId: string): Promise<boolean> {
-    const d = await this.prisma.powerDelegation.findFirst({
-      where: { ownerId, status: 'ACTIVE' },
-      select: { id: true },
+    const key = `delegation:active:${ownerId}`;
+    return this.cache.wrap(key, DELEGATION_CACHE_TTL, async () => {
+      const d = await this.prisma.powerDelegation.findFirst({
+        where: { ownerId, status: 'ACTIVE' },
+        select: { id: true },
+      });
+      return !!d;
     });
-    return !!d;
+  }
+
+  private invalidateDelegationCache(ownerId: string): void {
+    this.cache.del(`delegation:active:${ownerId}`);
   }
 
   async listCandidateManagers(ownerId: string) {
@@ -46,9 +57,9 @@ export class DelegationService {
       throw new BadRequestException('Fournir managerId ou managerEmail');
     }
 
-    // Vérifie qu'il n'y a pas déjà une délégation active
-    const existing = await this.getActiveDelegation(owner.id);
-    if (existing) {
+    // Vérifie qu'il n'y a pas déjà une délégation active (check léger, sans include)
+    const alreadyActive = await this.hasActiveDelegation(owner.id);
+    if (alreadyActive) {
       throw new BadRequestException('Une délégation est déjà active — révoquez-la d\'abord');
     }
 
@@ -75,6 +86,7 @@ export class DelegationService {
     });
 
     const ownerName = `${owner.firstName} ${owner.lastName}`;
+    this.invalidateDelegationCache(owner.id);
     await this.notify.notifyUser({
       userId: manager.id,
       event: 'delegation-granted',
@@ -95,6 +107,7 @@ export class DelegationService {
       data: { status: 'REVOKED', revokedAt: new Date() },
     });
 
+    this.invalidateDelegationCache(owner.id);
     const ownerName = `${owner.firstName} ${owner.lastName}`;
     await this.notify.notifyUser({
       userId: delegation.managerId,

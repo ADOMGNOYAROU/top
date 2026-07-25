@@ -178,28 +178,28 @@ export class ExportsService {
   }
 
   private async fetchRapportSummary(ownerFilter: object, dateFilter?: Record<string, Date>): Promise<Record<string, string>[]> {
-    const [totalBiens, biensOccupes, totalLocataires, payments] = await Promise.all([
+    // aggregate évite de charger tous les paiements en mémoire pour sommer
+    const [totalBiens, biensOccupes, totalLocataires, paymentAgg] = await Promise.all([
       this.prisma.property.count({ where: ownerFilter }),
       this.prisma.property.count({ where: { ...ownerFilter, status: 'OCCUPIED' } }),
       this.prisma.lease.count({ where: { property: ownerFilter, status: 'ACTIVE' } }),
-      this.prisma.payment.findMany({
+      this.prisma.payment.aggregate({
         where: {
           lease: { property: ownerFilter },
           status: PaymentStatus.PAID,
           ...(dateFilter ? { paidAt: dateFilter } : {}),
         },
-        select: { paidAmount: true },
+        _sum: { paidAmount: true },
+        _count: { id: true },
       }),
     ]);
-
-    const totalRevenu = payments.reduce((sum, p) => sum + p.paidAmount, 0);
 
     return [
       { Indicateur: 'Total biens', Valeur: String(totalBiens) },
       { Indicateur: 'Biens occupés', Valeur: String(biensOccupes) },
       { Indicateur: 'Locataires actifs', Valeur: String(totalLocataires) },
-      { Indicateur: 'Paiements confirmés', Valeur: String(payments.length) },
-      { Indicateur: 'Revenus totaux (FCFA)', Valeur: String(totalRevenu) },
+      { Indicateur: 'Paiements confirmés', Valeur: String(paymentAgg._count.id ?? 0) },
+      { Indicateur: 'Revenus totaux (FCFA)', Valeur: String(paymentAgg._sum.paidAmount ?? 0) },
     ];
   }
 
