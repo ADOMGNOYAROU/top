@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node -e \"const fs=require('fs'),j=JSON.parse(fs.readFileSync('angular.json','utf8')),b=j.projects['warah-frontend'].architect.build.configurations.production.budgets;b.forEach(x=>{if(x.type==='anyComponentStyle'){x.maximumWarning='50kb';x.maximumError='60kb'}});fs.writeFileSync('angular.json',JSON.stringify(j,null,2))\" && npx ng build --configuration production",
+  "buildCommand": "npx ng build --configuration production",
   "outputDirectory": "dist/warah-frontend/browser",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": null
